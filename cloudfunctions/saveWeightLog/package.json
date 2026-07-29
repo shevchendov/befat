@@ -1,0 +1,9 @@
+{
+  "name": "saveWeightLog",
+  "version": "1.0.0",
+  "description": "保存体重记录",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

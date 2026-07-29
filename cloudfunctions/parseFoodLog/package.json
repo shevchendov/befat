@@ -1,0 +1,12 @@
+{
+  "name": "parseFoodLog",
+  "version": "1.0.0",
+  "description": "调用 DeepSeek API 解析食物文字描述",
+  "main": "index.js",
+  "engines": {
+    "node": "18"
+  },
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

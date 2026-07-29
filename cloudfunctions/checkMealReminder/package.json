@@ -1,0 +1,9 @@
+{
+  "name": "checkMealReminder",
+  "version": "1.0.0",
+  "description": "检查两餐间隔并发送提醒",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

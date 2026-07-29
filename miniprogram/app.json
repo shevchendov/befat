@@ -1,0 +1,21 @@
+{
+  "pages": [
+    "pages/onboarding/onboarding",
+    "pages/index/index",
+    "pages/log-food/log-food",
+    "pages/weight-track/weight-track",
+    "pages/recipe-list/recipe-list",
+    "pages/recipe-detail/recipe-detail",
+    "pages/profile/profile"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "增肥记录",
+    "navigationBarBackgroundColor": "#FFF8E7",
+    "backgroundColor": "#FFF8E7"
+  },
+  "style": "v2",
+  "componentFramework": "glass-easel",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

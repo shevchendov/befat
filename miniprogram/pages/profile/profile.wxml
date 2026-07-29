@@ -1,0 +1,82 @@
+<view class="page-container">
+  <view class="card user-card" wx:if="{{user}}">
+    <text class="user-name">我的档案</text>
+    <view class="user-stats">
+      <view class="user-stat">
+        <text class="us-val">{{user.height_cm}}</text>
+        <text class="us-label">身高 cm</text>
+      </view>
+      <view class="user-stat">
+        <text class="us-val">{{user.current_weight_kg}}</text>
+        <text class="us-label">当前体重 kg</text>
+      </view>
+      <view class="user-stat">
+        <text class="us-val">{{user.target_weight_kg}}</text>
+        <text class="us-label">目标体重 kg</text>
+      </view>
+    </view>
+
+    <view class="bmi-display" wx:if="{{bmi}}">
+      <text class="bmi-value">BMI {{bmi}}</text>
+      <text class="bmi-status {{healthWarning.level}}">{{healthWarning.text}}</text>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{user}}">
+    <text class="section-title-inner">每日目标</text>
+    <view class="target-item">
+      <text class="target-label">热量目标</text>
+      <text class="target-value">{{user.daily_calorie_target}} kcal</text>
+    </view>
+    <view class="target-item">
+      <text class="target-label">蛋白质目标</text>
+      <text class="target-value">{{user.daily_protein_target_g}} g</text>
+    </view>
+    <view class="target-item">
+      <text class="target-label">活动水平</text>
+      <text class="target-value">{{activityLabel}}</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="menu-item" bindtap="goToOnboarding">
+      <text>重新设置目标</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="menu-item" bindtap="subscribeReminder">
+      <text>吃饭提醒</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    <text class="reminder-hint">开启后，两餐间隔超过 5 小时会收到提醒</text>
+  </view>
+
+  <view class="card">
+    <view class="menu-item" bindtap="exportData">
+      <text>导出数据</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-item danger" bindtap="confirmDeleteData">
+      <text>删除所有数据</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="menu-item" bindtap="toggleHealthInfo">
+      <text>健康提示</text>
+      <text class="menu-arrow">{{showHealthInfo ? 'v' : '›'}}</text>
+    </view>
+    <view class="health-info-content" wx:if="{{showHealthInfo}}">
+      <text class="health-info-text">• 本应用提供的信息仅供参考，不构成医疗建议</text>
+      <text class="health-info-text">• 如果你有甲亢、糖尿病、消化道疾病等健康问题，请先咨询医生</text>
+      <text class="health-info-text">• AI 估算的食物热量存在 ±30% 误差</text>
+      <text class="health-info-text">• 建议逐步增重，每周 0.5~1kg 为宜</text>
+      <text class="health-info-text">• 本产品面向 18 岁以上用户</text>
+    </view>
+  </view>
+
+  <view class="disclaimer">本内容由AI生成，仅供参考，不构成医疗建议</view>
+</view>

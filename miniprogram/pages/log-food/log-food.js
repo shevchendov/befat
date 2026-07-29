@@ -1,0 +1,161 @@
+const util = require('../../utils/util')
+const logger = require('../../utils/logger')
+
+Page({
+  data: {
+    mealType: 'lunch',
+    rawText: '',
+    parsing: false,
+    saving: false,
+    showResult: false,
+    parsedItems: [],
+    totalCalorie: 0,
+    totalProtein: 0,
+    rawTextSaved: ''
+  },
+
+  setMealType(e) {
+    this.setData({ mealType: e.currentTarget.dataset.type })
+  },
+
+  onTextInput(e) {
+    this.setData({ rawText: e.detail.value })
+  },
+
+  async parseFood() {
+    const text = this.data.rawText.trim()
+    if (!text) return
+
+    this.setData({ parsing: true })
+
+    try {
+      const today = util.formatDate(new Date())
+      const res = await wx.cloud.callFunction({
+        name: 'parseFoodLog',
+        data: {
+          raw_text: text,
+          meal_type: this.data.mealType,
+          date: today
+        }
+      })
+
+      const result = res.result
+
+      if (result.code === 88) {
+        wx.showToast({ title: '输入包含违规内容', icon: 'none' })
+        this.setData({ parsing: false })
+        return
+      }
+
+      if (result.code !== 0) {
+        wx.showToast({ title: result.message || '识别失败', icon: 'none' })
+        this.setData({ parsing: false })
+        return
+      }
+
+      this.setData({
+        showResult: true,
+        parsedItems: result.data.items.length > 0 ? result.data.items : [{ name: text, portion: '1份', calorie: 0, protein_g: 0 }],
+        totalCalorie: result.data.total_calorie,
+        totalProtein: result.data.total_protein_g,
+        rawTextSaved: text,
+        parsing: false
+      })
+    } catch (err) {
+      logger.error('parseFood', err)
+      wx.showToast({ title: '网络异常，请重试', icon: 'none' })
+      this.setData({ parsing: false })
+    }
+  },
+
+  editItem(e) {
+    const idx = e.currentTarget.dataset.index
+    const field = e.currentTarget.dataset.field
+    const value = e.detail.value
+    const key = 'parsedItems[' + idx + '].' + field
+    this.setData({ [key]: value }, () => {
+      this.recalcTotal()
+    })
+  },
+
+  removeItem(e) {
+    const idx = e.currentTarget.dataset.index
+    const items = this.data.parsedItems
+    items.splice(idx, 1)
+    this.setData({ parsedItems: items }, () => {
+      this.recalcTotal()
+    })
+  },
+
+  addItem() {
+    const items = this.data.parsedItems
+    items.push({ name: '', portion: '1份', calorie: 0, protein_g: 0 })
+    this.setData({ parsedItems: items })
+  },
+
+  recalcTotal() {
+    const items = this.data.parsedItems
+    let cal = 0
+    let pro = 0
+    items.forEach(item => {
+      cal += Number(item.calorie) || 0
+      pro += Number(item.protein_g) || 0
+    })
+    this.setData({
+      totalCalorie: cal,
+      totalProtein: Math.round(pro * 10) / 10
+    })
+  },
+
+  async saveFoodLog() {
+    const items = this.data.parsedItems.filter(item => item.name.trim())
+    if (items.length === 0) {
+      wx.showToast({ title: '请至少保留一项食物', icon: 'none' })
+      return
+    }
+
+    this.setData({ saving: true })
+
+    try {
+      const today = util.formatDate(new Date())
+      const db = wx.cloud.database()
+
+      await db.collection('food_logs').add({
+        data: {
+          date: today,
+          meal_type: this.data.mealType,
+          raw_text: this.data.rawTextSaved,
+          parsed_items: items.map(item => ({
+            name: item.name,
+            portion: item.portion || '1份',
+            calorie: Number(item.calorie) || 0,
+            protein_g: Number(item.protein_g) || 0
+          })),
+          total_calorie: this.data.totalCalorie,
+          total_protein_g: this.data.totalProtein,
+          created_at: db.serverDate()
+        }
+      })
+
+      wx.showToast({ title: '保存成功!', icon: 'success' })
+      setTimeout(() => {
+        wx.navigateBack()
+      }, 1500)
+    } catch (err) {
+      logger.error('saveFoodLog', err)
+      wx.showToast({ title: '保存失败，请重试', icon: 'none' })
+      this.setData({ saving: false })
+    }
+  },
+
+  resetForm() {
+    this.setData({
+      rawText: '',
+      rawTextSaved: '',
+      showResult: false,
+      parsedItems: [],
+      totalCalorie: 0,
+      totalProtein: 0
+    })
+  }
+})

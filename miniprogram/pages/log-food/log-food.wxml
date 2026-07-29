@@ -1,0 +1,68 @@
+<view class="page-container">
+  <view class="card">
+    <text class="label">选择餐次</text>
+    <view class="meal-type-select">
+      <view class="type-option {{mealType === 'breakfast' ? 'selected' : ''}}" bindtap="setMealType" data-type="breakfast">早餐</view>
+      <view class="type-option {{mealType === 'lunch' ? 'selected' : ''}}" bindtap="setMealType" data-type="lunch">午餐</view>
+      <view class="type-option {{mealType === 'dinner' ? 'selected' : ''}}" bindtap="setMealType" data-type="dinner">晚餐</view>
+      <view class="type-option {{mealType === 'snack' ? 'selected' : ''}}" bindtap="setMealType" data-type="snack">加餐</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <text class="label">描述你吃了什么</text>
+    <textarea class="food-input" placeholder="例：两个鸡腿加一碗米饭，一杯全脂牛奶" value="{{rawText}}" bindinput="onTextInput" maxlength="500" auto-height />
+    <view class="input-hint">尽量描述份量，AI 估算会更准确</view>
+  </view>
+
+  <view class="card" wx:if="{{!showResult}}">
+    <button class="btn-primary" bindtap="parseFood" disabled="{{!rawText.trim() || parsing}}">
+      <text wx:if="{{!parsing}}">AI 识别</text>
+      <text wx:if="{{parsing}}">识别中...</text>
+    </button>
+    <view class="disclaimer">AI 估算热量，仅供参考</view>
+  </view>
+
+  <view class="card result-card" wx:if="{{showResult}}">
+    <view class="result-header">
+      <text class="result-title">识别结果</text>
+      <text class="result-hint">可手动编辑修正</text>
+    </view>
+
+    <view wx:for="{{parsedItems}}" wx:for-item="item" wx:for-index="idx" wx:key="idx" class="parsed-item">
+      <view class="item-row">
+        <input class="item-input name-input" value="{{item.name}}" bindinput="editItem" data-index="{{idx}}" data-field="name" />
+        <input class="item-input portion-input" value="{{item.portion}}" bindinput="editItem" data-index="{{idx}}" data-field="portion" />
+      </view>
+      <view class="item-row">
+        <view class="item-nutrition">
+          <text>热量:</text>
+          <input class="item-input num-input" type="digit" value="{{item.calorie}}" bindinput="editItem" data-index="{{idx}}" data-field="calorie" />
+          <text>kcal</text>
+        </view>
+        <view class="item-nutrition">
+          <text>蛋白质:</text>
+          <input class="item-input num-input" type="digit" value="{{item.protein_g}}" bindinput="editItem" data-index="{{idx}}" data-field="protein_g" />
+          <text>g</text>
+        </view>
+      </view>
+      <view class="item-delete" bindtap="removeItem" data-index="{{idx}}">删除</view>
+    </view>
+
+    <view class="add-item" bindtap="addItem">+ 添加一项</view>
+
+    <view class="result-total">
+      <text>合计: {{totalCalorie}} kcal | 蛋白质 {{totalProtein}}g</text>
+    </view>
+
+    <view class="result-actions">
+      <button class="btn-secondary" bindtap="resetForm">重新输入</button>
+      <button class="btn-primary" bindtap="saveFoodLog" disabled="{{saving}}">
+        <text wx:if="{{!saving}}">保存记录</text>
+        <text wx:if="{{saving}}">保存中...</text>
+      </button>
+    </view>
+  </view>
+
+  <view class="disclaimer" wx:if="{{showResult}}">本内容由AI生成，仅供参考，不构成医疗建议</view>
+</view>

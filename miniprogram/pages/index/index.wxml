@@ -1,0 +1,65 @@
+<view class="page-container">
+  <view class="header-card">
+    <view class="date-text">{{dateText}}</view>
+    <view class="greeting">今天也要好好吃饭!</view>
+  </view>
+
+  <view class="progress-rings">
+    <view class="ring-wrapper">
+      <canvas class="ring-canvas" type="2d" id="calorieCanvas"></canvas>
+      <view class="ring-label">
+        <text class="ring-value">{{dailySummary.total_calorie}}</text>
+        <text class="ring-unit">/ {{targets.calorie}}</text>
+        <text class="ring-title">千卡</text>
+      </view>
+    </view>
+    <view class="ring-wrapper">
+      <canvas class="ring-canvas" type="2d" id="proteinCanvas"></canvas>
+      <view class="ring-label">
+        <text class="ring-value">{{dailySummary.total_protein_g}}</text>
+        <text class="ring-unit">/ {{targets.protein}}g</text>
+        <text class="ring-title">蛋白质</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="quick-actions">
+    <view class="action-btn" bindtap="goToLogFood">
+      <text class="action-icon">+</text>
+      <text>记录一餐</text>
+    </view>
+    <view class="action-btn" bindtap="goToWeightTrack">
+      <text class="action-icon">⚖️</text>
+      <text>体重打卡</text>
+    </view>
+    <view class="action-btn" bindtap="goToRecipeList">
+      <text class="action-icon">📖</text>
+      <text>增肥食谱</text>
+    </view>
+  </view>
+
+  <view class="section-title">今日饮食记录</view>
+
+  <view wx:if="{{meals.length === 0}}" class="empty-state">
+    <text>今天还没有记录</text>
+    <text class="empty-hint">点击上方"记录一餐"开始</text>
+  </view>
+
+  <view wx:for="{{meals}}" wx:key="index" class="meal-card">
+    <view class="meal-header">
+      <text class="meal-type">{{item.mealLabel}}</text>
+      <text class="meal-time">{{item.time}}</text>
+    </view>
+    <view class="meal-items">
+      <view wx:for="{{item.items}}" wx:for-item="food" wx:key="name" class="food-item">
+        <text class="food-name">{{food.name}}</text>
+        <text class="food-cal">{{food.calorie}}kcal</text>
+      </view>
+    </view>
+    <view class="meal-total">
+      <text>共 {{item.total_calorie}} kcal | 蛋白质 {{item.total_protein_g}}g</text>
+    </view>
+  </view>
+
+  <view class="disclaimer">本内容由AI生成，仅供参考，不构成医疗建议</view>
+</view>

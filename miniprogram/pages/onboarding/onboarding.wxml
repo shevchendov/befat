@@ -1,0 +1,98 @@
+<view class="page-container">
+  <view class="steps-indicator">
+    <view class="step {{step >= 1 ? 'active' : ''}}">1</view>
+    <view class="step-line {{step >= 2 ? 'active' : ''}}"></view>
+    <view class="step {{step >= 2 ? 'active' : ''}}">2</view>
+    <view class="step-line {{step >= 3 ? 'active' : ''}}"></view>
+    <view class="step {{step >= 3 ? 'active' : ''}}">3</view>
+  </view>
+
+  <!-- Step 1: 性别 + 年龄 -->
+  <view class="step-content" wx:if="{{step === 1}}">
+    <view class="title">基本信息</view>
+    <view class="subtitle margin-bottom">让我们先了解你</view>
+
+    <view class="form-group">
+      <text class="label">性别</text>
+      <view class="gender-select">
+        <view class="gender-option {{form.gender === 'male' ? 'selected' : ''}}" bindtap="setGender" data-gender="male">
+          <text class="gender-icon">♂</text>
+          <text>男性</text>
+        </view>
+        <view class="gender-option {{form.gender === 'female' ? 'selected' : ''}}" bindtap="setGender" data-gender="female">
+          <text class="gender-icon">♀</text>
+          <text>女性</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="form-group">
+      <text class="label">年龄</text>
+      <input class="input-field" type="number" placeholder="请输入年龄" value="{{form.age}}" bindinput="onInput" data-field="age" />
+    </view>
+
+    <view class="btn-next">
+      <button class="btn-primary" bindtap="nextStep" disabled="{{!form.gender || !form.age}}">下一步</button>
+    </view>
+  </view>
+
+  <!-- Step 2: 身高 + 体重 + 目标体重 -->
+  <view class="step-content" wx:if="{{step === 2}}">
+    <view class="title">身体数据</view>
+    <view class="subtitle margin-bottom">让我帮你计算增重目标</view>
+
+    <view class="form-group">
+      <text class="label">身高 (cm)</text>
+      <input class="input-field" type="digit" placeholder="例如 170" value="{{form.height_cm}}" bindinput="onInput" data-field="height_cm" />
+    </view>
+
+    <view class="form-group">
+      <text class="label">当前体重 (kg)</text>
+      <input class="input-field" type="digit" placeholder="例如 55" value="{{form.current_weight_kg}}" bindinput="onInput" data-field="current_weight_kg" />
+    </view>
+
+    <view class="form-group">
+      <text class="label">目标体重 (kg)</text>
+      <input class="input-field" type="digit" placeholder="例如 65" value="{{form.target_weight_kg}}" bindinput="onInput" data-field="target_weight_kg" />
+      <text class="hint">建议每月增重 2~4kg</text>
+    </view>
+
+    <view class="btn-next">
+      <button class="btn-primary" bindtap="nextStep" disabled="{{!form.height_cm || !form.current_weight_kg || !form.target_weight_kg}}">下一步</button>
+    </view>
+  </view>
+
+  <!-- Step 3: 活动水平 + 结果展示 -->
+  <view class="step-content" wx:if="{{step === 3}}">
+    <view class="title">活动水平</view>
+    <view class="subtitle margin-bottom">选择最符合你日常的活动量</view>
+
+    <view class="activity-options">
+      <view class="activity-option {{form.activity_level === 'sedentary' ? 'selected' : ''}}" bindtap="setActivity" data-level="sedentary">
+        <text class="activity-name">久坐不动</text>
+        <text class="activity-desc">办公室工作，很少运动</text>
+      </view>
+      <view class="activity-option {{form.activity_level === 'light' ? 'selected' : ''}}" bindtap="setActivity" data-level="light">
+        <text class="activity-name">轻度活动</text>
+        <text class="activity-desc">每周轻度运动 1~3 天</text>
+      </view>
+      <view class="activity-option {{form.activity_level === 'moderate' ? 'selected' : ''}}" bindtap="setActivity" data-level="moderate">
+        <text class="activity-name">中度活动</text>
+        <text class="activity-desc">每周中等强度运动 3~5 天</text>
+      </view>
+      <view class="activity-option {{form.activity_level === 'active' ? 'selected' : ''}}" bindtap="setActivity" data-level="active">
+        <text class="activity-name">高度活动</text>
+        <text class="activity-desc">每周高强度运动 6~7 天</text>
+      </view>
+    </view>
+
+    <view class="btn-next">
+      <button class="btn-primary" bindtap="submitForm" disabled="{{!form.activity_level || submitting}}">
+        <text wx:if="{{!submitting}}">完成设置</text>
+        <text wx:if="{{submitting}}">计算中...</text>
+      </button>
+    </view>
+  </view>
+
+  <view class="disclaimer" wx:if="{{step > 1}}">本内容由AI生成，仅供参考，不构成医疗建议</view>
+</view>

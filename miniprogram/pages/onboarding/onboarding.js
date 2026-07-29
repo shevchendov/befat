@@ -1,0 +1,121 @@
+const app = getApp()
+const logger = require('../../utils/logger')
+
+Page({
+  data: {
+    step: 1,
+    submitting: false,
+    form: {
+      gender: '',
+      age: '',
+      height_cm: '',
+      current_weight_kg: '',
+      target_weight_kg: '',
+      activity_level: ''
+    }
+  },
+
+  setGender(e) {
+    const gender = e.currentTarget.dataset.gender
+    this.setData({ 'form.gender': gender })
+  },
+
+  setActivity(e) {
+    const level = e.currentTarget.dataset.level
+    this.setData({ 'form.activity_level': level })
+  },
+
+  onInput(e) {
+    const field = e.currentTarget.dataset.field
+    const value = e.detail.value
+    this.setData({ ['form.' + field]: value })
+  },
+
+  nextStep() {
+    const step = this.data.step
+
+    if (step === 1) {
+      const age = parseInt(this.data.form.age)
+      if (!this.data.form.gender) {
+        wx.showToast({ title: '请选择性别', icon: 'none' })
+        return
+      }
+      if (!age || age < 10 || age > 100) {
+        wx.showToast({ title: '请输入有效年龄(10-100)', icon: 'none' })
+        return
+      }
+    }
+
+    if (step === 2) {
+      const h = parseFloat(this.data.form.height_cm)
+      const cw = parseFloat(this.data.form.current_weight_kg)
+      const tw = parseFloat(this.data.form.target_weight_kg)
+      if (!h || h < 100 || h > 250) {
+        wx.showToast({ title: '请输入有效身高(100-250cm)', icon: 'none' })
+        return
+      }
+      if (!cw || cw < 20 || cw > 300) {
+        wx.showToast({ title: '请输入有效体重(20-300kg)', icon: 'none' })
+        return
+      }
+      if (!tw || tw <= cw) {
+        wx.showToast({ title: '目标体重应大于当前体重', icon: 'none' })
+        return
+      }
+    }
+
+    this.setData({ step: step + 1 })
+  },
+
+  async submitForm() {
+    const form = this.data.form
+    this.setData({ submitting: true })
+
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'calcTarget',
+        data: {
+          gender: form.gender,
+          age: parseInt(form.age),
+          height_cm: parseFloat(form.height_cm),
+          current_weight_kg: parseFloat(form.current_weight_kg),
+          target_weight_kg: parseFloat(form.target_weight_kg),
+          activity_level: form.activity_level
+        }
+      })
+
+      const result = res.result
+
+      if (result.code === 2 || result.code === 3) {
+        wx.showModal({
+          title: '温馨提示',
+          content: result.message,
+          showCancel: false
+        })
+        this.setData({ submitting: false })
+        return
+      }
+
+      if (result.code !== 0) {
+        wx.showToast({ title: result.message || '提交失败', icon: 'none' })
+        this.setData({ submitting: false })
+        return
+      }
+
+      app.globalData.userInfo = { ...form, ...result.data }
+      app.globalData.dailyTargets = {
+        calorie: result.data.daily_calorie_target,
+        protein: result.data.daily_protein_target_g
+      }
+
+      wx.showToast({ title: '设置成功!', icon: 'success' })
+      setTimeout(() => {
+        wx.reLaunch({ url: '/pages/index/index' })
+      }, 1500)
+    } catch (err) {
+      logger.error('submitForm', err)
+      wx.showToast({ title: '网络异常，请重试', icon: 'none' })
+      this.setData({ submitting: false })
+    }
+  }
+})

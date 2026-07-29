@@ -1,0 +1,9 @@
+{
+  "name": "generateRecipeInit",
+  "version": "1.0.0",
+  "description": "初始化食谱数据",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}
