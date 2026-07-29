@@ -46,9 +46,7 @@ Page({
 
   onWeightInput(e) {
     let value = sanitizeDigit(e.detail.value)
-    const num = parseFloat(value)
-    if (!isNaN(num) && num > 300) value = '300'
-    if (!isNaN(num) && num < 20 && value.length >= 2) value = '20'
+    if (value.length > 3) value = value.slice(0, 3)
     this.setData({ inputWeight: value })
   },
 

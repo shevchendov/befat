@@ -32,18 +32,13 @@ Page({
 
     if (field === 'age') {
       value = sanitizeNumber(value)
-      value = clampNumber(value, 1, 150)
       if (value.length > 3) value = value.slice(0, 3)
     } else if (field === 'height_cm') {
       value = sanitizeDigit(value)
-      const num = parseFloat(value)
-      if (!isNaN(num) && num > 250) value = '250'
-      if (!isNaN(num) && num < 50 && value.length >= 2) value = '50'
+      if (value.length > 3) value = value.slice(0, 3)
     } else if (field === 'current_weight_kg' || field === 'target_weight_kg') {
       value = sanitizeDigit(value)
-      const num = parseFloat(value)
-      if (!isNaN(num) && num > 300) value = '300'
-      if (!isNaN(num) && num < 20 && value.length >= 2) value = '20'
+      if (value.length > 3) value = value.slice(0, 3)
     }
 
     this.setData({ ['form.' + field]: value })
