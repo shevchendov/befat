@@ -1,17 +1,16 @@
 const sdk = require('wx-server-sdk')
 jest.mock('wx-server-sdk')
+jest.mock('axios')
+const axios = require('axios')
 const parseFoodLog = require('../../cloudfunctions/parseFoodLog/index')
 const getDailySummary = require('../../cloudfunctions/getDailySummary/index')
 const saveWeightLog = require('../../cloudfunctions/saveWeightLog/index')
 
 beforeEach(() => {
   sdk.__resetDB()
-  global.fetch = jest.fn().mockResolvedValue({
-    ok: true,
-    json: () => Promise.resolve({
-      choices: [{ message: { content: JSON.stringify({ items: [{ name: '米饭', portion: '1碗', calorie: 200, protein_g: 4 }], total_calorie: 200, total_protein_g: 4 }) } }]
-    })
-  })
+  axios.post.mockResolvedValue({ data: {
+    choices: [{ message: { content: JSON.stringify({ items: [{ name: '米饭', portion: '1碗', calorie: 200, protein_g: 4 }], total_calorie: 200, total_protein_g: 4 }) } }]
+  }})
 })
 
 const DATE_VARIANTS = [

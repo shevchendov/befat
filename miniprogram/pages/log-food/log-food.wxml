@@ -16,7 +16,7 @@
   </view>
 
   <view class="card" wx:if="{{!showResult}}">
-    <button class="btn-primary" bindtap="parseFood" disabled="{{!rawText.trim() || parsing}}">
+    <button class="btn-primary" bindtap="parseFood" disabled="{{!canParse || parsing}}">
       <text wx:if="{{!parsing}}">AI 识别</text>
       <text wx:if="{{parsing}}">识别中...</text>
     </button>

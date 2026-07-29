@@ -1,7 +1,8 @@
 const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
-const logger = require('../common/logger')
+const axios = require('axios')
+const logger = require('./common/logger')
 const FN = 'parseFoodLog'
 
 exports.main = async (event, context) => {
@@ -62,29 +63,23 @@ exports.main = async (event, context) => {
 
 只返回JSON，不要任何解释文字。`
 
-    const resp = await fetch('https://api.deepseek.com/chat/completions', {
-      method: 'POST',
+    const resp = await axios.post('https://api.deepseek.com/chat/completions', {
+      model: 'deepseek-chat',
+      messages: [
+        { role: 'system', content: '你是一个中国食物营养分析专家。只返回JSON，不要任何解释文字。' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.1,
+      max_tokens: 1024
+    }, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + apiKey
       },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          { role: 'system', content: '你是一个中国食物营养分析专家。只返回JSON，不要任何解释文字。' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.1,
-        max_tokens: 1024
-      })
+      timeout: 30000
     })
 
-    if (!resp.ok) {
-      throw new Error('DeepSeek API error: ' + resp.status)
-    }
-
-    const data = await resp.json()
-    const content = data.choices?.[0]?.message?.content
+    const content = resp.data.choices?.[0]?.message?.content
 
     if (!content) {
       throw new Error('Empty response from DeepSeek')

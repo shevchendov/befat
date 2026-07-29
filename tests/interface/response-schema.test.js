@@ -1,5 +1,7 @@
 require('./setup')
 
+jest.mock('axios')
+const axios = require('axios')
 const calcTarget = require('../../cloudfunctions/calcTarget/index')
 const parseFoodLog = require('../../cloudfunctions/parseFoodLog/index')
 const getDailySummary = require('../../cloudfunctions/getDailySummary/index')
@@ -18,12 +20,9 @@ const ALL_FUNCTIONS = [
 
 beforeEach(() => {
   require('wx-server-sdk').__resetDB()
-  global.fetch = jest.fn().mockResolvedValue({
-    ok: true,
-    json: () => Promise.resolve({
-      choices: [{ message: { content: JSON.stringify({ items: [], total_calorie: 0, total_protein_g: 0 }) } }]
-    })
-  })
+  axios.post.mockResolvedValue({ data: {
+    choices: [{ message: { content: JSON.stringify({ items: [], total_calorie: 0, total_protein_g: 0 }) } }]
+  }})
 })
 
 describe('响应结构一致性', () => {

@@ -1,14 +1,11 @@
 jest.mock('wx-server-sdk')
+jest.mock('axios')
 
 const parseFoodLog = require('../cloudfunctions/parseFoodLog/index')
 
 function mockDeepSeekResponse(content) {
-  global.fetch = jest.fn().mockResolvedValue({
-    ok: true,
-    json: jest.fn().mockResolvedValue({
-      choices: [{ message: { content } }]
-    })
-  })
+  const axios = require('axios')
+  axios.post.mockResolvedValue({ data: { choices: [{ message: { content } }] } })
 }
 
 describe('parseFoodLog.main - parameter validation', () => {
@@ -178,7 +175,8 @@ describe('parseFoodLog.main - JSON parsing', () => {
   })
 
   test('handles API failure gracefully', async () => {
-    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 429 })
+    const axios = require('axios')
+    axios.post.mockRejectedValue(new Error('Request failed with status code 429'))
 
     const result = await parseFoodLog.main({
       raw_text: '两个鸡蛋',
@@ -190,10 +188,8 @@ describe('parseFoodLog.main - JSON parsing', () => {
   })
 
   test('handles empty response from API', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue({ choices: [{ message: { content: '' } }] })
-    })
+    const axios = require('axios')
+    axios.post.mockResolvedValue({ data: { choices: [{ message: { content: '' } }] } })
 
     const result = await parseFoodLog.main({
       raw_text: '一杯牛奶',

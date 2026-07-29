@@ -32,7 +32,7 @@ describe('setMealType', () => {
 describe('onTextInput', () => {
   test('更新输入文字', () => {
     page.onTextInput({ detail: { value: '一碗米饭' } })
-    expect(page.setData).toHaveBeenCalledWith({ rawText: '一碗米饭' })
+    expect(page.setData).toHaveBeenCalledWith({ rawText: '一碗米饭', canParse: true })
   })
 })
 

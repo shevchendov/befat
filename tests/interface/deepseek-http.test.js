@@ -1,50 +1,48 @@
+jest.mock('axios')
 require('./setup')
+const axios = require('axios')
 const parseFoodLog = require('../../cloudfunctions/parseFoodLog/index')
 
-function captureFetch() {
+function captureAxios() {
   let callArgs = null
-  global.fetch = jest.fn().mockImplementation((url, opts) => {
-    callArgs = { url, ...opts }
-    return Promise.resolve({
-      ok: true,
-      json: () => Promise.resolve({
-        choices: [{ message: { content: JSON.stringify({ items: [{ name: '米饭', portion: '1碗', calorie: 200, protein_g: 4 }], total_calorie: 200, total_protein_g: 4 }) } }]
-      })
-    })
+  axios.post.mockImplementation((url, data, config) => {
+    callArgs = { url, data, ...config }
+    return Promise.resolve({ data: {
+      choices: [{ message: { content: JSON.stringify({ items: [{ name: '米饭', portion: '1碗', calorie: 200, protein_g: 4 }], total_calorie: 200, total_protein_g: 4 }) } }]
+    }})
   })
   return () => callArgs
 }
 
 describe('DeepSeek HTTP 调用格式', () => {
-  const getCall = captureFetch()
+  const getCall = captureAxios()
 
   beforeEach(() => {
-    global.fetch = jest.fn()
+    axios.post.mockReset()
   })
 
   test('请求 URL 正确', async () => {
-    const getCall = captureFetch()
+    const getCall = captureAxios()
     await parseFoodLog.main({ raw_text: '一碗米饭', meal_type: 'lunch', date: '2026-07-29' }, {})
     const call = getCall()
     expect(call.url).toBe('https://api.deepseek.com/chat/completions')
   })
 
   test('使用 POST 方法', async () => {
-    const getCall = captureFetch()
+    const getCall = captureAxios()
     await parseFoodLog.main({ raw_text: '一碗米饭', meal_type: 'lunch', date: '2026-07-29' }, {})
-    const call = getCall()
-    expect(call.method).toBe('POST')
+    expect(axios.post).toHaveBeenCalled()
   })
 
   test('Content-Type 为 application/json', async () => {
-    const getCall = captureFetch()
+    const getCall = captureAxios()
     await parseFoodLog.main({ raw_text: '一碗米饭', meal_type: 'lunch', date: '2026-07-29' }, {})
     const call = getCall()
     expect(call.headers['Content-Type']).toBe('application/json')
   })
 
   test('Authorization 包含 Bearer token', async () => {
-    const getCall = captureFetch()
+    const getCall = captureAxios()
     await parseFoodLog.main({ raw_text: '一碗米饭', meal_type: 'lunch', date: '2026-07-29' }, {})
     const call = getCall()
     expect(call.headers['Authorization']).toMatch(/^Bearer .+/)
@@ -52,74 +50,65 @@ describe('DeepSeek HTTP 调用格式', () => {
   })
 
   test('请求体包含 model 字段', async () => {
-    const getCall = captureFetch()
+    const getCall = captureAxios()
     await parseFoodLog.main({ raw_text: '一碗米饭', meal_type: 'lunch', date: '2026-07-29' }, {})
     const call = getCall()
-    const body = JSON.parse(call.body)
-    expect(body).toHaveProperty('model')
-    expect(body.model).toBe('deepseek-chat')
+    expect(call.data).toHaveProperty('model')
+    expect(call.data.model).toBe('deepseek-chat')
   })
 
   test('请求体包含 messages 数组（system + user）', async () => {
-    const getCall = captureFetch()
+    const getCall = captureAxios()
     await parseFoodLog.main({ raw_text: '一碗米饭', meal_type: 'lunch', date: '2026-07-29' }, {})
     const call = getCall()
-    const body = JSON.parse(call.body)
-    expect(Array.isArray(body.messages)).toBe(true)
-    expect(body.messages).toHaveLength(2)
-    expect(body.messages[0].role).toBe('system')
-    expect(body.messages[1].role).toBe('user')
+    expect(Array.isArray(call.data.messages)).toBe(true)
+    expect(call.data.messages).toHaveLength(2)
+    expect(call.data.messages[0].role).toBe('system')
+    expect(call.data.messages[1].role).toBe('user')
   })
 
   test('user message 包含用户原始输入文字', async () => {
-    const getCall = captureFetch()
+    const getCall = captureAxios()
     await parseFoodLog.main({ raw_text: '两个鸡腿加一碗米饭', meal_type: 'lunch', date: '2026-07-29' }, {})
     const call = getCall()
-    const body = JSON.parse(call.body)
-    expect(body.messages[1].content).toContain('两个鸡腿加一碗米饭')
+    expect(call.data.messages[1].content).toContain('两个鸡腿加一碗米饭')
   })
 
   test('temperature 为 0.1（低随机性）', async () => {
-    const getCall = captureFetch()
+    const getCall = captureAxios()
     await parseFoodLog.main({ raw_text: '米饭', meal_type: 'lunch', date: '2026-07-29' }, {})
     const call = getCall()
-    const body = JSON.parse(call.body)
-    expect(body.temperature).toBe(0.1)
+    expect(call.data.temperature).toBe(0.1)
   })
 
   test('max_tokens 为 1024', async () => {
-    const getCall = captureFetch()
+    const getCall = captureAxios()
     await parseFoodLog.main({ raw_text: '米饭', meal_type: 'lunch', date: '2026-07-29' }, {})
     const call = getCall()
-    const body = JSON.parse(call.body)
-    expect(body.max_tokens).toBe(1024)
+    expect(call.data.max_tokens).toBe(1024)
   })
 
   test('system prompt 要求返回 JSON', async () => {
-    const getCall = captureFetch()
+    const getCall = captureAxios()
     await parseFoodLog.main({ raw_text: '米饭', meal_type: 'lunch', date: '2026-07-29' }, {})
     const call = getCall()
-    const body = JSON.parse(call.body)
-    expect(body.messages[0].content).toMatch(/JSON|json/)
+    expect(call.data.messages[0].content).toMatch(/JSON|json/)
   })
 
   test('API 返回非 200 时函数降级不崩溃', async () => {
-    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500 })
+    axios.post.mockRejectedValue(new Error('Request failed with status code 500'))
     const res = await parseFoodLog.main({ raw_text: '米饭', meal_type: 'lunch', date: '2026-07-29' }, {})
     expect(res.code).toBe(3)
   })
 
   test('API 超时/网络错误时函数降级不崩溃', async () => {
-    global.fetch = jest.fn().mockRejectedValue(new Error('connect ETIMEDOUT'))
+    axios.post.mockRejectedValue(new Error('connect ETIMEDOUT'))
     const res = await parseFoodLog.main({ raw_text: '米饭', meal_type: 'lunch', date: '2026-07-29' }, {})
     expect(res.code).toBe(3)
   })
 
   test('API 返回空 choices 时函数降级不崩溃', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ choices: [] })
-    })
+    axios.post.mockResolvedValue({ data: { choices: [] } })
     const res = await parseFoodLog.main({ raw_text: '米饭', meal_type: 'lunch', date: '2026-07-29' }, {})
     expect(res.code).toBe(3)
   })

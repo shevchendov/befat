@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "scripts": {
     "test": "jest",
-    "test:verbose": "jest --verbose"
+    "test:verbose": "jest --verbose",
+    "sync-common": "node cloudfunctions/sync-common.js"
   },
   "devDependencies": {
+    "axios": "^1.18.1",
     "jest": "^29.7.0"
   }
 }

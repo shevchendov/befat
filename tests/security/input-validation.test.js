@@ -1,4 +1,6 @@
+jest.mock('axios')
 require('../interface/setup')
+const axios = require('axios')
 const parseFoodLog = require('../../cloudfunctions/parseFoodLog/index')
 const saveWeightLog = require('../../cloudfunctions/saveWeightLog/index')
 const calcTarget = require('../../cloudfunctions/calcTarget/index')
@@ -7,12 +9,9 @@ const getDailySummary = require('../../cloudfunctions/getDailySummary/index')
 const VALID_USER = { height_cm: 175, current_weight_kg: 60, target_weight_kg: 62, gender: 'male', activity_level: 'moderate', age: 25 }
 
 beforeEach(() => {
-  global.fetch = jest.fn().mockResolvedValue({
-    ok: true,
-    json: () => Promise.resolve({
-      choices: [{ message: { content: JSON.stringify({ items: [{ name: '米饭', portion: '1碗', calorie: 200, protein_g: 4 }], total_calorie: 200, total_protein_g: 4 }) } }]
-    })
-  })
+  axios.post.mockResolvedValue({ data: {
+    choices: [{ message: { content: JSON.stringify({ items: [{ name: '米饭', portion: '1碗', calorie: 200, protein_g: 4 }], total_calorie: 200, total_protein_g: 4 }) } }]
+  }})
 })
 
 describe('XSS / 注入', () => {

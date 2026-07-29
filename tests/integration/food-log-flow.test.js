@@ -6,32 +6,28 @@ const getDailySummary = require('../../cloudfunctions/getDailySummary/index')
 const sdk = require('wx-server-sdk')
 
 function mockDeepSeekResponse(items, totalCal, totalPro) {
-  global.fetch = jest.fn().mockResolvedValue({
-    ok: true,
-    json: jest.fn().mockResolvedValue({
-      choices: [{
-        message: {
-          content: JSON.stringify({
-            items,
-            total_calorie: totalCal,
-            total_protein_g: totalPro
-          })
-        }
-      }]
-    })
-  })
+  const axios = require('axios')
+  axios.post.mockResolvedValue({ data: {
+    choices: [{
+      message: {
+        content: JSON.stringify({
+          items,
+          total_calorie: totalCal,
+          total_protein_g: totalPro
+        })
+      }
+    }]
+  }})
 }
 
 describe('记录一餐 → 每日汇总 集成', () => {
 
   beforeEach(() => {
     process.env.DEEPSEEK_API_KEY = 'test-deepseek-key'
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue({
-        choices: [{ message: { content: '[]' } }]
-      })
-    })
+    const axios = require('axios')
+    axios.post.mockResolvedValue({ data: {
+      choices: [{ message: { content: '[]' } }]
+    }})
   })
 
   test('AI解析 → 保存 → 每日汇总正确累计', async () => {
@@ -127,12 +123,10 @@ describe('记录一餐 → 每日汇总 集成', () => {
   })
 
   test('AI返回无效JSON时降级返回空结果', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue({
-        choices: [{ message: { content: 'invalid json!!!' } }]
-      })
-    })
+    const axios = require('axios')
+    axios.post.mockResolvedValue({ data: {
+      choices: [{ message: { content: 'invalid json!!!' } }]
+    }})
 
     const result = await parseFoodLog.main({
       raw_text: '随便吃点',

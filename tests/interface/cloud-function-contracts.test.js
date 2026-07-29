@@ -1,3 +1,4 @@
+jest.mock('axios')
 require('./setup')
 const calcTarget = require('../../cloudfunctions/calcTarget/index')
 const parseFoodLog = require('../../cloudfunctions/parseFoodLog/index')
@@ -7,12 +8,10 @@ const exportUserData = require('../../cloudfunctions/exportUserData/index')
 const deleteUserData = require('../../cloudfunctions/deleteUserData/index')
 
 function mockDeepSeek(items, totalCal, totalPro) {
-  global.fetch = jest.fn().mockResolvedValue({
-    ok: true,
-    json: jest.fn().mockResolvedValue({
-      choices: [{ message: { content: JSON.stringify({ items, total_calorie: totalCal, total_protein_g: totalPro }) } }]
-    })
-  })
+  const axios = require('axios')
+  axios.post.mockResolvedValue({ data: {
+    choices: [{ message: { content: JSON.stringify({ items, total_calorie: totalCal, total_protein_g: totalPro }) } }]
+  }})
 }
 
 const VALID_USER = { height_cm: 175, current_weight_kg: 60, target_weight_kg: 62, gender: 'male', activity_level: 'moderate', age: 25 }
@@ -126,10 +125,8 @@ describe('parseFoodLog 接口合约', () => {
   })
 
   test('AI 返回非 JSON 时降级为 code 3 并返回空 data', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue({ choices: [{ message: { content: 'not json' } }] })
-    })
+    const axios = require('axios')
+    axios.post.mockResolvedValue({ data: { choices: [{ message: { content: 'not json' } }] } })
     const res = await parseFoodLog.main(VALID_INPUT, {})
     expect(res.code).toBe(3)
     expect(res.data.items).toEqual([])
@@ -138,7 +135,8 @@ describe('parseFoodLog 接口合约', () => {
   })
 
   test('API HTTP 错误时返回 code 3', async () => {
-    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 429 })
+    const axios = require('axios')
+    axios.post.mockRejectedValue(new Error('Request failed with status code 429'))
     const res = await parseFoodLog.main(VALID_INPUT, {})
     expect(res.code).toBe(3)
   })

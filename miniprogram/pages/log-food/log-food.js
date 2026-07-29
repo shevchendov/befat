@@ -5,6 +5,7 @@ Page({
   data: {
     mealType: 'lunch',
     rawText: '',
+    canParse: false,
     parsing: false,
     saving: false,
     showResult: false,
@@ -19,7 +20,8 @@ Page({
   },
 
   onTextInput(e) {
-    this.setData({ rawText: e.detail.value })
+    const val = e.detail.value
+    this.setData({ rawText: val, canParse: !!val.trim() })
   },
 
   async parseFood() {
@@ -151,6 +153,7 @@ Page({
   resetForm() {
     this.setData({
       rawText: '',
+      canParse: false,
       rawTextSaved: '',
       showResult: false,
       parsedItems: [],
