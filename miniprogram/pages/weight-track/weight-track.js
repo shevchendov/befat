@@ -1,5 +1,6 @@
 const util = require('../../utils/util')
 const logger = require('../../utils/logger')
+const { sanitizeDigit } = require('../../utils/validators')
 
 Page({
   data: {
@@ -44,7 +45,11 @@ Page({
   },
 
   onWeightInput(e) {
-    this.setData({ inputWeight: e.detail.value })
+    let value = sanitizeDigit(e.detail.value)
+    const num = parseFloat(value)
+    if (!isNaN(num) && num > 300) value = '300'
+    if (!isNaN(num) && num < 20 && value.length >= 2) value = '20'
+    this.setData({ inputWeight: value })
   },
 
   async saveWeight() {

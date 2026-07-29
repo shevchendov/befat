@@ -37,12 +37,12 @@
       <view class="item-row">
         <view class="item-nutrition">
           <text>热量:</text>
-          <input class="item-input num-input" type="digit" value="{{item.calorie}}" bindinput="editItem" data-index="{{idx}}" data-field="calorie" />
+          <input class="item-input num-input" type="digit" value="{{item.calorie}}" bindinput="editItem" data-index="{{idx}}" data-field="calorie" maxlength="4" />
           <text>kcal</text>
         </view>
         <view class="item-nutrition">
           <text>蛋白质:</text>
-          <input class="item-input num-input" type="digit" value="{{item.protein_g}}" bindinput="editItem" data-index="{{idx}}" data-field="protein_g" />
+          <input class="item-input num-input" type="digit" value="{{item.protein_g}}" bindinput="editItem" data-index="{{idx}}" data-field="protein_g" maxlength="3" />
           <text>g</text>
         </view>
       </view>

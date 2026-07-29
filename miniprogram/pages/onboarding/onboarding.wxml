@@ -28,7 +28,7 @@
 
     <view class="form-group">
       <text class="label">年龄</text>
-      <input class="input-field" type="number" placeholder="请输入年龄" value="{{form.age}}" bindinput="onInput" data-field="age" />
+      <input class="input-number" type="number" placeholder="请输入年龄" value="{{form.age}}" bindinput="onInput" data-field="age" maxlength="3" />
     </view>
 
     <view class="btn-next">
@@ -43,17 +43,17 @@
 
     <view class="form-group">
       <text class="label">身高 (cm)</text>
-      <input class="input-field" type="digit" placeholder="例如 170" value="{{form.height_cm}}" bindinput="onInput" data-field="height_cm" />
+      <input class="input-number" type="digit" placeholder="例如 170" value="{{form.height_cm}}" bindinput="onInput" data-field="height_cm" maxlength="3" />
     </view>
 
     <view class="form-group">
       <text class="label">当前体重 (kg)</text>
-      <input class="input-field" type="digit" placeholder="例如 55" value="{{form.current_weight_kg}}" bindinput="onInput" data-field="current_weight_kg" />
+      <input class="input-number" type="digit" placeholder="例如 55" value="{{form.current_weight_kg}}" bindinput="onInput" data-field="current_weight_kg" maxlength="3" />
     </view>
 
     <view class="form-group">
       <text class="label">目标体重 (kg)</text>
-      <input class="input-field" type="digit" placeholder="例如 65" value="{{form.target_weight_kg}}" bindinput="onInput" data-field="target_weight_kg" />
+      <input class="input-number" type="digit" placeholder="例如 65" value="{{form.target_weight_kg}}" bindinput="onInput" data-field="target_weight_kg" maxlength="3" />
       <text class="hint">建议每月增重 2~4kg</text>
     </view>
 

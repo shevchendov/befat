@@ -12,7 +12,7 @@
   <view class="card">
     <text class="section-title-inner">记录新体重</text>
     <view class="weight-input-row">
-      <input class="input-field weight-input" type="digit" placeholder="输入体重" value="{{inputWeight}}" bindinput="onWeightInput" />
+      <input class="input-number weight-input" type="digit" placeholder="输入体重" value="{{inputWeight}}" bindinput="onWeightInput" maxlength="3" />
       <text class="weight-unit-label">kg</text>
     </view>
     <button class="btn-primary weight-save-btn" bindtap="saveWeight" disabled="{{!inputWeight || saving}}">

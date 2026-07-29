@@ -76,6 +76,21 @@ view, scroll-view, swiper, text, image, button, input, textarea {
   border-color: var(--primary);
 }
 
+.input-number {
+  height: 80rpx;
+  line-height: 80rpx;
+  padding: 0 30rpx;
+  font-size: 30rpx;
+  background: #F8F4EC;
+  border-radius: 16rpx;
+  border: 2rpx solid var(--border);
+  width: 100%;
+}
+
+.input-number:focus {
+  border-color: var(--primary);
+}
+
 .label {
   font-size: 28rpx;
   color: var(--text-secondary);

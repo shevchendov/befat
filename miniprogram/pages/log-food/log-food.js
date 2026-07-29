@@ -1,5 +1,6 @@
 const util = require('../../utils/util')
 const logger = require('../../utils/logger')
+const { sanitizeDigit } = require('../../utils/validators')
 
 Page({
   data: {
@@ -73,7 +74,20 @@ Page({
   editItem(e) {
     const idx = e.currentTarget.dataset.index
     const field = e.currentTarget.dataset.field
-    const value = e.detail.value
+    let value = e.detail.value
+
+    if (field === 'calorie' || field === 'protein_g') {
+      value = sanitizeDigit(value)
+      if (field === 'calorie') {
+        const num = parseFloat(value)
+        if (!isNaN(num) && num > 9999) value = '9999'
+      }
+      if (field === 'protein_g') {
+        const num = parseFloat(value)
+        if (!isNaN(num) && num > 999) value = '999'
+      }
+    }
+
     const key = 'parsedItems[' + idx + '].' + field
     this.setData({ [key]: value }, () => {
       this.recalcTotal()
