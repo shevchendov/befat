@@ -1,4 +1,8 @@
-<view class="page-container">
+<view class="loading-mask" wx:if="{{loading}}">
+  <text>加载中...</text>
+</view>
+
+<view class="page-container" wx:if="{{!loading}}">
   <view class="steps-indicator">
     <view class="step {{step >= 1 ? 'active' : ''}}">1</view>
     <view class="step-line {{step >= 2 ? 'active' : ''}}"></view>

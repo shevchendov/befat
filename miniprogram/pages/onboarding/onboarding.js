@@ -6,6 +6,7 @@ Page({
   data: {
     step: 1,
     submitting: false,
+    loading: true,
     form: {
       gender: '',
       age: '',
@@ -14,6 +15,23 @@ Page({
       target_weight_kg: '',
       activity_level: ''
     }
+  },
+
+  onShow() {
+    if (app.globalData.userInfo) {
+      wx.reLaunch({ url: '/pages/index/index' })
+      return
+    }
+    const db = wx.cloud.database()
+    db.collection('users').where({ _openid: '{openid}' }).get().then(res => {
+      if (res.data.length > 0) {
+        wx.reLaunch({ url: '/pages/index/index' })
+      } else {
+        this.setData({ loading: false })
+      }
+    }).catch(() => {
+      this.setData({ loading: false })
+    })
   },
 
   setGender(e) {
