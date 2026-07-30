@@ -1,0 +1,8 @@
+{
+  "name": "getShareCard",
+  "version": "1.0.0",
+  "description": "聚合今日战绩数据",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

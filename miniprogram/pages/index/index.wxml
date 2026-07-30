@@ -43,6 +43,12 @@
       </view>
       <text class="action-label">增肥食谱</text>
     </view>
+    <view class="action-btn" bindtap="goToShareCard">
+      <view class="action-icon action-icon-orange">
+        <text>📊</text>
+      </view>
+      <text class="action-label">生成战绩</text>
+    </view>
   </view>
 
   <view class="section-header">

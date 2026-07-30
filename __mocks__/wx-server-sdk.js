@@ -16,7 +16,15 @@ function buildGet(collection, query) {
 function filterItems(items, query) {
   if (query) {
     if (query._openid) items = items.filter(r => r._openid === query._openid)
-    if (query.date) items = items.filter(r => r.date === query.date)
+    if (query.date) {
+      if (typeof query.date === 'string') {
+        items = items.filter(r => r.date === query.date)
+      } else if (typeof query.date === 'object') {
+        if (query.date.$gte) items = items.filter(r => r.date >= query.date.$gte)
+        if (query.date.$lte) items = items.filter(r => r.date <= query.date.$lte)
+      }
+    }
+    if (query.recipe_id) items = items.filter(r => r.recipe_id === query.recipe_id)
   }
   return items
 }
@@ -102,7 +110,12 @@ const cloud = {
     }),
     serverDate: mockServerDate,
     command: {
-      in: (arr) => ({ in: arr })
+      in: (arr) => ({ in: arr }),
+      gte: jest.fn(v => ({
+        $gte: v,
+        lte: (v2) => ({ $gte: v, $lte: v2 })
+      })),
+      lte: jest.fn(v => ({ $lte: v }))
     }
   })),
   getWXContext: jest.fn(() => ({
@@ -113,8 +126,12 @@ const cloud = {
   openapi: {
     security: {
       msgSecCheck: jest.fn().mockResolvedValue({ errCode: 0, errMsg: 'ok' })
+    },
+    wxacode: {
+      getUnlimited: jest.fn().mockResolvedValue({ buffer: Buffer.from('fake-png-data') })
     }
   },
+  uploadFile: jest.fn().mockResolvedValue({ fileID: 'cloud://test/wxacode/test-openid.png' }),
   __resetDB() {
     Object.keys(DB).forEach(k => { DB[k] = [] })
     idSeq = 1

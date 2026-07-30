@@ -7,6 +7,7 @@
     "pages/recipe-list/recipe-list",
     "pages/recipe-detail/recipe-detail",
     "pages/my-favorites/my-favorites",
+    "pages/share-card/share-card",
     "pages/profile/profile"
   ],
   "window": {
