@@ -1,5 +1,40 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-07-30] 1dd7f1f
+
+**﻿style: 放大 Canvas 关键视觉元素**
+
+- 品牌"BE FAT"42→50px/"做大只"24→28px，描边加粗
+- 环形进度半径76→82，主数字32→40px bold，圆环线宽12→14
+- 本周体重/距目标数值30→38px bold
+- 连续打卡标签150×56→175×66，字号24→27px
+- 爆炸射线数量7→12条，长度1.5-2x，三角基底5→8px，分布更扩散
+- 各元素位置微调防重叠
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `miniprogram/pages/share-card/share-card.js`
+
+## [2026-07-30] 41f7484
+
+**﻿style: 放大 Canvas 关键视觉元素**
+
+- 品牌"BE FAT"42→50px/"做大只"24→28px，描边加粗
+- 环形进度半径76→82，主数字32→40px bold，圆环线宽12→14
+- 本周体重/距目标数值30→38px bold
+- 连续打卡标签150×56→175×66，字号24→27px
+- 爆炸射线数量7→12条，长度1.5-2x，三角基底5→8px，分布更扩散
+- 各元素位置微调防重叠
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `.commit_msg.tmp`
+- `CHANGELOG.md`
+- `miniprogram/pages/share-card/share-card.js`
+
 ## [2026-07-30] ce8c108
 
 **﻿fix: 修复 Canvas roundRect 兼容性和按钮样式**

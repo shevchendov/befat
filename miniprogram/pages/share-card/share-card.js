@@ -29,6 +29,7 @@ const QUOTES = [
 
 const W = 690
 const H = 1104
+const SCALE = 2
 
 Page({
   data: {
@@ -83,10 +84,10 @@ Page({
 
       const canvas = res[0].node
       const dpr = wx.getSystemInfoSync().pixelRatio
-      canvas.width = W * dpr
-      canvas.height = H * dpr
+      canvas.width = W * SCALE * dpr
+      canvas.height = H * SCALE * dpr
       const ctx = canvas.getContext('2d')
-      ctx.scale(dpr, dpr)
+      ctx.scale(dpr * SCALE, dpr * SCALE)
 
       try { this.drawBackground(ctx) } catch (e) { logger.error('drawBg', e) }
       try { this.drawDecorations(ctx) } catch (e) { logger.error('drawDeco', e) }
