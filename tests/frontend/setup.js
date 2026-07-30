@@ -45,6 +45,8 @@ const wxCloud = {
   DB: { REGEX: Symbol('REGEX') }
 }
 
+const mockStorage = {}
+
 global.wx = {
   cloud: wxCloud,
   showToast: jest.fn(),
@@ -64,7 +66,10 @@ global.wx = {
   getFileSystemManager: jest.fn(() => ({ writeFileSync: jest.fn(), readFileSync: jest.fn(() => '{}') })),
   env: { USER_DATA_PATH: '/tmp' },
   requestSubscribeMessage: jest.fn(({ success }) => { if (success) success({}) }),
-  openDocument: jest.fn(({ success }) => { if (success) success() })
+  openDocument: jest.fn(({ success }) => { if (success) success() }),
+  getStorageSync: jest.fn(key => mockStorage[key]),
+  setStorageSync: jest.fn((key, val) => { mockStorage[key] = val }),
+  clearStorageSync: jest.fn(() => { Object.keys(mockStorage).forEach(k => delete mockStorage[k]) })
 }
 
 global.Page = jest.fn(config => { pageRegistry.push(config) })
@@ -83,9 +88,10 @@ beforeEach(() => {
   callFnMock.mockResolvedValue({ result: { code: 0, message: 'ok', data: {} } })
   Object.keys(global.wx).forEach(k => {
     if (typeof global.wx[k] === 'function' && k !== 'cloud') {
-      if (k !== 'showModal' && k !== 'getWindowInfo') global.wx[k].mockClear()
+      if (k !== 'showModal' && k !== 'getWindowInfo' && k !== 'clearStorageSync') global.wx[k].mockClear()
     }
   })
+  Object.keys(mockStorage).forEach(k => delete mockStorage[k])
 })
 
 function createPage(config) {

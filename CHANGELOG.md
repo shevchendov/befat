@@ -1,5 +1,36 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-07-30] 1b46585
+
+**﻿fix: 修复分享卡片页面 Canvas 节点查询时序导致的崩溃**
+
+- canvas 被 wx:else 条件渲染控制，数据加载完成前 loading=true 导致 canvas 未渲染
+- 改为先 setData({loading:false}) 再 wx.nextTick 查询 canvas，确保节点已渲染
+- 改用 .fields({node:true,size:true}).exec() 标准模式替代 .node() 方法
+- 增加 res[0]/node 空值判断和 3 次有限重试，避免直接崩溃
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `miniprogram/pages/share-card/share-card.js`
+
+## [2026-07-30] ae61fe6
+
+**﻿fix: 修复分享卡片页面 Canvas 节点查询时序导致的崩溃**
+
+- canvas 被 wx:else 条件渲染控制，数据加载完成前 loading=true 导致 canvas 未渲染
+- 改为先 setData({loading:false}) 再 wx.nextTick 查询 canvas，确保节点已渲染
+- 改用 .fields({node:true,size:true}).exec() 标准模式替代 .node() 方法
+- 增加 res[0]/node 空值判断和 3 次有限重试，避免直接崩溃
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `.commit_msg.tmp`
+- `CHANGELOG.md`
+- `miniprogram/pages/share-card/share-card.js`
+
 ## [2026-07-30] f24c360
 
 **chore: remove temp commit msg file**

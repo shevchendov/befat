@@ -96,8 +96,10 @@ Page({
 
         this.drawRings()
 
-        if (caloriePercent >= CELEBRATION_THRESHOLD && meals.length > 0) {
+        const storageKey = 'celebrate_shown_' + today
+        if (caloriePercent >= CELEBRATION_THRESHOLD && meals.length > 0 && !wx.getStorageSync(storageKey)) {
           this.setData({ showCelebration: true })
+          wx.setStorageSync(storageKey, true)
           setTimeout(() => this.setData({ showCelebration: false }), 3000)
         }
       }
