@@ -1,0 +1,44 @@
+#!/bin/sh
+# post-commit hook — auto-append last commit to CHANGELOG.md (with sensitive info masking)
+HASH=$(git log -1 --format="%h")
+DATE=$(git log -1 --format="%ad" --date=short)
+SUBJECT=$(git log -1 --format="%s")
+BODY=$(git log -1 --format="%b")
+FILES=$(git diff-tree --no-commit-id -r --name-only HEAD | sed 's/^/- `/' | sed 's/$/`/')
+CHANGELOG="CHANGELOG.md"
+
+# Mask sensitive patterns in commit message
+# Patterns: API keys, tokens, passwords, secrets, connection strings, private keys
+MASKED=0
+mask_value() {
+  MASKED=1
+  printf '%s' "$1" | sed -E \
+    -e 's/(sk-[a-zA-Z0-9]{10,})/sk-***/g' \
+    -e 's/(-----BEGIN[ A-Z]*KEY-----)[^#]*/\1`***`/g' \
+    -e 's/((api[_-]?key|apikey|password|passwd|secret|token|auth[_-]?token|private[_-]?key|access[_-]?key|session[_-]?key)[[:space:]]*[:=][[:space:]]*)[\x27"]?[a-zA-Z0-9_\-\.\/+]{8,}[\x27"]?/\1***/gi' \
+    -e 's/((mongodb|postgresql|mysql|redis):\/\/)[^@\s]+@/\1***@/g' \
+    -e 's/((http|https):\/\/)[^:]+:[^@]+@/\1***:***@/g'
+}
+
+SUBJECT=$(mask_value "$SUBJECT")
+BODY=$(mask_value "$BODY")
+FILES=$(mask_value "$FILES")
+
+# Build entry from subject + body
+BODY_TRIMMED=$(printf "%s" "$BODY" | sed '/^[[:space:]]*$/d')
+ENTRY="## [$DATE] $HASH\n\n**$SUBJECT**"
+
+if [ -n "$BODY_TRIMMED" ]; then
+  ENTRY="$ENTRY\n\n$BODY_TRIMMED"
+fi
+
+ENTRY="$ENTRY\n\n**涉及文件:**\n$FILES"
+
+# Warn if anything was masked
+if [ "$MASKED" -eq 1 ]; then
+  echo "WARNING: post-commit hook masked sensitive info in CHANGELOG.md entry" >&2
+fi
+
+TITLE=$(head -1 "$CHANGELOG")
+REST=$(tail -n +2 "$CHANGELOG")
+printf "%s\n\n%b\n%s" "$TITLE" "$ENTRY" "$REST" > "$CHANGELOG"
