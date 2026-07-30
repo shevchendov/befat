@@ -23,7 +23,7 @@
 }
 
 .step.active {
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  background: var(--color-primary);
 }
 
 .step-line {

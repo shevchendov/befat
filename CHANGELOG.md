@@ -1,5 +1,37 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-07-30] a98cffa
+
+**fix: theme.wxss CSS 变量包裹在 page {} 选择器中**
+
+- 修复 WXSS 编译错误 unexpected token
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `miniprogram/common/theme.wxss`
+
+## [2026-07-30] e881ec5
+
+**feat: 全站视觉统一 - recipe-list/recipe-detail/my-favorites/weight-track/profile/log-food**
+
+- recipe-list: 食谱卡片黑边暖底，标签用 theme 变量
+- recipe-detail(高强度): 详情卡黑边，统计区倾斜 -2deg，mini-tag 更新
+- my-favorites(高强度): 收藏卡片黑边暖底，统一变量
+- profile: BMI 显示区用 card-bg-light
+- log-food(低强度): confetti 配色改为新强调色
+- index: confetti 配色更新
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `miniprogram/pages/index/index.wxml`
+- `miniprogram/pages/log-food/log-food.wxml`
+- `miniprogram/pages/my-favorites/my-favorites.wxss`
+- `miniprogram/pages/profile/profile.wxss`
+- `miniprogram/pages/recipe-detail/recipe-detail.wxss`
+- `miniprogram/pages/recipe-list/recipe-list.wxss`
+
 ## [2026-07-30] 17d9719
 
 **refactor: 改用统一 SCALE=2 系数缩放 canvas 绘制**
