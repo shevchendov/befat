@@ -119,13 +119,18 @@ Page({
 
   drawDecorations(ctx) {
     var rays = [
-      { x: 80, y: 80, a: -0.8, l: 60 },
-      { x: 80, y: 80, a: 0.3, l: 50 },
-      { x: 80, y: 80, a: 1.2, l: 40 },
-      { x: 580, y: 320, a: 2.0, l: 45 },
-      { x: 580, y: 320, a: -1.8, l: 35 },
-      { x: 600, y: 240, a: 2.5, l: 50 },
-      { x: 100, y: 380, a: -1.0, l: 40 }
+      { x: 80, y: 80, a: -0.8, l: 110 },
+      { x: 75, y: 85, a: 0.3, l: 90 },
+      { x: 85, y: 75, a: 1.2, l: 75 },
+      { x: 40, y: 120, a: -1.6, l: 60 },
+      { x: 570, y: 320, a: 2.0, l: 80 },
+      { x: 560, y: 310, a: -1.8, l: 70 },
+      { x: 600, y: 240, a: 2.5, l: 90 },
+      { x: 620, y: 280, a: -2.6, l: 55 },
+      { x: 100, y: 380, a: -1.0, l: 75 },
+      { x: 130, y: 200, a: -0.4, l: 60 },
+      { x: 540, y: 200, a: -2.3, l: 65 },
+      { x: 350, y: 220, a: 0.7, l: 50 }
     ]
     ctx.fillStyle = '#FFD23F'
     rays.forEach(function (r) {
@@ -133,9 +138,9 @@ Page({
       ctx.translate(r.x, r.y)
       ctx.rotate(r.a)
       ctx.beginPath()
-      ctx.moveTo(-5, 0)
+      ctx.moveTo(-8, 0)
       ctx.lineTo(0, -r.l)
-      ctx.lineTo(5, 0)
+      ctx.lineTo(8, 0)
       ctx.closePath()
       ctx.fill()
       ctx.restore()
@@ -144,24 +149,24 @@ Page({
 
   drawBrand(ctx) {
     ctx.save()
-    ctx.translate(50, 70)
+    ctx.translate(50, 75)
     ctx.rotate(-0.05)
 
-    ctx.font = 'bold 42px sans-serif'
+    ctx.font = 'bold 50px sans-serif'
     ctx.textAlign = 'left'
     ctx.textBaseline = 'alphabetic'
     ctx.fillStyle = '#FFD23F'
-    ctx.lineWidth = 4
+    ctx.lineWidth = 5
     ctx.strokeStyle = '#1A1006'
     ctx.strokeText('BE FAT', 0, 0)
     ctx.fillText('BE FAT', 0, 0)
 
-    ctx.font = '24px sans-serif'
+    ctx.font = '28px sans-serif'
     ctx.fillStyle = '#FFF8E7'
     ctx.strokeStyle = '#1A1006'
-    ctx.lineWidth = 2
-    ctx.strokeText('做大只', 0, 42)
-    ctx.fillText('做大只', 0, 42)
+    ctx.lineWidth = 3
+    ctx.strokeText('做大只', 0, 48)
+    ctx.fillText('做大只', 0, 48)
 
     ctx.restore()
   },
@@ -171,21 +176,21 @@ Page({
     var text = '连续 ' + (d.consecutive_days || 0) + ' 天'
 
     ctx.save()
-    ctx.translate(520, 60)
+    ctx.translate(505, 58)
     ctx.rotate(-0.07)
 
     ctx.fillStyle = '#FFD23F'
     ctx.lineWidth = 4
     ctx.strokeStyle = '#1A1006'
-    rndRect(ctx, 0, 0, 150, 56, 12)
+    rndRect(ctx, 0, 0, 175, 66, 14)
     ctx.fill()
     ctx.stroke()
 
-    ctx.font = 'bold 24px sans-serif'
+    ctx.font = 'bold 27px sans-serif'
     ctx.fillStyle = '#1A1006'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillText(text, 75, 28)
+    ctx.fillText(text, 87, 33)
 
     ctx.restore()
   },
@@ -196,8 +201,8 @@ Page({
     var calPct = d.target_calorie > 0 ? d.total_calorie / d.target_calorie : 0
     var proPct = d.target_protein > 0 ? d.total_protein_g / d.target_protein : 0
 
-    this.drawOneRing(ctx, 172, 300, 76, Math.min(calPct, 1), '#FFD23F', Math.round(d.total_calorie), String(d.target_calorie), '热量', 'kcal')
-    this.drawOneRing(ctx, 518, 300, 76, Math.min(proPct, 1), '#FF6B35', d.total_protein_g, String(d.target_protein) + 'g', '蛋白质', 'g')
+    this.drawOneRing(ctx, 172, 305, 82, Math.min(calPct, 1), '#FFD23F', Math.round(d.total_calorie), String(d.target_calorie), '热量', 'kcal')
+    this.drawOneRing(ctx, 518, 305, 82, Math.min(proPct, 1), '#FF6B35', d.total_protein_g, String(d.target_protein) + 'g', '蛋白质', 'g')
   },
 
   drawOneRing(ctx, cx, cy, radius, pct, color, value, targetText, label, unit) {
@@ -205,7 +210,7 @@ Page({
 
     ctx.beginPath()
     ctx.arc(cx, cy, radius, 0, Math.PI * 2)
-    ctx.lineWidth = 12
+    ctx.lineWidth = 14
     ctx.strokeStyle = '#1A1006'
     ctx.stroke()
 
@@ -213,24 +218,24 @@ Page({
       ctx.beginPath()
       ctx.arc(cx, cy, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * pct)
       ctx.strokeStyle = color
-      ctx.lineWidth = 12
+      ctx.lineWidth = 14
       ctx.lineCap = 'round'
       ctx.stroke()
     }
 
     ctx.fillStyle = '#FFF8E7'
-    ctx.font = 'bold 32px sans-serif'
+    ctx.font = 'bold 40px sans-serif'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillText(String(value), cx, cy - 8)
+    ctx.fillText(String(value), cx, cy - 12)
 
-    ctx.font = '15px sans-serif'
+    ctx.font = '16px sans-serif'
     ctx.fillStyle = '#FFD23F'
-    ctx.fillText('/ ' + targetText, cx, cy + 20)
+    ctx.fillText('/ ' + targetText, cx, cy + 24)
 
-    ctx.font = '17px sans-serif'
+    ctx.font = '18px sans-serif'
     ctx.fillStyle = '#FFF8E7'
-    ctx.fillText(label, cx, cy + 56)
+    ctx.fillText(label, cx, cy + 60)
 
     ctx.restore()
   },
@@ -248,11 +253,11 @@ Page({
     rndRect(ctx, 0, 0, 590, 110, 16)
     ctx.fill()
 
-    ctx.font = '20px sans-serif'
+    ctx.font = '22px sans-serif'
     ctx.textBaseline = 'middle'
     ctx.fillStyle = '#FFD23F'
     ctx.textAlign = 'left'
-    ctx.fillText('本周体重', 30, 36)
+    ctx.fillText('本周体重', 30, 34)
 
     var changeText = ''
     if (d.week_weight_change_kg !== 0) {
@@ -260,20 +265,20 @@ Page({
     } else {
       changeText = '0 kg'
     }
-    ctx.font = 'bold 30px sans-serif'
+    ctx.font = 'bold 38px sans-serif'
     ctx.fillStyle = d.week_weight_change_kg >= 0 ? '#639922' : '#FF6B35'
-    ctx.fillText(changeText, 30, 80)
+    ctx.fillText(changeText, 30, 82)
 
     if (d.remaining_kg !== null) {
-      ctx.font = '20px sans-serif'
+      ctx.font = '22px sans-serif'
       ctx.fillStyle = '#FFD23F'
       ctx.textAlign = 'right'
-      ctx.fillText('距目标还差', 560, 36)
+      ctx.fillText('距目标还差', 560, 34)
 
-      ctx.font = 'bold 30px sans-serif'
+      ctx.font = 'bold 38px sans-serif'
       ctx.fillStyle = '#FFF8E7'
       var remain = (d.remaining_kg > 0 ? '+' : '') + d.remaining_kg + ' kg'
-      ctx.fillText(remain, 560, 80)
+      ctx.fillText(remain, 560, 82)
     }
 
     ctx.restore()

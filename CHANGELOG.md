@@ -1,5 +1,42 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-07-30] ce8c108
+
+**﻿fix: 修复 Canvas roundRect 兼容性和按钮样式**
+
+- roundRect 在低版本 WeChat 不支持导致绘制链断裂，改用 arcTo 手动实现兼容
+- 每步绘制加 try-catch 隔离，单步失败不影响其余内容
+- 环形进度半径 80->76，避免视觉拥挤
+- action-btn 从 button 改为 view，去掉默认样式冲突
+- 增加 data logger 方便真机调试
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `miniprogram/pages/share-card/share-card.js`
+- `miniprogram/pages/share-card/share-card.wxml`
+- `miniprogram/pages/share-card/share-card.wxss`
+
+## [2026-07-30] a455206
+
+**﻿fix: 修复 Canvas roundRect 兼容性和按钮样式**
+
+- roundRect 在低版本 WeChat 不支持导致绘制链断裂，改用 arcTo 手动实现兼容
+- 每步绘制加 try-catch 隔离，单步失败不影响其余内容
+- 环形进度半径 80->76，避免视觉拥挤
+- action-btn 从 button 改为 view，去掉默认样式冲突
+- 增加 data logger 方便真机调试
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `.commit_msg.tmp`
+- `CHANGELOG.md`
+- `miniprogram/pages/share-card/share-card.js`
+- `miniprogram/pages/share-card/share-card.wxml`
+- `miniprogram/pages/share-card/share-card.wxss`
+
 ## [2026-07-30] 42c9141
 
 **﻿fix: 达标庆祝弹窗一天只弹一次**
