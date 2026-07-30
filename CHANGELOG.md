@@ -1,5 +1,20 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-07-30] 17d9719
+
+**refactor: 改用统一 SCALE=2 系数缩放 canvas 绘制**
+
+- 新增 SCALE=2 常量，canvas.width/height 乘以 SCALE 提高物理分辨率
+- ctx.scale 改为 dpr * SCALE，所有绘制坐标/字号/线宽自动放大
+- CSS 显示尺寸不变（690rpx × 1104rpx），画布空间不变
+- 导出图片清晰度翻倍（saveToAlbum 以 2x 分辨率输出）
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `miniprogram/pages/share-card/share-card.js`
+
 ## [2026-07-30] 1dd7f1f
 
 **﻿style: 放大 Canvas 关键视觉元素**
