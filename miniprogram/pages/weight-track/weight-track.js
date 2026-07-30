@@ -2,11 +2,17 @@ const util = require('../../utils/util')
 const logger = require('../../utils/logger')
 const { sanitizeDigit } = require('../../utils/validators')
 
+function formatWeight(v) {
+  return v !== null && v !== undefined ? v.toFixed(2) : '--'
+}
+
 Page({
   data: {
     inputWeight: '',
     latestWeight: null,
+    latestWeightDisplay: '--',
     weightChange: null,
+    weightChangeDisplay: null,
     records: [],
     saving: false
   },
@@ -22,18 +28,25 @@ Page({
         _openid: '{openid}'
       }).orderBy('date', 'desc').limit(100).get()
 
-      const records = [...res.data].reverse()
+      const records = [...res.data].reverse().map(r => ({
+        ...r,
+        weight_kg_display: r.weight_kg.toFixed(2)
+      }))
+      const recordsReversed = [...records].reverse()
       const latest = records.length > 0 ? records[records.length - 1].weight_kg : null
       let change = null
       if (records.length >= 2) {
         const prev = records[records.length - 2].weight_kg
-        change = Math.round((latest - prev) * 10) / 10
+        change = Math.round((latest - prev) * 100) / 100
       }
 
       this.setData({
         records,
+        recordsReversed,
         latestWeight: latest,
-        weightChange: change
+        latestWeightDisplay: formatWeight(latest),
+        weightChange: change,
+        weightChangeDisplay: change !== null ? (change >= 0 ? '+' : '') + change.toFixed(2) : null
       }, () => {
         if (records.length > 1) {
           setTimeout(() => this.drawChart(), 300)
@@ -46,7 +59,11 @@ Page({
 
   onWeightInput(e) {
     let value = sanitizeDigit(e.detail.value)
-    if (value.length > 3) value = value.slice(0, 3)
+    const parts = value.split('.')
+    if (parts.length > 1 && parts[1].length > 2) {
+      value = parts[0] + '.' + parts[1].slice(0, 2)
+    }
+    if (value.length > 6) value = value.slice(0, 6)
     this.setData({ inputWeight: value })
   },
 
@@ -70,18 +87,25 @@ Page({
       })
 
       if (res.result.code === 0) {
-        const records = res.result.data.records
+        const records = res.result.data.records.map(r => ({
+          ...r,
+          weight_kg_display: r.weight_kg.toFixed(2)
+        }))
+        const recordsReversed = [...records].reverse()
         const latest = records.length > 0 ? records[records.length - 1].weight_kg : weight
         let change = null
         if (records.length >= 2) {
           const prev = records[records.length - 2].weight_kg
-          change = Math.round((latest - prev) * 10) / 10
+          change = Math.round((latest - prev) * 100) / 100
         }
 
         this.setData({
           records,
+          recordsReversed,
           latestWeight: latest,
+          latestWeightDisplay: formatWeight(latest),
           weightChange: change,
+          weightChangeDisplay: change !== null ? (change >= 0 ? '+' : '') + change.toFixed(2) : null,
           inputWeight: '',
           saving: false
         }, () => {
@@ -141,7 +165,7 @@ Page({
         ctx.moveTo(padding.left, y)
         ctx.lineTo(width - padding.right, y)
         ctx.stroke()
-        ctx.fillText(val.toFixed(1), padding.left - 10 * dpr, y + 7 * dpr)
+        ctx.fillText(val.toFixed(2), padding.left - 10 * dpr, y + 7 * dpr)
       }
 
       const points = records.map((r, idx) => ({

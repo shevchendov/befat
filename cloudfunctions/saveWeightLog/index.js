@@ -32,7 +32,7 @@ exports.main = async (event, context) => {
 
     const isUpdate = existing.data.length > 0
     const record = {
-      weight_kg: Math.round(weight_kg * 10) / 10,
+      weight_kg: Math.round(weight_kg * 100) / 100,
       updated_at: db.serverDate()
     }
 

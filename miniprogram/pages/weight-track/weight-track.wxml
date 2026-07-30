@@ -1,18 +1,16 @@
 <view class="page-container">
   <view class="card weight-current">
     <text class="weight-label">最新体重</text>
-    <text class="weight-value">{{latestWeight || '--'}} <text class="weight-unit">kg</text></text>
-    <text class="weight-change" wx:if="{{weightChange !== null}}">
-      <text wx:if="{{weightChange >= 0}}">+{{weightChange}}</text>
-      <text wx:if="{{weightChange < 0}}">{{weightChange}}</text>
-      kg
+    <text class="weight-value">{{latestWeightDisplay}} <text class="weight-unit">kg</text></text>
+    <text class="weight-change" wx:if="{{weightChangeDisplay}}">
+      {{weightChangeDisplay}} kg
     </text>
   </view>
 
   <view class="card">
     <text class="section-title-inner">记录新体重</text>
     <view class="weight-input-row">
-      <input class="input-number weight-input" type="digit" placeholder="输入体重" value="{{inputWeight}}" bindinput="onWeightInput" maxlength="3" />
+      <input class="input-number weight-input" type="digit" placeholder="输入体重" value="{{inputWeight}}" bindinput="onWeightInput" maxlength="6" />
       <text class="weight-unit-label">kg</text>
     </view>
     <button class="btn-primary weight-save-btn" bindtap="saveWeight" disabled="{{!inputWeight || saving}}">
@@ -28,9 +26,9 @@
 
   <view class="card">
     <text class="section-title-inner">历史记录</text>
-    <view wx:for="{{records}}" wx:key="index" class="record-item">
+    <view wx:for="{{recordsReversed}}" wx:key="index" class="record-item">
       <text class="record-date">{{item.date}}</text>
-      <text class="record-weight">{{item.weight_kg}} kg</text>
+      <text class="record-weight">{{item.weight_kg_display}} kg</text>
     </view>
     <view wx:if="{{records.length === 0}}" class="empty-records">
       <text>还没有体重记录</text>

@@ -116,8 +116,8 @@ describe('saveWeightLog.main - create and update', () => {
     expect(dates).toEqual(dates.slice().sort())
   })
 
-  test('rounds weight to 1 decimal', async () => {
+  test('rounds weight to 2 decimals', async () => {
     const result = await saveWeightLog.main({ date: '2026-07-30', weight_kg: 65.666 }, {})
-    expect(result.data.records[0].weight_kg).toBe(65.7)
+    expect(result.data.records[0].weight_kg).toBe(65.67)
   })
 })

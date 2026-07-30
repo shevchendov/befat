@@ -44,12 +44,12 @@ describe('体重打卡 集成', () => {
     expect(weights).toEqual([61.0, 62.0, 64.0, 65.0, 65.5])
   })
 
-  test('体重数值四舍五入到一位小数', async () => {
+  test('体重数值四舍五入到两位小数', async () => {
     const result = await saveWeightLog.main({ date: '2026-07-29', weight_kg: 65.666 }, {})
-    expect(result.data.records[0].weight_kg).toBe(65.7)
+    expect(result.data.records[0].weight_kg).toBe(65.67)
 
     const result2 = await saveWeightLog.main({ date: '2026-07-30', weight_kg: 65.444 }, {})
-    expect(result2.data.records[1].weight_kg).toBe(65.4)
+    expect(result2.data.records[1].weight_kg).toBe(65.44)
   })
 
   test('非法体重值被拒绝', async () => {
