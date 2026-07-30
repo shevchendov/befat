@@ -13,7 +13,10 @@ Page({
     parsedItems: [],
     totalCalorie: 0,
     totalProtein: 0,
-    rawTextSaved: ''
+    rawTextSaved: '',
+    showCelebration: false,
+    celebEmoji: '🎉',
+    celebText: ''
   },
 
   setMealType(e) {
@@ -153,15 +156,33 @@ Page({
         }
       })
 
-      wx.showToast({ title: '保存成功!', icon: 'success' })
+      const mealLabels = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '加餐' }
+      const mealEmojis = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍿' }
+      const celebTexts = {
+        breakfast: '早上吃好，今天精神肯定好！',
+        lunch: '中午吃饱，下午才有力气长肉！',
+        dinner: '晚餐到位，睡觉都在变大只！',
+        snack: '聪明！加餐是增重党的秘密武器！'
+      }
+      this.setData({
+        saving: false,
+        showCelebration: true,
+        celebEmoji: mealEmojis[this.data.mealType] || '🎉',
+        celebText: celebTexts[this.data.mealType] || '又吃了一顿，离目标又近一步！'
+      })
       setTimeout(() => {
+        this.setData({ showCelebration: false })
         wx.navigateBack()
-      }, 1500)
+      }, 2500)
     } catch (err) {
       logger.error('saveFoodLog', err)
       wx.showToast({ title: '保存失败，请重试', icon: 'none' })
       this.setData({ saving: false })
     }
+  },
+
+  dismissCelebration() {
+    this.setData({ showCelebration: false })
   },
 
   resetForm() {

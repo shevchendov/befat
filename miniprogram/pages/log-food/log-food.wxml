@@ -1,6 +1,6 @@
 <view class="page-container">
   <view class="card">
-    <text class="label">选择餐次</text>
+    <text class="label">这顿吃的是哪一餐？🤔</text>
     <view class="meal-type-select">
       <view class="type-option {{mealType === 'breakfast' ? 'selected' : ''}}" bindtap="setMealType" data-type="breakfast">早餐</view>
       <view class="type-option {{mealType === 'lunch' ? 'selected' : ''}}" bindtap="setMealType" data-type="lunch">午餐</view>
@@ -10,23 +10,23 @@
   </view>
 
   <view class="card">
-    <text class="label">描述你吃了什么</text>
-    <textarea class="food-input" placeholder="例：两个鸡腿加一碗米饭，一杯全脂牛奶" value="{{rawText}}" bindinput="onTextInput" maxlength="500" auto-height />
-    <view class="input-hint">尽量描述份量，AI 估算会更准确</view>
+    <text class="label">说说你今天吃了啥 🍽️</text>
+    <textarea class="food-input" placeholder="例：两个大鸡腿➕一碗米饭➕一杯全脂牛奶" value="{{rawText}}" bindinput="onTextInput" maxlength="500" auto-height />
+    <view class="input-hint">💡 描述得越细，AI 猜得越准哦</view>
   </view>
 
   <view class="card" wx:if="{{!showResult}}">
     <button class="btn-primary" bindtap="parseFood" disabled="{{!canParse || parsing}}">
-      <text wx:if="{{!parsing}}">AI 识别</text>
-      <text wx:if="{{parsing}}">识别中...</text>
+      <text wx:if="{{!parsing}}">🤖 让 AI 猜猜热量</text>
+      <text wx:if="{{parsing}}">🤖 AI 正在努力...</text>
     </button>
     <view class="disclaimer">AI 估算热量，仅供参考</view>
   </view>
 
   <view class="card result-card" wx:if="{{showResult}}">
     <view class="result-header">
-      <text class="result-title">识别结果</text>
-      <text class="result-hint">可手动编辑修正</text>
+      <text class="result-title">🎯 AI 猜的</text>
+      <text class="result-hint">✏️ 不对可以改</text>
     </view>
 
     <view wx:for="{{parsedItems}}" wx:for-item="item" wx:for-index="idx" wx:key="idx" class="parsed-item">
@@ -46,23 +46,42 @@
           <text>g</text>
         </view>
       </view>
-      <view class="item-delete" bindtap="removeItem" data-index="{{idx}}">删除</view>
+      <view class="item-delete" bindtap="removeItem" data-index="{{idx}}">✕ 不要这个</view>
     </view>
 
-    <view class="add-item" bindtap="addItem">+ 添加一项</view>
+    <view class="add-item" bindtap="addItem">➕ 再加一道菜</view>
 
     <view class="result-total">
       <text>合计: {{totalCalorie}} kcal | 蛋白质 {{totalProtein}}g</text>
     </view>
 
     <view class="result-actions">
-      <button class="btn-secondary" bindtap="resetForm">重新输入</button>
+      <button class="btn-secondary" bindtap="resetForm">🔄 重新来</button>
       <button class="btn-primary" bindtap="saveFoodLog" disabled="{{saving}}">
-        <text wx:if="{{!saving}}">保存记录</text>
-        <text wx:if="{{saving}}">保存中...</text>
+        <text wx:if="{{!saving}}">✅ 记下来！</text>
+        <text wx:if="{{saving}}">📝 正在记...</text>
       </button>
     </view>
   </view>
 
   <view class="disclaimer" wx:if="{{showResult}}">本内容由AI生成，仅供参考，不构成医疗建议</view>
+
+  <view class="celebrate-overlay" wx:if="{{showCelebration}}" catchtap="dismissCelebration">
+    <view class="celebrate-modal">
+      <text class="celebrate-emoji">{{celebEmoji}}</text>
+      <text class="celebrate-title">又搞定一餐！🎉</text>
+      <text class="celebrate-sub">{{celebText}}<text>\n💪🔥 做大只的路上有你有我</text></text>
+      <button class="celebrate-btn" bindtap="dismissCelebration">继续加油 🚀</button>
+      <view class="confetti-container">
+        <view class="confetti-piece" style="left:10%;top:-5%;background:#FF7A2F;animation-delay:0s"></view>
+        <view class="confetti-piece" style="left:30%;top:-5%;background:#FF6B6B;animation-delay:0.1s"></view>
+        <view class="confetti-piece" style="left:50%;top:-5%;background:#2ECC71;animation-delay:0.2s"></view>
+        <view class="confetti-piece" style="left:70%;top:-5%;background:#FFB347;animation-delay:0.15s"></view>
+        <view class="confetti-piece" style="left:90%;top:-5%;background:#FF6B6B;animation-delay:0.25s"></view>
+        <view class="confetti-piece" style="left:20%;top:-5%;background:#2ECC71;animation-delay:0.3s"></view>
+        <view class="confetti-piece" style="left:60%;top:-5%;background:#FF7A2F;animation-delay:0.35s"></view>
+        <view class="confetti-piece" style="left:80%;top:-5%;background:#FFB347;animation-delay:0.05s"></view>
+      </view>
+    </view>
+  </view>
 </view>

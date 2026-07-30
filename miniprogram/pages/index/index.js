@@ -2,9 +2,12 @@ const app = getApp()
 const util = require('../../utils/util')
 const logger = require('../../utils/logger')
 
+const CELEBRATION_THRESHOLD = 0.8
+
 Page({
   data: {
     dateText: '',
+    greeting: '',
     dailySummary: {
       total_calorie: 0,
       total_protein_g: 0
@@ -13,7 +16,10 @@ Page({
       calorie: 2500,
       protein: 100
     },
-    meals: []
+    meals: [],
+    showCelebration: false,
+    caloriePercent: 0,
+    proteinPercent: 0
   },
 
   onShow() {
@@ -21,10 +27,19 @@ Page({
   },
 
   async loadData() {
-    const today = util.formatDate(new Date())
-    const todayText = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })
+    const now = new Date()
+    const today = util.formatDate(now)
+    const hour = now.getHours()
+    const dateText = now.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' })
 
-    this.setData({ dateText: todayText })
+    let greeting
+    if (hour < 9) greeting = '早起的鸟儿有虫吃，早起的人儿要加餐！🌅'
+    else if (hour < 12) greeting = '离午饭还有一会儿，先垫垫肚子？🍙'
+    else if (hour < 14) greeting = '吃饱了吗？没吃饱再来一轮！🍖'
+    else if (hour < 18) greeting = '下午茶时间到，搞点零食不过分吧？🧋'
+    else greeting = '夜宵时间！做大只的黄金时刻！🌙'
+
+    this.setData({ dateText, greeting })
 
     if (app.globalData.dailyTargets) {
       this.setData({ targets: app.globalData.dailyTargets })
@@ -48,6 +63,7 @@ Page({
               const itemList = log.parsed_items || [{ name: log.raw_text, calorie: log.total_calorie, protein_g: log.total_protein_g }]
               meals.push({
                 mealLabel: util.getMealTypeLabel(type),
+                mealType: type,
                 time: log.created_at ? new Date(log.created_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : '',
                 items: itemList.map(item => ({
                   name: item.name,
@@ -61,6 +77,9 @@ Page({
           }
         })
 
+        const caloriePercent = data.target_calorie > 0 ? Math.min(data.total_calorie / data.target_calorie, 1) : 0
+        const proteinPercent = data.target_protein > 0 ? Math.min(data.total_protein_g / data.target_protein, 1) : 0
+
         this.setData({
           dailySummary: {
             total_calorie: data.total_calorie,
@@ -70,10 +89,17 @@ Page({
             calorie: data.target_calorie || this.data.targets.calorie,
             protein: data.target_protein || this.data.targets.protein
           },
-          meals
+          meals,
+          caloriePercent,
+          proteinPercent
         })
 
         this.drawRings()
+
+        if (caloriePercent >= CELEBRATION_THRESHOLD && meals.length > 0) {
+          this.setData({ showCelebration: true })
+          setTimeout(() => this.setData({ showCelebration: false }), 3000)
+        }
       }
     } catch (err) {
       logger.error('loadData', err)
@@ -84,11 +110,11 @@ Page({
     const targets = this.data.targets
     const current = this.data.dailySummary
 
-    this.drawSingleRing('calorieCanvas', current.total_calorie, targets.calorie, '#FF8C42')
-    this.drawSingleRing('proteinCanvas', current.total_protein_g, targets.protein, '#4CAF50')
+    this.drawSingleRing('calorieCanvas', current.total_calorie, targets.calorie)
+    this.drawSingleRing('proteinCanvas', current.total_protein_g, targets.protein)
   },
 
-  drawSingleRing(canvasId, current, target, color) {
+  drawSingleRing(canvasId, current, target) {
     const query = wx.createSelectorQuery()
     query.select('#' + canvasId).fields({ node: true, size: true }).exec((res) => {
       if (!res[0]) return
@@ -101,26 +127,46 @@ Page({
 
       const cx = size / 2
       const cy = size / 2
-      const radius = size / 2 - 20 * dpr
-      const lineWidth = 20 * dpr
+      const radius = size / 2 - 22 * dpr
+      const lineWidth = 24 * dpr
       const progress = target > 0 ? Math.min(current / target, 1) : 0
 
       ctx.clearRect(0, 0, size, size)
 
+      const isCalorie = canvasId === 'calorieCanvas'
+      const trackColor = isCalorie ? '#FFE8D0' : '#D8F5E0'
+      const fillColor = isCalorie ? '#FF7A2F' : '#2ECC71'
+
       ctx.beginPath()
       ctx.arc(cx, cy, radius, -Math.PI / 2, Math.PI * 1.5)
-      ctx.strokeStyle = '#F0E6D6'
+      ctx.strokeStyle = trackColor
       ctx.lineWidth = lineWidth
       ctx.lineCap = 'round'
       ctx.stroke()
 
-      ctx.beginPath()
-      ctx.arc(cx, cy, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress)
-      ctx.strokeStyle = color
-      ctx.lineWidth = lineWidth
-      ctx.lineCap = 'round'
-      ctx.stroke()
+      if (progress > 0) {
+        ctx.beginPath()
+        ctx.arc(cx, cy, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress)
+        ctx.strokeStyle = fillColor
+        ctx.lineWidth = lineWidth
+        ctx.lineCap = 'round'
+        ctx.stroke()
+      }
+
+      if (progress >= 1) {
+        ctx.beginPath()
+        ctx.arc(cx, cy, radius + 8 * dpr, 0, Math.PI * 2)
+        ctx.strokeStyle = isCalorie ? '#FF7A2F' : '#2ECC71'
+        ctx.lineWidth = 4 * dpr
+        ctx.globalAlpha = 0.3
+        ctx.stroke()
+        ctx.globalAlpha = 1
+      }
     })
+  },
+
+  dismissCelebration() {
+    this.setData({ showCelebration: false })
   },
 
   goToLogFood() {

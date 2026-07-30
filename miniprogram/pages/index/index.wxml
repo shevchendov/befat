@@ -1,7 +1,8 @@
 <view class="page-container">
-  <view class="header-card">
-    <view class="date-text">{{dateText}}</view>
-    <view class="greeting">今天也要好好吃饭!</view>
+  <view class="hero-banner">
+    <text class="hero-date">{{dateText}}</text>
+    <text class="hero-greeting">{{greeting}}</text>
+    <view class="hero-badge" wx:if="{{caloriePercent >= 1}}">🎯 今日目标达成！</view>
   </view>
 
   <view class="progress-rings">
@@ -10,7 +11,7 @@
       <view class="ring-label">
         <text class="ring-value">{{dailySummary.total_calorie}}</text>
         <text class="ring-unit">/ {{targets.calorie}}</text>
-        <text class="ring-title">千卡</text>
+        <text class="ring-title">🔥 热量</text>
       </view>
     </view>
     <view class="ring-wrapper">
@@ -18,36 +19,54 @@
       <view class="ring-label">
         <text class="ring-value">{{dailySummary.total_protein_g}}</text>
         <text class="ring-unit">/ {{targets.protein}}g</text>
-        <text class="ring-title">蛋白质</text>
+        <text class="ring-title">💪 蛋白质</text>
       </view>
     </view>
   </view>
 
   <view class="quick-actions">
     <view class="action-btn" bindtap="goToLogFood">
-      <text class="action-icon">+</text>
-      <text>记录一餐</text>
+      <view class="action-icon action-icon-orange">
+        <text>🍽️</text>
+      </view>
+      <text class="action-label">记录一餐</text>
     </view>
     <view class="action-btn" bindtap="goToWeightTrack">
-      <text class="action-icon">⚖️</text>
-      <text>体重打卡</text>
+      <view class="action-icon action-icon-green">
+        <text>⚖️</text>
+      </view>
+      <text class="action-label">称体重</text>
     </view>
     <view class="action-btn" bindtap="goToRecipeList">
-      <text class="action-icon">📖</text>
-      <text>增肥食谱</text>
+      <view class="action-icon action-icon-coral">
+        <text>📖</text>
+      </view>
+      <text class="action-label">增肥食谱</text>
     </view>
   </view>
 
-  <view class="section-title">今日饮食记录</view>
-
-  <view wx:if="{{meals.length === 0}}" class="empty-state">
-    <text>今天还没有记录</text>
-    <text class="empty-hint">点击上方"记录一餐"开始</text>
+  <view class="section-header">
+    <text class="section-title">🍱 今天吃咗啥</text>
+    <text wx:if="{{meals.length > 0}}" class="section-count">{{dailySummary.total_calorie}} / {{targets.calorie}} kcal</text>
   </view>
 
-  <view wx:for="{{meals}}" wx:key="index" class="meal-card">
+  <view wx:if="{{meals.length === 0}}" class="empty-state">
+    <view class="empty-illustration">
+      <text class="empty-emoji">🍽️</text>
+    </view>
+    <text class="empty-title">今天嘴巴还没开工呢！</text>
+    <text class="empty-hint">快去上面点"记录一餐"，喂饱自己 💪</text>
+  </view>
+
+  <view wx:for="{{meals}}" wx:key="index" class="meal-card meal-{{item.mealType}}">
     <view class="meal-header">
-      <text class="meal-type">{{item.mealLabel}}</text>
+      <view class="meal-type-tag">
+        <text wx:if="{{item.mealType === 'breakfast'}}">🌅</text>
+        <text wx:if="{{item.mealType === 'lunch'}}">☀️</text>
+        <text wx:if="{{item.mealType === 'dinner'}}">🌙</text>
+        <text wx:if="{{item.mealType === 'snack'}}">🍿</text>
+        <text> {{item.mealLabel}}</text>
+      </view>
       <text class="meal-time">{{item.time}}</text>
     </view>
     <view class="meal-items">
@@ -57,7 +76,26 @@
       </view>
     </view>
     <view class="meal-total">
-      <text>共 {{item.total_calorie}} kcal | 蛋白质 {{item.total_protein_g}}g</text>
+      <text>小计 {{item.total_calorie}} kcal · 蛋白质 {{item.total_protein_g}}g</text>
+    </view>
+  </view>
+
+  <view class="celebrate-overlay" wx:if="{{showCelebration}}" catchtap="dismissCelebration">
+    <view class="celebrate-modal">
+      <text class="celebrate-emoji">🎉</text>
+      <text class="celebrate-title">吃得不错嘛！</text>
+      <text class="celebrate-sub">进度超过 80%，离做大只又近一步！<text>\n💪🔥</text></text>
+      <button class="celebrate-btn" bindtap="dismissCelebration">继续干饭 🍖</button>
+      <view class="confetti-container">
+        <view class="confetti-piece" style="left:10%;top:-5%;background:#FF7A2F;animation-delay:0s"></view>
+        <view class="confetti-piece" style="left:30%;top:-5%;background:#FF6B6B;animation-delay:0.1s"></view>
+        <view class="confetti-piece" style="left:50%;top:-5%;background:#2ECC71;animation-delay:0.2s"></view>
+        <view class="confetti-piece" style="left:70%;top:-5%;background:#FFB347;animation-delay:0.15s"></view>
+        <view class="confetti-piece" style="left:90%;top:-5%;background:#FF6B6B;animation-delay:0.25s"></view>
+        <view class="confetti-piece" style="left:20%;top:-5%;background:#2ECC71;animation-delay:0.3s"></view>
+        <view class="confetti-piece" style="left:60%;top:-5%;background:#FF7A2F;animation-delay:0.35s"></view>
+        <view class="confetti-piece" style="left:80%;top:-5%;background:#FFB347;animation-delay:0.05s"></view>
+      </view>
     </view>
   </view>
 

@@ -146,7 +146,7 @@ describe('saveFoodLog', () => {
     expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('保留') }))
   })
 
-  test('成功保存后导航返回', async () => {
+  test('成功保存后显示庆祝弹窗', async () => {
     collectionAdd.mockImplementation(({ data }) => {
       return Promise.resolve({ _id: 'new-id' })
     })
@@ -156,7 +156,8 @@ describe('saveFoodLog', () => {
     page.data.totalCalorie = 200
     page.data.totalProtein = 4
     await page.saveFoodLog()
-    expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('成功') }))
+    expect(page.data.showCelebration).toBe(true)
+    expect(page.data.celebText).toBeTruthy()
   })
 
   test('保存失败时 toast', async () => {
