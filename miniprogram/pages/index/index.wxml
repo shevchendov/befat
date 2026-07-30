@@ -93,14 +93,14 @@
       <text class="celebrate-sub">进度超过 80%，离做大只又近一步！<text>\n💪🔥</text></text>
       <button class="celebrate-btn" bindtap="dismissCelebration">继续干饭 🍖</button>
       <view class="confetti-container">
-        <view class="confetti-piece" style="left:10%;top:-5%;background:#FF7A2F;animation-delay:0s"></view>
-        <view class="confetti-piece" style="left:30%;top:-5%;background:#FF6B6B;animation-delay:0.1s"></view>
-        <view class="confetti-piece" style="left:50%;top:-5%;background:#2ECC71;animation-delay:0.2s"></view>
-        <view class="confetti-piece" style="left:70%;top:-5%;background:#FFB347;animation-delay:0.15s"></view>
-        <view class="confetti-piece" style="left:90%;top:-5%;background:#FF6B6B;animation-delay:0.25s"></view>
-        <view class="confetti-piece" style="left:20%;top:-5%;background:#2ECC71;animation-delay:0.3s"></view>
-        <view class="confetti-piece" style="left:60%;top:-5%;background:#FF7A2F;animation-delay:0.35s"></view>
-        <view class="confetti-piece" style="left:80%;top:-5%;background:#FFB347;animation-delay:0.05s"></view>
+        <view class="confetti-piece" style="left:10%;top:-5%;background:#E8471F;animation-delay:0s"></view>
+        <view class="confetti-piece" style="left:30%;top:-5%;background:#FF6B35;animation-delay:0.1s"></view>
+        <view class="confetti-piece" style="left:50%;top:-5%;background:#639922;animation-delay:0.2s"></view>
+        <view class="confetti-piece" style="left:70%;top:-5%;background:#FFD23F;animation-delay:0.15s"></view>
+        <view class="confetti-piece" style="left:90%;top:-5%;background:#FF6B35;animation-delay:0.25s"></view>
+        <view class="confetti-piece" style="left:20%;top:-5%;background:#639922;animation-delay:0.3s"></view>
+        <view class="confetti-piece" style="left:60%;top:-5%;background:#E8471F;animation-delay:0.35s"></view>
+        <view class="confetti-piece" style="left:80%;top:-5%;background:#FFD23F;animation-delay:0.05s"></view>
       </view>
     </view>
   </view>

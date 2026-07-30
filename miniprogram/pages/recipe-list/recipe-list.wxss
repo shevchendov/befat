@@ -16,16 +16,16 @@
   padding: 12rpx 28rpx;
   margin-right: 16rpx;
   border-radius: 30rpx;
-  background: #F8F4EC;
+  background: var(--card-bg-light);
   font-size: 26rpx;
-  color: var(--text-secondary);
-  border: 2rpx solid var(--border);
+  color: var(--color-text-secondary);
+  border: 2rpx solid var(--border-divider);
 }
 
 .tag.active {
-  background: var(--primary);
+  background: var(--color-primary);
   color: #fff;
-  border-color: var(--primary);
+  border-color: var(--color-primary);
 }
 
 .recipe-grid {
@@ -33,15 +33,17 @@
 }
 
 .recipe-card {
-  background: var(--card-bg);
-  border-radius: 20rpx;
+  background: var(--card-bg-warm);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: 28rpx;
   margin-bottom: 16rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.06);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.15s;
 }
 
 .recipe-card:active {
-  opacity: 0.85;
+  transform: scale(0.97);
 }
 
 .recipe-header {
@@ -96,9 +98,9 @@
 .mini-tag {
   padding: 6rpx 16rpx;
   border-radius: 20rpx;
-  background: #FFF5EB;
+  background: var(--card-bg-light);
   font-size: 22rpx;
-  color: var(--primary-light);
+  color: var(--color-text-secondary);
 }
 
 .empty-state {

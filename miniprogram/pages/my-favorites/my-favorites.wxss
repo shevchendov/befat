@@ -7,15 +7,17 @@
 }
 
 .recipe-card {
-  background: var(--card-bg);
-  border-radius: 20rpx;
+  background: var(--card-bg-warm);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: 28rpx;
   margin-bottom: 16rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.06);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.15s;
 }
 
 .recipe-card:active {
-  opacity: 0.85;
+  transform: scale(0.97);
 }
 
 .recipe-header {
@@ -68,9 +70,9 @@
 .mini-tag {
   padding: 6rpx 16rpx;
   border-radius: 20rpx;
-  background: #FFF5EB;
+  background: var(--card-bg-light);
   font-size: 22rpx;
-  color: var(--primary-light);
+  color: var(--color-text-secondary);
 }
 
 .empty-state {

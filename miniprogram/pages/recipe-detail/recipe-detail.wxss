@@ -31,6 +31,7 @@
   display: flex;
   gap: 40rpx;
   margin-bottom: 20rpx;
+  transform: rotate(var(--tilt-subtle));
 }
 
 .detail-stat {
@@ -59,9 +60,9 @@
 .mini-tag {
   padding: 6rpx 20rpx;
   border-radius: 20rpx;
-  background: #FFF5EB;
+  background: var(--card-bg-light);
   font-size: 24rpx;
-  color: var(--primary-light);
+  color: var(--color-text-secondary);
 }
 
 .section-title-inner {
