@@ -1,5 +1,16 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-07-30] 720d472
+
+**fix: onboarding step.active 改为 solid primary 色**
+
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `miniprogram/pages/onboarding/onboarding.wxss`
+
 ## [2026-07-30] a98cffa
 
 **fix: theme.wxss CSS 变量包裹在 page {} 选择器中**
