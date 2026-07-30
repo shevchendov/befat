@@ -1,5 +1,49 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-07-30] f24c360
+
+**chore: remove temp commit msg file**
+
+**涉及文件:**
+- `.commit_msg.tmp`
+
+## [2026-07-30] 2f732ce
+
+**﻿feat: 实现今日战绩分享卡片功能**
+
+- 新建 getShareCard 云函数聚合今日热量/蛋白质 vs 目标、本周体重变化、距目标差距、连续打卡天数
+- 新建 getWxacode 云函数生成小程序码并上传云存储
+- 更新 shared mock 支持 gte/lte 操作符和 wxacode.getUnlimited
+- 更新 sync-common.js 加入两个新目标
+- 新增 share-card 页面用 Canvas 2D 绘制贴纸风卡片
+- 支持保存到相册（含权限拒绝引导去设置）
+- 首页添加生成战绩入口按钮
+- 为两个新云函数编写完整测试（连续打卡边界）
+DEPLOY: cloudfunctions/getShareCard,cloudfunctions/getWxacode
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `.commit_msg.tmp`
+- `__mocks__/wx-server-sdk.js`
+- `cloudfunctions/getShareCard/common/logger.js`
+- `cloudfunctions/getShareCard/index.js`
+- `cloudfunctions/getShareCard/package.json`
+- `cloudfunctions/getWxacode/common/logger.js`
+- `cloudfunctions/getWxacode/config.json`
+- `cloudfunctions/getWxacode/index.js`
+- `cloudfunctions/getWxacode/package.json`
+- `cloudfunctions/sync-common.js`
+- `miniprogram/app.json`
+- `miniprogram/pages/index/index.js`
+- `miniprogram/pages/index/index.wxml`
+- `miniprogram/pages/share-card/share-card.js`
+- `miniprogram/pages/share-card/share-card.json`
+- `miniprogram/pages/share-card/share-card.wxml`
+- `miniprogram/pages/share-card/share-card.wxss`
+- `tests/getShareCard.test.js`
+- `tests/getWxacode.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getShareCard,cloudfunctions/getWxacode
+
 ## [2026-07-30] 6d0fb56
 
 **feat: 新增菜单管理云函数和个人收藏功能**

@@ -44,19 +44,29 @@ Page({
         logger.warn('qrGenFail', e.message)
       }
 
-      this.drawCard()
+      this.setData({ loading: false })
+      wx.nextTick(() => {
+        this.drawCard(0)
+      })
     } catch (err) {
       logger.error('shareCardLoad', err)
       this.setData({ error: err.message, loading: false })
     }
   },
 
-  drawCard() {
+  drawCard(retry) {
     const query = wx.createSelectorQuery()
-    query.select('#shareCanvas').node((res) => {
-      const canvas = res.node
-      if (!canvas) { this.setData({ error: 'Canvas 初始化失败', loading: false }); return }
+    query.select('#shareCanvas').fields({ node: true, size: true }).exec((res) => {
+      if (!res || !res[0] || !res[0].node) {
+        if ((retry || 0) < 3) {
+          wx.nextTick(() => this.drawCard((retry || 0) + 1))
+        } else {
+          this.setData({ error: 'Canvas 初始化失败', loading: false })
+        }
+        return
+      }
 
+      const canvas = res[0].node
       const dpr = wx.getSystemInfoSync().pixelRatio
       canvas.width = W * dpr
       canvas.height = H * dpr
@@ -74,8 +84,7 @@ Page({
       this.drawFooter(ctx)
 
       this.canvas = canvas
-      this.setData({ loading: false })
-    }).exec()
+    })
   },
 
   drawBackground(ctx) {
