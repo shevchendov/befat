@@ -4,7 +4,8 @@
   "scripts": {
     "test": "jest",
     "test:verbose": "jest --verbose",
-    "sync-common": "node cloudfunctions/sync-common.js"
+    "sync-common": "node cloudfunctions/sync-common.js",
+    "check-deploy": "node scripts/check-deploy-status.js"
   },
   "devDependencies": {
     "axios": "^1.18.1",

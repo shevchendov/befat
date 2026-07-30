@@ -1,5 +1,40 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-07-30] 6902efb
+
+**﻿docs: 更新 commit 规范模板并新增配套自动化工具**
+
+- AGENTS.md: 替换旧 commit 规范为强制模板（DEPLOY/VERIFIED/DATA IMPACT 字段）
+- .githooks/post-commit: 新增 DEPLOY 字段解析，DEPLOY 非 none 时自动追加 ⚠️ 待确认标记到 CHANGELOG
+- scripts/check-deploy-status.js: 新建脚本，扫描 CHANGELOG 中所有 ⚠️ 待确认标记并汇总输出
+- package.json: 新增 check-deploy script 命令
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `.githooks/post-commit`
+- `AGENTS.md`
+- `CHANGELOG.md`
+- `package.json`
+- `scripts/check-deploy-status.js`
+
+## [2026-07-30] bf485a7
+
+**﻿docs: 更新 commit 规范模板并新增配套自动化工具**
+
+- AGENTS.md: 替换旧 commit 规范为强制模板（DEPLOY/VERIFIED/DATA IMPACT 字段）
+- .githooks/post-commit: 新增 DEPLOY 字段解析，DEPLOY 非 none 时自动追加 ⚠️ 待确认标记到 CHANGELOG
+- scripts/check-deploy-status.js: 新建脚本，扫描 CHANGELOG 中所有 ⚠️ 待确认标记并汇总输出
+- package.json: 新增 check-deploy script 命令
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `.githooks/post-commit`
+- `AGENTS.md`
+- `package.json`
+- `scripts/check-deploy-status.js`
+
 每条提交自动记录于此（通过 `.githooks/post-commit`）。
 
 ## [2026-07-30] e57936c

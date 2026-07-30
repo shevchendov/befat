@@ -1,5 +1,5 @@
 #!/bin/sh
-# post-commit hook — auto-append last commit to CHANGELOG.md (with sensitive info masking)
+# post-commit hook — auto-append last commit to CHANGELOG.md (with sensitive info masking & deploy reminders)
 HASH=$(git log -1 --format="%h")
 DATE=$(git log -1 --format="%ad" --date=short)
 SUBJECT=$(git log -1 --format="%s")
@@ -8,7 +8,6 @@ FILES=$(git diff-tree --no-commit-id -r --name-only HEAD | sed 's/^/- `/' | sed 
 CHANGELOG="CHANGELOG.md"
 
 # Mask sensitive patterns in commit message
-# Patterns: API keys, tokens, passwords, secrets, connection strings, private keys
 MASKED=0
 mask_value() {
   MASKED=1
@@ -24,6 +23,16 @@ SUBJECT=$(mask_value "$SUBJECT")
 BODY=$(mask_value "$BODY")
 FILES=$(mask_value "$FILES")
 
+# Extract DEPLOY line from body: non-none → add ⚠️ marker
+DEPLOY_MARKER=""
+DEPLOY_LINE=$(printf "%s" "$BODY" | grep -i "^DEPLOY:" | sed 's/^[Dd][Ee][Pp][Ll][Oo][Yy]:[[:space:]]*//')
+if [ -n "$DEPLOY_LINE" ]; then
+  DEPLOY_NORMALIZED=$(printf "%s" "$DEPLOY_LINE" | tr '[:upper:]' '[:lower:]' | sed 's/[[:space:]]//g')
+  if [ "$DEPLOY_NORMALIZED" != "none" ]; then
+    DEPLOY_MARKER=$(printf "\n⚠️ 待确认：以下云函数是否已重新部署 → %s" "$DEPLOY_LINE")
+  fi
+fi
+
 # Build entry from subject + body
 BODY_TRIMMED=$(printf "%s" "$BODY" | sed '/^[[:space:]]*$/d')
 ENTRY="## [$DATE] $HASH\n\n**$SUBJECT**"
@@ -32,7 +41,7 @@ if [ -n "$BODY_TRIMMED" ]; then
   ENTRY="$ENTRY\n\n$BODY_TRIMMED"
 fi
 
-ENTRY="$ENTRY\n\n**涉及文件:**\n$FILES"
+ENTRY="$ENTRY\n\n**涉及文件:**\n$FILES$DEPLOY_MARKER"
 
 # Warn if anything was masked
 if [ "$MASKED" -eq 1 ]; then
