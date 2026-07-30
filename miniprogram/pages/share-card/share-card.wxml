@@ -14,8 +14,8 @@
     <canvas type="2d" id="shareCanvas" class="share-canvas"></canvas>
 
     <view class="actions">
-      <button class="action-btn save-btn" bindtap="saveToAlbum">保存到相册</button>
-      <button class="action-btn back-btn" bindtap="goBack">返回首页</button>
+      <view class="action-btn save-btn" bindtap="saveToAlbum" hover-class="btn-hover">保存到相册</view>
+      <view class="action-btn back-btn" bindtap="goBack" hover-class="btn-hover">返回首页</view>
     </view>
   </view>
 </view>

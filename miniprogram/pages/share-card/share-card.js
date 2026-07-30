@@ -1,5 +1,19 @@
 const logger = require('../../utils/logger')
 
+function rndRect(ctx, x, y, w, h, r) {
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.lineTo(x + w - r, y)
+  ctx.arcTo(x + w, y, x + w, y + r, r)
+  ctx.lineTo(x + w, y + h - r)
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r)
+  ctx.lineTo(x + r, y + h)
+  ctx.arcTo(x, y + h, x, y + h - r, r)
+  ctx.lineTo(x, y + r)
+  ctx.arcTo(x, y, x + r, y, r)
+  ctx.closePath()
+}
+
 const QUOTES = [
   '啧啧啧，干饭圈的狠人就是你',
   '别停，再吃一顿就更狠了',
@@ -32,6 +46,7 @@ Page({
       const cardRes = await wx.cloud.callFunction({ name: 'getShareCard' })
       if (cardRes.result.code !== 0) throw new Error(cardRes.result.message)
       this.cardData = cardRes.result.data
+      logger.info('shareCard', 'data loaded', this.cardData)
 
       this.qrTempPath = null
       try {
@@ -73,17 +88,17 @@ Page({
       const ctx = canvas.getContext('2d')
       ctx.scale(dpr, dpr)
 
-      this.drawBackground(ctx)
-      this.drawDecorations(ctx)
-      this.drawBrand(ctx)
-      this.drawBadge(ctx)
-      this.drawRings(ctx)
-      this.drawWeightCard(ctx)
-      this.drawQuoteCard(ctx)
-      this.drawQR(ctx, canvas)
-      this.drawFooter(ctx)
+      try { this.drawBackground(ctx) } catch (e) { logger.error('drawBg', e) }
+      try { this.drawDecorations(ctx) } catch (e) { logger.error('drawDeco', e) }
+      try { this.drawBrand(ctx) } catch (e) { logger.error('drawBrand', e) }
+      try { this.drawBadge(ctx) } catch (e) { logger.error('drawBadge', e) }
+      try { this.drawRings(ctx) } catch (e) { logger.error('drawRings', e) }
+      try { this.drawWeightCard(ctx) } catch (e) { logger.error('drawWeight', e) }
+      try { this.drawQuoteCard(ctx) } catch (e) { logger.error('drawQuote', e) }
+      try { this.drawFooter(ctx) } catch (e) { logger.error('drawFooter', e) }
 
       this.canvas = canvas
+      try { this.drawQR(ctx, canvas) } catch (e) { logger.error('drawQR', e) }
     })
   },
 
@@ -103,7 +118,7 @@ Page({
   },
 
   drawDecorations(ctx) {
-    const rays = [
+    var rays = [
       { x: 80, y: 80, a: -0.8, l: 60 },
       { x: 80, y: 80, a: 0.3, l: 50 },
       { x: 80, y: 80, a: 1.2, l: 40 },
@@ -133,6 +148,8 @@ Page({
     ctx.rotate(-0.05)
 
     ctx.font = 'bold 42px sans-serif'
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'alphabetic'
     ctx.fillStyle = '#FFD23F'
     ctx.lineWidth = 4
     ctx.strokeStyle = '#1A1006'
@@ -160,26 +177,27 @@ Page({
     ctx.fillStyle = '#FFD23F'
     ctx.lineWidth = 4
     ctx.strokeStyle = '#1A1006'
-    ctx.beginPath()
-    ctx.roundRect(0, 0, 150, 56, 12)
+    rndRect(ctx, 0, 0, 150, 56, 12)
     ctx.fill()
     ctx.stroke()
 
     ctx.font = 'bold 24px sans-serif'
     ctx.fillStyle = '#1A1006'
     ctx.textAlign = 'center'
-    ctx.fillText(text, 75, 38)
+    ctx.textBaseline = 'middle'
+    ctx.fillText(text, 75, 28)
 
     ctx.restore()
   },
 
   drawRings(ctx) {
     var d = this.cardData
+    logger.info('drawRings', 'data', d)
     var calPct = d.target_calorie > 0 ? d.total_calorie / d.target_calorie : 0
     var proPct = d.target_protein > 0 ? d.total_protein_g / d.target_protein : 0
 
-    this.drawOneRing(ctx, 172, 300, 80, Math.min(calPct, 1), '#FFD23F', Math.round(d.total_calorie), String(d.target_calorie), '热量', 'kcal')
-    this.drawOneRing(ctx, 518, 300, 80, Math.min(proPct, 1), '#FF6B35', d.total_protein_g, String(d.target_protein) + 'g', '蛋白质', 'g')
+    this.drawOneRing(ctx, 172, 300, 76, Math.min(calPct, 1), '#FFD23F', Math.round(d.total_calorie), String(d.target_calorie), '热量', 'kcal')
+    this.drawOneRing(ctx, 518, 300, 76, Math.min(proPct, 1), '#FF6B35', d.total_protein_g, String(d.target_protein) + 'g', '蛋白质', 'g')
   },
 
   drawOneRing(ctx, cx, cy, radius, pct, color, value, targetText, label, unit) {
@@ -187,7 +205,7 @@ Page({
 
     ctx.beginPath()
     ctx.arc(cx, cy, radius, 0, Math.PI * 2)
-    ctx.lineWidth = 14
+    ctx.lineWidth = 12
     ctx.strokeStyle = '#1A1006'
     ctx.stroke()
 
@@ -195,24 +213,24 @@ Page({
       ctx.beginPath()
       ctx.arc(cx, cy, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * pct)
       ctx.strokeStyle = color
-      ctx.lineWidth = 14
+      ctx.lineWidth = 12
       ctx.lineCap = 'round'
       ctx.stroke()
     }
 
     ctx.fillStyle = '#FFF8E7'
-    ctx.font = 'bold 34px sans-serif'
+    ctx.font = 'bold 32px sans-serif'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillText(String(value), cx, cy - 10)
+    ctx.fillText(String(value), cx, cy - 8)
 
-    ctx.font = '16px sans-serif'
+    ctx.font = '15px sans-serif'
     ctx.fillStyle = '#FFD23F'
-    ctx.fillText('/ ' + targetText, cx, cy + 22)
+    ctx.fillText('/ ' + targetText, cx, cy + 20)
 
-    ctx.font = '18px sans-serif'
+    ctx.font = '17px sans-serif'
     ctx.fillStyle = '#FFF8E7'
-    ctx.fillText(label, cx, cy + 60)
+    ctx.fillText(label, cx, cy + 56)
 
     ctx.restore()
   },
@@ -227,11 +245,11 @@ Page({
     ctx.fillStyle = '#1A1006'
     ctx.lineWidth = 4
     ctx.strokeStyle = '#1A1006'
-    ctx.beginPath()
-    ctx.roundRect(0, 0, 590, 110, 16)
+    rndRect(ctx, 0, 0, 590, 110, 16)
     ctx.fill()
 
     ctx.font = '20px sans-serif'
+    ctx.textBaseline = 'middle'
     ctx.fillStyle = '#FFD23F'
     ctx.textAlign = 'left'
     ctx.fillText('本周体重', 30, 36)
@@ -272,8 +290,7 @@ Page({
     ctx.fillStyle = '#FFD23F'
     ctx.lineWidth = 4
     ctx.strokeStyle = '#1A1006'
-    ctx.beginPath()
-    ctx.roundRect(0, 0, 590, 100, 16)
+    rndRect(ctx, 0, 0, 590, 100, 16)
     ctx.fill()
     ctx.stroke()
 
@@ -281,9 +298,9 @@ Page({
     ctx.fillStyle = '#1A1006'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillText('今日战绩', 295, 35)
+    ctx.fillText('今日战绩', 295, 34)
     ctx.font = '20px sans-serif'
-    ctx.fillText('"' + quote + '"', 295, 68)
+    ctx.fillText('"' + quote + '"', 295, 66)
 
     ctx.restore()
   },
@@ -300,8 +317,7 @@ Page({
 
       ctx.lineWidth = 4
       ctx.strokeStyle = '#1A1006'
-      ctx.beginPath()
-      ctx.roundRect(-4, -4, 100, 100, 12)
+      rndRect(ctx, -4, -4, 100, 100, 12)
       ctx.fillStyle = '#FFF'
       ctx.fill()
       ctx.stroke()
@@ -309,9 +325,7 @@ Page({
       ctx.drawImage(img, 6, 6, 80, 80)
       ctx.restore()
     }
-    img.onerror = function () {
-      logger.warn('qrLoadFail')
-    }
+    img.onerror = function () { logger.warn('qrLoadFail') }
     img.src = this.qrTempPath
   },
 
@@ -319,7 +333,9 @@ Page({
     var today = new Date()
     var dateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0')
 
+    ctx.save()
     ctx.font = '16px sans-serif'
+    ctx.textBaseline = 'middle'
     ctx.fillStyle = '#FFF8E7'
     ctx.textAlign = 'right'
     ctx.fillText(dateStr, W - 50, 770)
@@ -328,6 +344,7 @@ Page({
     ctx.fillStyle = 'rgba(255,248,231,0.5)'
     ctx.textAlign = 'center'
     ctx.fillText('AI生成，仅供参考', W / 2, 810)
+    ctx.restore()
   },
 
   saveToAlbum() {

@@ -1,5 +1,40 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-07-30] 42c9141
+
+**﻿fix: 达标庆祝弹窗一天只弹一次**
+
+- 使用 wx.setStorageSync/wx.getStorageSync 以日期为 key 记录弹窗状态
+- onShow 中先检查 celebrate_shown_YYYY-MM-DD，已存在则跳过
+- 更新测试 setup 增加 storage mock 和重置逻辑
+- 新增 index 首页测试：5 个用例覆盖达标弹、未达标、无餐、同天重复、跨天重置
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `miniprogram/pages/index/index.js`
+- `tests/frontend/index.test.js`
+- `tests/frontend/setup.js`
+
+## [2026-07-30] 4945a21
+
+**﻿fix: 达标庆祝弹窗一天只弹一次**
+
+- 使用 wx.setStorageSync/wx.getStorageSync 以日期为 key 记录弹窗状态
+- onShow 中先检查 celebrate_shown_YYYY-MM-DD，已存在则跳过
+- 更新测试 setup 增加 storage mock 和重置逻辑
+- 新增 index 首页测试：5 个用例覆盖达标弹、未达标、无餐、同天重复、跨天重置
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `.commit_msg.tmp`
+- `CHANGELOG.md`
+- `miniprogram/pages/index/index.js`
+- `tests/frontend/index.test.js`
+- `tests/frontend/setup.js`
+
 ## [2026-07-30] 1b46585
 
 **﻿fix: 修复分享卡片页面 Canvas 节点查询时序导致的崩溃**
