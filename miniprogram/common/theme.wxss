@@ -1,0 +1,38 @@
+/* ========================================
+   统一视觉规范 - design tokens & mixins
+   参考：share-card 页面确认视觉风格
+   ======================================== */
+
+/* ----- 主色系 ----- */
+--color-primary: #E8471F;
+--color-primary-dark: #D43D1A;
+--color-primary-bg: #FFF8E7;
+
+/* ----- 卡片/背景色 ----- */
+--card-bg-warm: #FFF8F0;
+--card-bg-light: #FFF3E0;
+--card-bg-white: #FFF;
+
+/* ----- 强调色 ----- */
+--color-accent-yellow: #FFD23F;
+--color-accent-orange: #FF6B35;
+--color-accent-green: #639922;
+
+/* ----- 中性色 ----- */
+--color-text-primary: #1A1006;
+--color-text-secondary: #666;
+--color-text-light: #999;
+--color-border: #1A1006;
+
+/* ----- 描边 & 圆角 ----- */
+--border-width: 4rpx;
+--radius-sm: 16rpx;
+--radius-md: 24rpx;
+--radius-lg: 40rpx;
+
+/* ----- 阴影 ----- */
+--shadow-card: 0 4rpx 20rpx rgba(0,0,0,0.08);
+--shadow-strong: 0 8rpx 32rpx rgba(0,0,0,0.15);
+
+/* ----- 倾斜角度（装饰用，非高强度页面不加） ----- */
+--tilt-subtle: -2deg;

@@ -2,8 +2,9 @@
   padding-bottom: 60rpx;
 }
 
+/* ========== 顶部品牌区 ========== */
 .hero-banner {
-  background: var(--primary-gradient);
+  background: var(--color-primary);
   margin: 0;
   padding: 60rpx 40rpx 50rpx;
   position: relative;
@@ -64,6 +65,7 @@
   animation: pop 0.5s ease;
 }
 
+/* ========== 进度环 ========== */
 .progress-rings {
   display: flex;
   justify-content: center;
@@ -77,9 +79,10 @@
   position: relative;
   width: 260rpx;
   height: 260rpx;
-  background: #fff;
+  background: var(--card-bg-white);
+  border: var(--border-width) solid var(--color-border);
   border-radius: 50%;
-  box-shadow: 0 4rpx 24rpx rgba(255, 122, 47, 0.12);
+  box-shadow: var(--shadow-card);
   padding: 12rpx;
 }
 
@@ -100,22 +103,23 @@
 .ring-value {
   font-size: 44rpx;
   font-weight: 800;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
 }
 
 .ring-unit {
   font-size: 22rpx;
-  color: var(--text-light);
+  color: var(--color-text-light);
 }
 
 .ring-title {
   display: block;
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   margin-top: 4rpx;
   font-weight: 600;
 }
 
+/* ========== 快捷操作（贴纸按钮） ========== */
 .quick-actions {
   display: flex;
   justify-content: space-around;
@@ -132,12 +136,14 @@
 .action-icon {
   width: 110rpx;
   height: 110rpx;
+  background: var(--card-bg-white);
+  border: var(--border-width) solid var(--color-border);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 48rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-card);
   transition: transform 0.15s;
 }
 
@@ -145,24 +151,13 @@
   transform: scale(0.9);
 }
 
-.action-icon-orange {
-  background: var(--primary-gradient);
-}
-
-.action-icon-green {
-  background: linear-gradient(135deg, #2ECC71, #A8E6CF);
-}
-
-.action-icon-coral {
-  background: linear-gradient(135deg, #FF6B6B, #FF9B9B);
-}
-
 .action-label {
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
+/* ========== 餐食列表标题 ========== */
 .section-header {
   display: flex;
   justify-content: space-between;
@@ -173,27 +168,29 @@
 .section-title {
   font-size: 32rpx;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
 }
 
 .section-count {
   font-size: 24rpx;
-  color: var(--text-light);
+  color: var(--color-text-light);
 }
 
+/* ========== 空状态 ========== */
 .empty-state {
   text-align: center;
   padding: 60rpx 30rpx;
   margin: 10rpx 30rpx;
-  background: #fff;
-  border-radius: 24rpx;
-  box-shadow: 0 4rpx 20rpx rgba(255, 122, 47, 0.08);
+  background: var(--card-bg-warm);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
 }
 
 .empty-illustration {
   width: 160rpx;
   height: 160rpx;
-  background: var(--card-gradient-1);
+  background: var(--card-bg-light);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -208,22 +205,25 @@
 .empty-title {
   font-size: 32rpx;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   display: block;
   margin-bottom: 12rpx;
 }
 
 .empty-hint {
   font-size: 26rpx;
-  color: var(--text-light);
+  color: var(--color-text-light);
   display: block;
 }
 
+/* ========== 餐食卡片 ========== */
 .meal-card {
-  border-radius: 24rpx;
   margin: 12rpx 30rpx;
   padding: 24rpx 28rpx;
-  box-shadow: 0 4rpx 20rpx rgba(255, 122, 47, 0.08);
+  background: var(--card-bg-warm);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
   animation: slideUp 0.3s ease both;
 }
 
@@ -231,11 +231,6 @@
 .meal-card:nth-child(4) { animation-delay: 0.05s; }
 .meal-card:nth-child(5) { animation-delay: 0.1s; }
 .meal-card:nth-child(6) { animation-delay: 0.15s; }
-
-.meal-breakfast { background: linear-gradient(135deg, #FFF5EB, #FFE8D0); }
-.meal-lunch { background: linear-gradient(135deg, #FFF0F0, #FFE0E0); }
-.meal-dinner { background: linear-gradient(135deg, #F0E6FF, #E0D0F5); }
-.meal-snack { background: linear-gradient(135deg, #FFF8E0, #FFEEB0); }
 
 .meal-header {
   display: flex;
@@ -247,12 +242,12 @@
 .meal-type-tag {
   font-size: 28rpx;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
 }
 
 .meal-time {
   font-size: 24rpx;
-  color: var(--text-light);
+  color: var(--color-text-light);
 }
 
 .meal-items {
@@ -271,18 +266,18 @@
 }
 
 .food-name {
-  color: var(--text-primary);
+  color: var(--color-text-primary);
 }
 
 .food-cal {
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
 .meal-total {
   text-align: right;
   font-size: 24rpx;
-  color: var(--text-light);
+  color: var(--color-text-light);
   margin-top: 10rpx;
   padding-top: 10rpx;
   border-top: 1rpx solid rgba(0,0,0,0.06);

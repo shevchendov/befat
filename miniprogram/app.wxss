@@ -1,23 +1,22 @@
+@import 'common/theme.wxss';
+
 page {
-  --primary: #FF7A2F;
-  --primary-light: #FF9B5E;
-  --primary-bg: #FFF0E0;
-  --primary-gradient: linear-gradient(135deg, #FF7A2F, #FFB07A);
+  --primary: var(--color-primary);
+  --primary-bg: var(--color-primary-bg);
+  --primary-light: var(--card-bg-light);
   --coral: #FF6B6B;
   --coral-light: #FF9B9B;
   --success: #2ECC71;
   --success-light: #A8E6CF;
   --warning: #FFB347;
   --danger: #FF6B6B;
-  --text-primary: #2D2D2D;
-  --text-secondary: #7A7A7A;
-  --text-light: #B0B0B0;
-  --border: #F5E6D0;
-  --card-bg: #FFFFFF;
-  --bg: #FFF5EB;
-  --card-gradient-1: linear-gradient(135deg, #FFF5EB, #FFE8D0);
-  --card-gradient-2: linear-gradient(135deg, #FFF0F0, #FFE0E0);
-  --card-gradient-3: linear-gradient(135deg, #F0FFF4, #D8F5E0);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-light: var(--color-text-light);
+  --border: var(--color-border);
+  --card-bg: var(--card-bg-white);
+  --bg: var(--color-primary-bg);
+  --primary-gradient: linear-gradient(135deg, var(--color-primary), #FF6B35);
 
   background-color: var(--bg);
   color: var(--text-primary);
@@ -32,66 +31,75 @@ view, scroll-view, swiper, text, image, button, input, textarea {
 
 .card {
   background: var(--card-bg);
-  border-radius: 24rpx;
+  border-radius: var(--radius-md);
   padding: 30rpx;
   margin: 16rpx 30rpx;
-  box-shadow: 0 4rpx 20rpx rgba(255, 122, 47, 0.08);
+  box-shadow: var(--shadow-card);
+  border: var(--border-width) solid var(--color-border);
+}
+
+.card-bare {
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  padding: 30rpx;
+  margin: 16rpx 30rpx;
+  box-shadow: var(--shadow-card);
 }
 
 .card-gradient {
-  background: var(--card-gradient-1);
-  border-radius: 24rpx;
+  background: var(--card-bg-light);
+  border-radius: var(--radius-md);
   padding: 30rpx;
   margin: 16rpx 30rpx;
-  box-shadow: 0 4rpx 20rpx rgba(255, 122, 47, 0.1);
+  box-shadow: var(--shadow-card);
+  border: var(--border-width) solid var(--color-border);
 }
 
 .card-coral {
-  background: var(--card-gradient-2);
+  background: var(--card-bg-warm);
 }
 
 .card-green {
-  background: var(--card-gradient-3);
+  background: var(--card-bg-warm);
 }
 
 .btn-primary {
-  background: var(--primary-gradient);
-  color: #fff;
-  border-radius: 50rpx;
+  background: var(--color-primary);
+  color: var(--card-bg-white);
+  border-radius: var(--radius-lg);
   padding: 24rpx 0;
   font-size: 32rpx;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
-  border: none;
+  border: var(--border-width) solid var(--color-border);
   width: 100%;
-  box-shadow: 0 4rpx 16rpx rgba(255, 122, 47, 0.3);
   transition: transform 0.15s;
 }
 
 .btn-primary:active {
-  opacity: 0.9;
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
 .btn-primary[disabled] {
   opacity: 0.5;
-  box-shadow: none;
+  border-color: var(--color-text-light);
 }
 
 .btn-secondary {
-  background: var(--card-bg);
-  color: var(--primary);
-  border-radius: 50rpx;
+  background: var(--card-bg-white);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-lg);
   padding: 24rpx 0;
   font-size: 32rpx;
-  font-weight: 500;
+  font-weight: 600;
   text-align: center;
-  border: 2rpx solid var(--primary);
+  border: var(--border-width) solid var(--color-border);
   width: 100%;
+  transition: transform 0.15s;
 }
 
 .btn-secondary:active {
-  opacity: 0.7;
+  transform: scale(0.96);
 }
 
 .input-field {
@@ -179,8 +187,9 @@ view, scroll-view, swiper, text, image, button, input, textarea {
 }
 
 .celebrate-modal {
-  background: #fff;
-  border-radius: 32rpx;
+  background: var(--card-bg-white);
+  border-radius: var(--radius-md);
+  border: var(--border-width) solid var(--color-border);
   padding: 60rpx 50rpx 50rpx;
   width: 580rpx;
   text-align: center;
@@ -213,19 +222,18 @@ view, scroll-view, swiper, text, image, button, input, textarea {
 }
 
 .celebrate-btn {
-  background: var(--primary-gradient);
-  color: #fff;
-  border-radius: 50rpx;
+  background: var(--color-primary);
+  color: var(--card-bg-white);
+  border-radius: var(--radius-lg);
   padding: 22rpx 60rpx;
   font-size: 30rpx;
-  font-weight: 600;
-  border: none;
-  box-shadow: 0 4rpx 16rpx rgba(255, 122, 47, 0.3);
+  font-weight: 700;
+  border: var(--border-width) solid var(--color-border);
+  transition: transform 0.15s;
 }
 
 .celebrate-btn:active {
-  opacity: 0.85;
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
 .confetti-container {
