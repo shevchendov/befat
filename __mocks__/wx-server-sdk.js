@@ -1,4 +1,4 @@
-const DB = { users: [], food_logs: [], weight_logs: [], recipes: [] }
+const DB = { users: [], food_logs: [], weight_logs: [], recipes: [], user_favorites: [] }
 let idSeq = 1
 const _serverDate = () => new Date().toISOString()
 
@@ -48,41 +48,62 @@ const cloud = {
   init: jest.fn(),
   DYNAMIC_CURRENT_ENV: 'env-mock',
   database: jest.fn(() => ({
-    collection: jest.fn(name => ({
-      where: jest.fn(query => ({
-        orderBy: buildOrderBy(name, query),
-        get: buildGet(name, query),
-        limit: jest.fn(n => ({
+    collection: jest.fn(name => {
+      const col = {
+        where: jest.fn(query => ({
+          orderBy: buildOrderBy(name, query),
+          get: buildGet(name, query),
+          limit: jest.fn(n => ({
+            get: jest.fn().mockImplementation(() => {
+              const items = filterItems(DB[name], query)
+              return Promise.resolve({ data: items.slice(0, n) })
+            })
+          }))
+        })),
+        doc: jest.fn(id => ({
           get: jest.fn().mockImplementation(() => {
-            const items = filterItems(DB[name], query)
-            return Promise.resolve({ data: items.slice(0, n) })
+            const item = DB[name].find(r => r._id === id)
+            return Promise.resolve({ data: item || null })
+          }),
+          update: jest.fn().mockImplementation(({ data }) => {
+            const idx = DB[name].findIndex(r => r._id === id)
+            if (idx !== -1) Object.assign(DB[name][idx], data)
+            return Promise.resolve({})
+          }),
+          remove: jest.fn().mockImplementation(() => {
+            const idx = DB[name].findIndex(r => r._id === id)
+            if (idx !== -1) DB[name].splice(idx, 1)
+            return Promise.resolve({})
           })
-        }))
-      })),
-      doc: jest.fn(id => ({
-        update: jest.fn().mockImplementation(({ data }) => {
-          const idx = DB[name].findIndex(r => r._id === id)
-          if (idx !== -1) {
-            if (data) Object.assign(DB[name][idx], data)
-            else Object.assign(DB[name][idx], data)
-          }
-          return Promise.resolve({})
+        })),
+        add: jest.fn().mockImplementation(({ data }) => {
+          const openid = cloud.getWXContext().OPENID
+          const doc = { _id: genId(), _openid: openid, ...data }
+          DB[name].push(doc)
+          return Promise.resolve({ _id: doc._id })
         }),
-        remove: jest.fn().mockImplementation(() => {
-          const idx = DB[name].findIndex(r => r._id === id)
-          if (idx !== -1) DB[name].splice(idx, 1)
-          return Promise.resolve({})
+        count: jest.fn().mockResolvedValue({ total: DB[name].length }),
+        orderBy: jest.fn((field, dir) => ({
+          get: jest.fn().mockImplementation(() => {
+            const items = DB[name] || []
+            const sorted = items.slice().sort((a, b) => {
+              const va = a[field] || '', vb = b[field] || ''
+              return dir === 'desc' ? vb.localeCompare(va) : va.localeCompare(vb)
+            })
+            return Promise.resolve({ data: sorted })
+          })
+        })),
+        get: jest.fn().mockImplementation(() => {
+          const items = DB[name] || []
+          return Promise.resolve({ data: items })
         })
-      })),
-      add: jest.fn().mockImplementation(({ data }) => {
-        const openid = cloud.getWXContext().OPENID
-        const doc = { _id: genId(), _openid: openid, ...data }
-        DB[name].push(doc)
-        return Promise.resolve({ _id: doc._id })
-      }),
-      count: jest.fn().mockResolvedValue({ total: DB[name].length })
-    })),
-    serverDate: mockServerDate
+      }
+      return col
+    }),
+    serverDate: mockServerDate,
+    command: {
+      in: (arr) => ({ in: arr })
+    }
   })),
   getWXContext: jest.fn(() => ({
     OPENID: 'test-openid',

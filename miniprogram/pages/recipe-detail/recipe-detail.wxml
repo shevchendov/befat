@@ -1,6 +1,9 @@
 <view class="page-container">
   <view class="card" wx:if="{{recipe}}">
-    <text class="detail-title">{{recipe.title}}</text>
+    <view class="detail-header">
+      <text class="detail-title">{{recipe.title}}</text>
+      <text class="detail-fav {{favorited ? 'fav-active' : ''}}" bindtap="toggleFav">{{favorited ? '♥' : '♡'}}</text>
+    </view>
     <view class="detail-stats">
       <view class="detail-stat">
         <text class="stat-num">{{recipe.calorie}}</text>

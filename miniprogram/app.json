@@ -6,6 +6,7 @@
     "pages/weight-track/weight-track",
     "pages/recipe-list/recipe-list",
     "pages/recipe-detail/recipe-detail",
+    "pages/my-favorites/my-favorites",
     "pages/profile/profile"
   ],
   "window": {

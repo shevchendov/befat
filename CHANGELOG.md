@@ -1,5 +1,51 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-07-30] 6d0fb56
+
+**feat: 新增菜单管理云函数和个人收藏功能**
+
+- 新增 manageRecipe 云函数（管理员 CRUD），OPENID 通过 process.env.ADMIN_OPENID 配置
+- 新增 toggleFavorite 云函数（收藏/取消收藏切换）
+- 新增 getFavorites 云函数（获取用户收藏列表，联表查询 recipes）
+- 新增 my-favorites 收藏页面及 profile 入口
+- recipe-list/detail 添加收藏红心图标，recipe-list 新增"我的收藏"筛选
+- 更新共享 mock 支持 user_favorites、orderBy、command.in
+- sync-common.js 添加 3 个新云函数目标
+DEPLOY: cloudfunctions/manageRecipe, cloudfunctions/toggleFavorite, cloudfunctions/getFavorites
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+DATA IMPACT: 需手动新建 user_favorites 集合，权限仅创建者可读写
+
+**涉及文件:**
+- `__mocks__/wx-server-sdk.js`
+- `cloudfunctions/getFavorites/common/logger.js`
+- `cloudfunctions/getFavorites/index.js`
+- `cloudfunctions/getFavorites/package.json`
+- `cloudfunctions/manageRecipe/common/logger.js`
+- `cloudfunctions/manageRecipe/index.js`
+- `cloudfunctions/manageRecipe/package.json`
+- `cloudfunctions/sync-common.js`
+- `cloudfunctions/toggleFavorite/common/logger.js`
+- `cloudfunctions/toggleFavorite/index.js`
+- `cloudfunctions/toggleFavorite/package.json`
+- `miniprogram/app.json`
+- `miniprogram/pages/my-favorites/my-favorites.js`
+- `miniprogram/pages/my-favorites/my-favorites.json`
+- `miniprogram/pages/my-favorites/my-favorites.wxml`
+- `miniprogram/pages/my-favorites/my-favorites.wxss`
+- `miniprogram/pages/profile/profile.js`
+- `miniprogram/pages/profile/profile.wxml`
+- `miniprogram/pages/recipe-detail/recipe-detail.js`
+- `miniprogram/pages/recipe-detail/recipe-detail.wxml`
+- `miniprogram/pages/recipe-detail/recipe-detail.wxss`
+- `miniprogram/pages/recipe-list/recipe-list.js`
+- `miniprogram/pages/recipe-list/recipe-list.wxml`
+- `miniprogram/pages/recipe-list/recipe-list.wxss`
+- `tests/getFavorites.test.js`
+- `tests/interface/response-schema.test.js`
+- `tests/manageRecipe.test.js`
+- `tests/toggleFavorite.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/manageRecipe, cloudfunctions/toggleFavorite, cloudfunctions/getFavorites
+
 ## [2026-07-30] 6902efb
 
 **﻿docs: 更新 commit 规范模板并新增配套自动化工具**

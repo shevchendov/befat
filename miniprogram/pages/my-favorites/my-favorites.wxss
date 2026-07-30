@@ -2,34 +2,8 @@
   padding-bottom: 60rpx;
 }
 
-.tag-filter {
-  padding: 20rpx 30rpx 10rpx;
-}
-
-.tag-scroll {
-  display: flex;
-  white-space: nowrap;
-}
-
-.tag {
-  display: inline-block;
-  padding: 12rpx 28rpx;
-  margin-right: 16rpx;
-  border-radius: 30rpx;
-  background: #F8F4EC;
-  font-size: 26rpx;
-  color: var(--text-secondary);
-  border: 2rpx solid var(--border);
-}
-
-.tag.active {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
-}
-
 .recipe-grid {
-  padding: 10rpx 30rpx;
+  padding: 20rpx 30rpx;
 }
 
 .recipe-card {
@@ -60,9 +34,7 @@
 
 .fav-icon {
   font-size: 108rpx;
-  color: var(--text-light);
   padding: 12rpx 12rpx 12rpx 24rpx;
-  transition: color 0.2s;
   line-height: 1;
 }
 
@@ -103,7 +75,16 @@
 
 .empty-state {
   text-align: center;
-  padding: 80rpx 30rpx;
+  padding: 120rpx 30rpx;
   color: var(--text-light);
-  font-size: 30rpx;
+}
+
+.empty-state text {
+  display: block;
+}
+
+.empty-hint {
+  font-size: 26rpx;
+  margin-top: 16rpx;
+  color: var(--text-light);
 }

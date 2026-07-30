@@ -3,7 +3,8 @@ const path = require('path')
 
 const TARGETS = [
   'calcTarget', 'parseFoodLog', 'getDailySummary', 'saveWeightLog',
-  'deleteUserData', 'exportUserData', 'checkMealReminder', 'generateRecipeInit'
+  'deleteUserData', 'exportUserData', 'checkMealReminder', 'generateRecipeInit',
+  'manageRecipe', 'toggleFavorite', 'getFavorites'
 ]
 
 const ROOT = path.resolve(__dirname)

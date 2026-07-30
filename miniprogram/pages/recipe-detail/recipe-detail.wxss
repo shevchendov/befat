@@ -2,12 +2,29 @@
   padding-bottom: 60rpx;
 }
 
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24rpx;
+}
+
 .detail-title {
   font-size: 36rpx;
   font-weight: 700;
-  display: block;
-  margin-bottom: 24rpx;
   color: var(--text-primary);
+  flex: 1;
+}
+
+.detail-fav {
+  font-size: 132rpx;
+  color: var(--text-light);
+  padding: 12rpx 12rpx 12rpx 24rpx;
+  line-height: 1;
+}
+
+.detail-fav.fav-active {
+  color: var(--danger);
 }
 
 .detail-stats {
