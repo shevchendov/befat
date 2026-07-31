@@ -1,5 +1,19 @@
 const logger = require('../../utils/logger')
 
+function rndRect(ctx, x, y, w, h, r) {
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.lineTo(x + w - r, y)
+  ctx.arcTo(x + w, y, x + w, y + r, r)
+  ctx.lineTo(x + w, y + h - r)
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r)
+  ctx.lineTo(x + r, y + h)
+  ctx.arcTo(x, y + h, x, y + h - r, r)
+  ctx.lineTo(x, y + r)
+  ctx.arcTo(x, y, x + r, y, r)
+  ctx.closePath()
+}
+
 Page({
   data: {
     goal: null,
@@ -23,7 +37,7 @@ Page({
         }, () => {
           const d = res.result.data
           if (d.trend_data && d.trend_data.length > 0) {
-            wx.nextTick(() => this.drawTrendChart(d.trend_data, d.target_weight))
+            setTimeout(() => this.drawTrendChart(d.trend_data, d.target_weight), 300)
           }
         })
       } else {
@@ -40,28 +54,29 @@ Page({
   drawTrendChart(trendData, targetWeight, retry) {
     const query = wx.createSelectorQuery()
     query.select('#trendChart').fields({ node: true, size: true }).exec((res) => {
-      if (!res || !res[0] || !res[0].node) {
+      const node = res && res[0] && res[0].node
+      const cssW = res && res[0] ? res[0].width : 0
+      const cssH = res && res[0] ? res[0].height : 0
+
+      if (!node || !cssW || !cssH) {
         if ((retry || 0) < 3) {
-          wx.nextTick(() => this.drawTrendChart(trendData, targetWeight, (retry || 0) + 1))
+          setTimeout(() => this.drawTrendChart(trendData, targetWeight, (retry || 0) + 1), 300)
         } else {
           logger.warn('goalDetail', 'canvas init fail')
         }
         return
       }
 
-      const canvas = res[0].node
-      const dpr = wx.getSystemInfoSync().pixelRatio
-      const cssW = res[0].width
-      const cssH = res[0].height
+      const canvas = node
+      const dpr = wx.getWindowInfo().pixelRatio
       canvas.width = cssW * dpr
       canvas.height = cssH * dpr
       const ctx = canvas.getContext('2d')
       ctx.scale(dpr, dpr)
 
+      // 动态 Y 轴范围：数据(含目标值)实际 min/max 外扩 10%
       const data = trendData.slice()
       const target = Number(targetWeight)
-
-      // 动态 Y 轴范围：数据(含目标值)实际 min/max 外扩 10%
       const weights = data.map(d => Number(d.weight_kg))
       let min = Math.min(...weights, target)
       let max = Math.max(...weights, target)
@@ -85,7 +100,7 @@ Page({
 
       ctx.clearRect(0, 0, cssW, cssH)
 
-      // 网格 + Y 轴刻度（取整数值，避免 .3333 这种）
+      // 网格 + Y 轴刻度
       const gridCount = 4
       ctx.font = '20px sans-serif'
       ctx.textAlign = 'right'
@@ -105,7 +120,7 @@ Page({
         ctx.fillText(String(label), padL - 10, gy)
       }
 
-      // 目标线（水平虚线 + 标签）
+      // 目标线：贯穿整个绘图区域宽度（padL 到右边界）
       const targetY = yAt(target)
       ctx.strokeStyle = '#FFD23F'
       ctx.lineWidth = 2
@@ -116,14 +131,23 @@ Page({
       ctx.stroke()
       ctx.setLineDash([])
 
+      // 目标标签：放在虚线右端上方（右上角方向），亮黄底 + 2px 黑描边 + 深棕文字
+      // 目标线贴近图表顶部时改放虚线下方，避免超出画布
+      const labelText = '目标 ' + target
       ctx.font = 'bold 20px sans-serif'
-      ctx.textAlign = 'left'
-      ctx.textBaseline = 'bottom'
+      ctx.textAlign = 'right'
+      const labelX = padL + chartW
+      const labelBelow = targetY - 38 < padT
+      const labelW = ctx.measureText(labelText).width
       ctx.fillStyle = '#FFD23F'
       ctx.strokeStyle = '#1A1006'
-      ctx.lineWidth = 3
-      ctx.strokeText('目标 ' + target, padL + 8, targetY - 8)
-      ctx.fillText('目标 ' + target, padL + 8, targetY - 8)
+      ctx.lineWidth = 2
+      rndRect(ctx, labelX - labelW - 15, labelBelow ? targetY + 8 : targetY - 40, labelW + 20, 30, 8)
+      ctx.fill()
+      ctx.stroke()
+      ctx.textBaseline = labelBelow ? 'top' : 'bottom'
+      ctx.fillStyle = '#2B2B2B'
+      ctx.fillText(labelText, labelX - 5, labelBelow ? targetY + 17 : targetY - 18)
 
       // X 轴日期标签：超过 7 个点做间隔抽样
       ctx.font = '20px sans-serif'

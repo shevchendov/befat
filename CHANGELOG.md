@@ -1,5 +1,23 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-07-31] 03cbef5
+
+**feat: goal-detail 页面体重趋势改为 Canvas 折线图**
+
+- 用原生 Canvas 2D 绘制体重折线图，替换原有文字列表
+- 实际折线暖橙 #FF6B35 + 黑色粗描边，目标线黄色虚线并标注目标值
+- Y 轴范围按数据动态计算并外扩 10%，X 轴日期标签超 7 点自动间隔抽样
+- 空数据/单数据点边界处理，高清屏 dpr 适配
+- 纯前端改动，不涉及云函数
+DEPLOY: none
+VERIFIED: 未测试
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `miniprogram/pages/goal-detail/goal-detail.js`
+- `miniprogram/pages/goal-detail/goal-detail.wxml`
+- `miniprogram/pages/goal-detail/goal-detail.wxss`
+
 ## [2026-07-31] 475c67c
 
 **feat: 新增目标进度追踪功能**
