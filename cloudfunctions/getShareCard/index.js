@@ -21,9 +21,18 @@ function weekStart() {
   return fmt(m)
 }
 
+function dateBefore(days) {
+  const d = new Date()
+  d.setDate(d.getDate() - days)
+  return fmt(d)
+}
+
 async function countConsecutive(openid) {
-  const fRes = await db.collection('food_logs').where({ _openid: openid }).get()
-  const wRes = await db.collection('weight_logs').where({ _openid: openid }).get()
+  const startDate = dateBefore(365)
+  const [fRes, wRes] = await Promise.all([
+    db.collection('food_logs').where({ _openid: openid, date: _.gte(startDate) }).get(),
+    db.collection('weight_logs').where({ _openid: openid, date: _.gte(startDate) }).get()
+  ])
   const set = new Set()
   fRes.data.forEach(d => { if (d.date) set.add(d.date) })
   wRes.data.forEach(d => { if (d.date) set.add(d.date) })
@@ -49,21 +58,20 @@ exports.main = async (event, context) => {
     const today = fmt(new Date())
     const ws = weekStart()
 
-    const foodLogs = await db.collection('food_logs').where({ _openid: openid, date: today }).get()
+    const [foodLogs, userRes, wLogs, latestW] = await Promise.all([
+      db.collection('food_logs').where({ _openid: openid, date: today }).get(),
+      db.collection('users').where({ _openid: openid }).get(),
+      db.collection('weight_logs').where({ _openid: openid, date: _.gte(ws).lte(today) }).orderBy('date', 'asc').get(),
+      db.collection('weight_logs').where({ _openid: openid }).orderBy('date', 'desc').limit(1).get()
+    ])
     let totalCal = 0; let totalPro = 0
     foodLogs.data.forEach(l => { totalCal += l.total_calorie || 0; totalPro += l.total_protein_g || 0 })
-
-    const userRes = await db.collection('users').where({ _openid: openid }).get()
     const user = userRes.data[0] || null
-
-    const wLogs = await db.collection('weight_logs').where({ _openid: openid, date: _.gte(ws).lte(today) }).orderBy('date', 'asc').get()
+    const lw = latestW.data.length > 0 ? latestW.data[0].weight_kg : null
     let weekChange = 0
     if (wLogs.data.length >= 2) {
       weekChange = Math.round((wLogs.data[wLogs.data.length - 1].weight_kg - wLogs.data[0].weight_kg) * 100) / 100
     }
-
-    const latestW = await db.collection('weight_logs').where({ _openid: openid }).orderBy('date', 'desc').limit(1).get()
-    const lw = latestW.data.length > 0 ? latestW.data[0].weight_kg : null
 
     let remain = null
     if (user && user.target_weight_kg != null && lw !== null) remain = Math.round((user.target_weight_kg - lw) * 100) / 100

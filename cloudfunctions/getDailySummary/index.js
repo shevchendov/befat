@@ -18,12 +18,10 @@ exports.main = async (event, context) => {
       return result
     }
 
-    const foodLogs = await db.collection('food_logs').where({
-      _openid: openid,
-      date: date
-    }).orderBy('created_at', 'asc').get()
-
-    const userRes = await db.collection('users').where({ _openid: openid }).get()
+    const [foodLogs, userRes] = await Promise.all([
+      db.collection('food_logs').where({ _openid: openid, date: date }).orderBy('created_at', 'asc').get(),
+      db.collection('users').where({ _openid: openid }).get()
+    ])
     const user = userRes.data[0] || null
 
     const meals = { breakfast: [], lunch: [], dinner: [], snack: [] }
