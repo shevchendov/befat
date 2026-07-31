@@ -19,7 +19,8 @@ Page({
     meals: [],
     showCelebration: false,
     caloriePercent: 0,
-    proteinPercent: 0
+    proteinPercent: 0,
+    goalProgress: null
   },
 
   onShow() {
@@ -40,6 +41,7 @@ Page({
     else greeting = '夜宵时间！做大只的黄金时刻！🌙'
 
     this.setData({ dateText, greeting })
+    this.loadGoalProgress()
 
     if (app.globalData.dailyTargets) {
       this.setData({ targets: app.globalData.dailyTargets })
@@ -169,6 +171,39 @@ Page({
 
   dismissCelebration() {
     this.setData({ showCelebration: false })
+  },
+
+  async loadGoalProgress() {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'getGoalProgress'
+      })
+
+      if (res.result.code === 0) {
+        const d = res.result.data
+        const progress = Math.max(0, Math.min(d.progress_percent, 100))
+        const fmtW = v => Number(v).toFixed(1)
+        this.setData({
+          goalProgress: {
+            achieved: d.achieved,
+            initial_weight: fmtW(d.initial_weight),
+            current_weight: fmtW(d.current_weight),
+            target_weight: fmtW(d.target_weight),
+            progress_percent: progress,
+            barWidth: progress + '%',
+            remaining_kg: fmtW(d.remaining_kg),
+            estimated_date: d.estimated_date,
+            trend_data: d.trend_data
+          }
+        })
+      }
+    } catch (err) {
+      logger.error('loadGoalProgress', err)
+    }
+  },
+
+  goToGoalDetail() {
+    wx.navigateTo({ url: '/pages/goal-detail/goal-detail' })
   },
 
   goToLogFood() {

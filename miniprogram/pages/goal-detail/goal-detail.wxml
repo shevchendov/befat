@@ -1,0 +1,47 @@
+<view class="goal-detail-page">
+  <view wx:if="{{loading}}" class="loading">加载中...</view>
+
+  <block wx:elif="{{goal}}">
+    <view class="goal-summary-card">
+      <view class="goal-status {{goal.achieved ? 'is-achieved' : ''}}">
+        <text class="goal-status-emoji">{{goal.achieved ? '🎉' : '🎯'}}</text>
+        <text class="goal-status-title">{{goal.achieved ? '目标达成！' : '目标进行中'}}</text>
+      </view>
+
+      <view class="goal-figures">
+        <view class="goal-figure">
+          <text class="goal-figure-label">当前</text>
+          <text class="goal-figure-value">{{goal.current_weight}}</text>
+          <text class="goal-figure-unit">kg</text>
+        </view>
+        <view class="goal-figure">
+          <text class="goal-figure-label">目标</text>
+          <text class="goal-figure-value goal-figure-target">{{goal.target_weight}}</text>
+          <text class="goal-figure-unit">kg</text>
+        </view>
+      </view>
+
+      <view class="goal-bar">
+        <view class="goal-bar-fill" style="width: {{goal.progress_percent > 100 ? 100 : goal.progress_percent}}%;"></view>
+      </view>
+      <view class="goal-bar-caption">完成 {{goal.progress_percent}}%</view>
+
+      <view wx:if="{{goal.estimated_date}}" class="goal-estimate">
+        ⏱ 照这个节奏，预计 {{goal.estimated_date}} 达成
+      </view>
+    </view>
+
+    <view class="goal-section">
+      <view class="goal-section-title">📈 体重趋势</view>
+      <view wx:if="{{goal.trend_data.length > 0}}" class="trend-list">
+        <view class="trend-row" wx:for="{{goal.trend_data}}" wx:key="date">
+          <text class="trend-date">{{item.date}}</text>
+          <text class="trend-weight">{{item.weight_kg}} kg</text>
+        </view>
+      </view>
+      <view wx:else class="goal-empty">暂无体重记录，先去记一笔吧～</view>
+    </view>
+  </block>
+
+  <view wx:else class="goal-empty">未找到目标信息</view>
+</view>

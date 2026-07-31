@@ -1,5 +1,19 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-07-31] 72cec89
+
+**chore: .gitignore 忽略微信开发者工具临时目录和本地编辑器配置**
+
+- 忽略 .tmp.driveupload/、.tmp.drivedownload/（DevTools 上传下载缓存，9857 个临时文件）
+- 忽略 .vscode/（本地编辑器配置）
+- 避免 git status 持续出现无关脏文件
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `.gitignore`
+- `CHANGELOG.md`
+
 ## [2026-07-31] 29aab6d
 
 **perf: 云函数查询并行化 + countConsecutive 加 365 天回溯过滤**

@@ -1,0 +1,9 @@
+{
+  "name": "getGoalProgress",
+  "version": "1.0.0",
+  "description": "获取目标体重进度追踪数据",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}
