@@ -1,5 +1,22 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-07-31] 29aab6d
+
+**perf: 云函数查询并行化 + countConsecutive 加 365 天回溯过滤**
+
+- getDailySummary: food_logs 和 users 查询改用 Promise.all 并行
+- getShareCard: 主函数 4 个查询 + countConsecutive 内 2 个查询全部并行化
+- countConsecutive 增加 date: _.gte(startDate) 365 天过滤，避免全表扫描随用户数据线性增长
+- 需在云开发控制台 food_logs 集合建复合索引 _openid(1)+date(1)+created_at(1)
+DEPLOY: cloudfunctions/getDailySummary,cloudfunctions/getShareCard
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `cloudfunctions/getDailySummary/index.js`
+- `cloudfunctions/getShareCard/index.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getDailySummary,cloudfunctions/getShareCard
+
 ## [2026-07-30] fe23795
 
 **chore: 自动追加本次提交记录到 CHANGELOG.md**
