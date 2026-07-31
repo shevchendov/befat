@@ -1,0 +1,9 @@
+{
+  "name": "recalcTarget",
+  "version": "1.0.0",
+  "description": "精简重算目标（复用已有用户档案，重算每日目标）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

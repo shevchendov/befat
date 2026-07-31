@@ -1,0 +1,138 @@
+let mockUsers = []
+let mockUpdateData = null
+
+const mockWhere = jest.fn(() => ({ get: jest.fn().mockResolvedValue({ data: mockUsers }) }))
+const mockDoc = jest.fn((id) => ({
+  update: jest.fn(({ data }) => {
+    mockUpdateData = data
+    return Promise.resolve({})
+  })
+}))
+
+jest.mock('wx-server-sdk', () => ({
+  init: jest.fn(),
+  DYNAMIC_CURRENT_ENV: 'env-mock',
+  database: jest.fn(() => ({
+    collection: jest.fn(() => ({
+      where: mockWhere,
+      doc: mockDoc
+    })),
+    serverDate: jest.fn(() => '2026-07-31T00:00:00.000Z')
+  })),
+  getWXContext: jest.fn(() => ({
+    OPENID: 'test-openid',
+    APPID: 'test-appid',
+    UNIONID: null
+  }))
+}))
+
+const recalcTarget = require('../cloudfunctions/recalcTarget/index')
+
+const USER = {
+  _id: 'u1',
+  _openid: 'test-openid',
+  height_cm: 175,
+  gender: 'male',
+  age: 25,
+  activity_level: 'moderate',
+  current_weight_kg: 60,
+  target_weight_kg: 65,
+  initial_weight: 55,
+  daily_calorie_target: 2800,
+  daily_protein_target_g: 108
+}
+
+beforeEach(() => {
+  mockUsers = []
+  mockUpdateData = null
+})
+
+describe('recalcTarget.main - parameter validation', () => {
+  test('returns code 1 when missing params', async () => {
+    const result = await recalcTarget.main({}, {})
+    expect(result.code).toBe(1)
+  })
+
+  test('returns code 1 when only one param provided', async () => {
+    const result = await recalcTarget.main({ current_weight_kg: 62 }, {})
+    expect(result.code).toBe(1)
+  })
+
+  test('returns code 1 when weight out of range', async () => {
+    mockUsers = [USER]
+    const result = await recalcTarget.main({ current_weight_kg: 62, target_weight_kg: -5 }, {})
+    expect(result.code).toBe(1)
+  })
+})
+
+describe('recalcTarget.main - user guard', () => {
+  test('returns code -1 when user not found', async () => {
+    const result = await recalcTarget.main({ current_weight_kg: 62, target_weight_kg: 65 }, {})
+    expect(result.code).toBe(-1)
+  })
+
+  test('returns code 1 when user profile incomplete', async () => {
+    mockUsers = [{ _id: 'u1', height_cm: 175, gender: 'male' }]
+    const result = await recalcTarget.main({ current_weight_kg: 62, target_weight_kg: 65 }, {})
+    expect(result.code).toBe(1)
+  })
+})
+
+describe('recalcTarget.main - safety guards', () => {
+  test('returns code 2 when BMI < 16', async () => {
+    mockUsers = [USER]
+    const result = await recalcTarget.main({ current_weight_kg: 45, target_weight_kg: 60 }, {})
+    expect(result.code).toBe(2)
+    expect(result.data.bmi).toBe(14.7)
+  })
+
+  test('returns code 3 when weekly gain > 1kg', async () => {
+    mockUsers = [USER]
+    const result = await recalcTarget.main({ current_weight_kg: 55, target_weight_kg: 85 }, {})
+    expect(result.code).toBe(3)
+    expect(result.message).toContain('增长过快')
+  })
+
+  test('does not update db when guard fails', async () => {
+    mockUsers = [USER]
+    await recalcTarget.main({ current_weight_kg: 45, target_weight_kg: 60 }, {})
+    expect(mockUpdateData).toBeNull()
+  })
+})
+
+describe('recalcTarget.main - success', () => {
+  test('recalculates targets and updates users', async () => {
+    mockUsers = [USER]
+    const result = await recalcTarget.main({ current_weight_kg: 62, target_weight_kg: 65 }, {})
+    expect(result.code).toBe(0)
+
+    const bmr = 10 * 62 + 6.25 * 175 - 5 * 25 + 5
+    const tdee = Math.round(bmr * 1.55)
+    expect(result.data.tdee).toBe(tdee)
+    expect(result.data.daily_calorie_target).toBe(tdee + 350)
+    expect(result.data.daily_protein_target_g).toBe(Math.round(62 * 1.8))
+    expect(result.data.bmi).toBeCloseTo(62 / (1.75 ** 2), 1)
+
+    expect(mockUpdateData).not.toBeNull()
+    expect(mockUpdateData.target_weight_kg).toBe(65)
+    expect(mockUpdateData.daily_calorie_target).toBe(tdee + 350)
+    expect(mockUpdateData.daily_protein_target_g).toBe(Math.round(62 * 1.8))
+    expect(mockUpdateData.updated_at).toBe('2026-07-31T00:00:00.000Z')
+  })
+
+  test('does NOT overwrite initial_weight or current_weight_kg', async () => {
+    mockUsers = [USER]
+    await recalcTarget.main({ current_weight_kg: 62, target_weight_kg: 65 }, {})
+    expect(mockUpdateData.initial_weight).toBeUndefined()
+    expect(mockUpdateData.current_weight_kg).toBeUndefined()
+  })
+
+  test('uses stored height/gender/age/activity from user profile', async () => {
+    mockUsers = [{ ...USER, gender: 'female', height_cm: 160, age: 30, activity_level: 'light' }]
+    const result = await recalcTarget.main({ current_weight_kg: 50, target_weight_kg: 52 }, {})
+    expect(result.code).toBe(0)
+    const bmr = 10 * 50 + 6.25 * 160 - 5 * 30 - 161
+    const tdee = Math.round(bmr * 1.375)
+    expect(result.data.tdee).toBe(tdee)
+  })
+})

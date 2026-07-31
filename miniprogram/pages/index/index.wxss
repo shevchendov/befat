@@ -311,6 +311,21 @@
   color: var(--color-text-primary);
 }
 
+.goal-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.goal-card-edit {
+  font-size: 24rpx;
+  color: var(--color-accent-orange);
+  font-weight: 600;
+  padding: 6rpx 16rpx;
+  background: rgba(255, 107, 53, 0.12);
+  border-radius: var(--radius-sm);
+}
+
 .goal-card-arrow {
   font-size: 40rpx;
   color: var(--color-accent-orange);

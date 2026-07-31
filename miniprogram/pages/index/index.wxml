@@ -54,7 +54,10 @@
   <view class="goal-card" wx:if="{{goalProgress}}" bindtap="goToGoalDetail" hover-class="goal-card-hover">
     <view class="goal-card-header">
       <text class="goal-card-title">🎯 目标进度</text>
-      <text class="goal-card-arrow">›</text>
+      <view class="goal-card-actions">
+        <text class="goal-card-edit" catchtap="goToTargetEdit">修改目标</text>
+        <text class="goal-card-arrow">›</text>
+      </view>
     </view>
 
     <block wx:if="{{goalProgress.achieved}}">

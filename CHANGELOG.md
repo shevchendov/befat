@@ -1,5 +1,15 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-07-31] 31b1c90
+
+**chore: 更新 CHANGELOG 记录 e3ebb15**
+
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+
 ## [2026-07-31] e3ebb15
 
 **fix: 修复 goal-detail 折线图排版与目标标签配色，清理废弃 API**

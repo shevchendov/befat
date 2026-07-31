@@ -2,25 +2,8 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const logger = require('./common/logger')
+const { validateWeights, computeTargets } = require('./common/targetCalc')
 const FN = 'calcTarget'
-
-function calcTDEE(gender, weightKg, heightCm, age, activityLevel) {
-  let bmr
-  if (gender === 'male') {
-    bmr = 10 * weightKg + 6.25 * heightCm - 5 * age + 5
-  } else {
-    bmr = 10 * weightKg + 6.25 * heightCm - 5 * age - 161
-  }
-
-  const multipliers = {
-    sedentary: 1.2,
-    light: 1.375,
-    moderate: 1.55,
-    active: 1.725
-  }
-  const tdee = bmr * (multipliers[activityLevel] || 1.2)
-  return Math.round(tdee)
-}
 
 exports.main = async (event, context) => {
   const start = Date.now()
@@ -43,32 +26,16 @@ exports.main = async (event, context) => {
       return result
     }
 
-    const bmi = current_weight_kg / ((height_cm / 100) ** 2)
-
-    if (bmi < 16) {
-      const result = {
-        code: 2,
-        message: '您的 BMI 偏低（' + bmi.toFixed(1) + '），建议先咨询医生或营养师，再制定增重计划。',
-        data: { bmi: Math.round(bmi * 10) / 10 }
-      }
-      logger.info(FN, 'return', { code: 2, bmi: result.data.bmi, duration: Date.now() - start })
-      return result
+    const guard = validateWeights(current_weight_kg, target_weight_kg, height_cm)
+    if (!guard.ok) {
+      logger.info(FN, 'return', { code: guard.code, bmi: guard.data.bmi, duration: Date.now() - start })
+      return { code: guard.code, message: guard.message, data: guard.data }
     }
+    const bmi = Math.round(guard.bmi * 10) / 10
 
-    const weeklyGain = (target_weight_kg - current_weight_kg) / 4
-    if (weeklyGain > 1) {
-      const result = {
-        code: 3,
-        message: '您设定的目标体重增长过快（每周约' + weeklyGain.toFixed(1) + 'kg），建议将每周增重目标控制在 0.5~1kg。请调整目标体重。',
-        data: { bmi: Math.round(bmi * 10) / 10 }
-      }
-      logger.info(FN, 'return', { code: 3, weeklyGain: Math.round(weeklyGain * 10) / 10, duration: Date.now() - start })
-      return result
-    }
-
-    const tdee = calcTDEE(gender, current_weight_kg, height_cm, age, activity_level)
-    const dailyCalorieTarget = tdee + 350
-    const dailyProteinTargetG = Math.round(current_weight_kg * 1.8)
+    const targets = computeTargets(gender, current_weight_kg, height_cm, age, activity_level)
+    const dailyCalorieTarget = targets.daily_calorie_target
+    const dailyProteinTargetG = targets.daily_protein_target_g
 
     const userData = {
       height_cm,
@@ -79,7 +46,7 @@ exports.main = async (event, context) => {
       age,
       daily_calorie_target: dailyCalorieTarget,
       daily_protein_target_g: dailyProteinTargetG,
-      bmi: Math.round(bmi * 10) / 10,
+      bmi,
       updated_at: db.serverDate()
     }
 
@@ -96,10 +63,10 @@ exports.main = async (event, context) => {
       code: 0,
       message: 'ok',
       data: {
-        tdee,
+        tdee: targets.tdee,
         daily_calorie_target: dailyCalorieTarget,
         daily_protein_target_g: dailyProteinTargetG,
-        bmi: Math.round(bmi * 10) / 10
+        bmi
       }
     }
     logger.info(FN, 'success', { duration: Date.now() - start, isNewUser: existing.data.length === 0 })

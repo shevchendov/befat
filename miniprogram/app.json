@@ -9,6 +9,7 @@
     "pages/my-favorites/my-favorites",
     "pages/share-card/share-card",
     "pages/goal-detail/goal-detail",
+    "pages/target-edit/target-edit",
     "pages/profile/profile"
   ],
   "window": {

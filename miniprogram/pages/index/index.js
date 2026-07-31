@@ -206,6 +206,10 @@ Page({
     wx.navigateTo({ url: '/pages/goal-detail/goal-detail' })
   },
 
+  goToTargetEdit() {
+    wx.navigateTo({ url: '/pages/target-edit/target-edit' })
+  },
+
   goToLogFood() {
     wx.navigateTo({ url: '/pages/log-food/log-food' })
   },
