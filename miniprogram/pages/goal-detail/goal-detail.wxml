@@ -33,13 +33,10 @@
 
     <view class="goal-section">
       <view class="goal-section-title">📈 体重趋势</view>
-      <view wx:if="{{goal.trend_data.length > 0}}" class="trend-list">
-        <view class="trend-row" wx:for="{{goal.trend_data}}" wx:key="date">
-          <text class="trend-date">{{item.date}}</text>
-          <text class="trend-weight">{{item.weight_kg}} kg</text>
-        </view>
+      <view class="trend-card" wx:if="{{goal.trend_data.length > 0}}">
+        <canvas class="trend-canvas" type="2d" id="trendChart"></canvas>
       </view>
-      <view wx:else class="goal-empty">暂无体重记录，先去记一笔吧～</view>
+      <view wx:else class="goal-empty">打卡体重后，这里会显示你的变化趋势</view>
     </view>
   </block>
 

@@ -1,5 +1,33 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-07-31] 475c67c
+
+**feat: 新增目标进度追踪功能**
+
+- 新建 getGoalProgress 云函数：并行查询 users + weight_logs，增/减重双向进度计算
+- 首页进度环下方新增目标进度卡片：已达成显示庆祝态，未达成显示进度条+剩余差距+预计达成日期
+- 新增 goal-detail 页面骨架，展示目标数据与体重趋势列表
+- 编写 10 个单元测试覆盖边界情况（除零保护/方向不符/字段回退等）
+DEPLOY: cloudfunctions/getGoalProgress
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+DATA IMPACT: 未修改数据结构，仅新增查询；需确认 weight_logs 的 _openid + date 复合索引
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `cloudfunctions/getGoalProgress/common/logger.js`
+- `cloudfunctions/getGoalProgress/index.js`
+- `cloudfunctions/getGoalProgress/package.json`
+- `miniprogram/app.json`
+- `miniprogram/pages/goal-detail/goal-detail.js`
+- `miniprogram/pages/goal-detail/goal-detail.json`
+- `miniprogram/pages/goal-detail/goal-detail.wxml`
+- `miniprogram/pages/goal-detail/goal-detail.wxss`
+- `miniprogram/pages/index/index.js`
+- `miniprogram/pages/index/index.wxml`
+- `miniprogram/pages/index/index.wxss`
+- `tests/getGoalProgress.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getGoalProgress
+
 ## [2026-07-31] 72cec89
 
 **chore: .gitignore 忽略微信开发者工具临时目录和本地编辑器配置**
