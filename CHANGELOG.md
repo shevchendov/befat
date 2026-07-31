@@ -1,5 +1,21 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-07-31] e3ebb15
+
+**fix: 修复 goal-detail 折线图排版与目标标签配色，清理废弃 API**
+
+- 修复 canvas 尺寸为 0 时网格线/Y轴刻度越界与上方卡片重叠的问题，增加尺寸守卫与延时重试
+- 目标标签位置移至虚线右端，改为亮黄底 #FFD23F + 2px 黑描边 + 深棕文字，提升对比度
+- share-card、goal-detail 的 wx.getSystemInfoSync 统一替换为 wx.getWindowInfo
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `miniprogram/pages/goal-detail/goal-detail.js`
+- `miniprogram/pages/goal-detail/goal-detail.wxss`
+- `miniprogram/pages/share-card/share-card.js`
+
 ## [2026-07-31] 03cbef5
 
 **feat: goal-detail 页面体重趋势改为 Canvas 折线图**
