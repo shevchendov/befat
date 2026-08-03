@@ -1,5 +1,15 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-03] 0ba0919
+
+**chore: 更新 CHANGELOG 记录 14d4975**
+
+DEPLOY: none
+VERIFIED: 真机测试通过
+
+**涉及文件:**
+- `CHANGELOG.md`
+
 ## [2026-07-31] 14d4975
 
 **feat: 新增修改目标功能（精简重算 + 手动微调）**
@@ -49,7 +59,7 @@ DATA IMPACT: 更新 users 集合 target_weight_kg、daily_calorie_target、daily
 - `miniprogram/pages/target-edit/target-edit.wxss`
 - `tests/recalcTarget.test.js`
 - `tests/updateTargetManual.test.js`
-⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/recalcTarget, cloudfunctions/updateTargetManual, cloudfunctions/calcTarget
+✅ 已部署并真机验证：recalcTarget、updateTargetManual、calcTarget
 
 ## [2026-07-31] 31b1c90
 
