@@ -158,10 +158,23 @@ Page({
         if (w > maxYLabelW) maxYLabelW = w
       })
 
+      // 测量 X 轴日期标签宽度与字号（用于旋转后底部预留与相邻重叠判断）
+      const xLabels = records.map(r => r.date.slice(5))
+      const dateLabelH = Math.round(20 * dpr)
+      let maxXLabelW = 0
+      xLabels.forEach(t => {
+        const w = ctx.measureText(t).width
+        if (w > maxXLabelW) maxXLabelW = w
+      })
+      // 45° 旋转后标签的横向投影宽度 = (文本宽 + 字高) * sin45，用于判断相邻标签是否重叠
+      const projectedLabelW = Math.round(0.7071 * (maxXLabelW + dateLabelH) + 4 * dpr)
+      // 旋转后标签的等效半高，据此额外加大图表底部 padding，避免标签被画布底部裁切
+      const labelHalfExtent = projectedLabelW / 2
+
       const padding = {
         top: 40 * dpr,
         right: 30 * dpr,
-        bottom: 60 * dpr,
+        bottom: Math.max(60 * dpr, labelHalfExtent * 2 + 20 * dpr),
         left: maxYLabelW + 16 * dpr
       }
       const chartW = width - padding.left - padding.right
@@ -210,21 +223,22 @@ Page({
 
       ctx.fillStyle = '#999'
       ctx.textAlign = 'center'
-      ctx.textBaseline = 'top'
+      ctx.textBaseline = 'middle'
       ctx.font = Math.round(20 * dpr) + 'px sans-serif'
-      const xLabels = records.map(r => r.date.slice(5))
-      let maxXLabelW = 0
-      xLabels.forEach(t => {
-        const w = ctx.measureText(t).width
-        if (w > maxXLabelW) maxXLabelW = w
-      })
-      // 根据可用宽度与标签实际宽度自适应抽样，保证相邻标签间距不小于 标签宽 + 12*dpr，避免重叠
-      const maxLabels = Math.max(1, Math.floor(chartW / (maxXLabelW + 12 * dpr)))
-      const labelStep = Math.max(1, Math.ceil(records.length / maxLabels))
+      // 相邻标签中心间距：数据点间隔
+      const pointSpacing = chartW / (records.length - 1)
+      // 相邻两个标签不重叠所需的最小中心距 = 旋转后横向投影宽（各占一半）
+      // 空间足够则全部显示；不足时回退间隔抽样兜底
+      const labelStep = pointSpacing >= projectedLabelW ? 1 : Math.max(1, Math.ceil(projectedLabelW / pointSpacing))
+      // 旋转标签的绘制锚点纵坐标：保证旋转后文字整体不超出画布底部
+      const labelBaseY = height - labelHalfExtent - 10 * dpr
       records.forEach((r, idx) => {
-        if (idx % labelStep === 0 || idx === records.length - 1) {
-          ctx.fillText(xLabels[idx], points[idx].x, height - padding.bottom / 2 + 10 * dpr)
-        }
+        if (idx % labelStep !== 0 && idx !== records.length - 1) return
+        ctx.save()
+        ctx.translate(points[idx].x, labelBaseY)
+        ctx.rotate(-Math.PI / 4)
+        ctx.fillText(xLabels[idx], 0, 0)
+        ctx.restore()
       })
     })
   }
