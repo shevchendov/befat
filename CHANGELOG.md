@@ -1,5 +1,22 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-03] 0fc8512
+
+**fix: parseFoodLog 切换 DeepSeek model 至 deepseek-v4-flash**
+
+- model 参数从已退休的 deepseek-chat 改为 deepseek-v4-flash
+- 同步更新 deepseek-http 接口合约测试断言
+- 排查确认全项目仅此一处调用，无共享封装需同步
+- 核查错误处理：调用失败返回 code 3 而非静默写入，无 0 值降级路径
+DEPLOY: cloudfunctions/parseFoodLog
+VERIFIED: 仅本地jest测试通过（59项），未做真机/云端验证
+DATA IMPACT: none
+
+**涉及文件:**
+- `cloudfunctions/parseFoodLog/index.js`
+- `tests/interface/deepseek-http.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/parseFoodLog
+
 ## [2026-08-03] c07390b
 
 **chore: 确认 CHANGELOG 部署与真机验证状态**
