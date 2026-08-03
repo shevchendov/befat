@@ -1,5 +1,15 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-03] c07390b
+
+**chore: 确认 CHANGELOG 部署与真机验证状态**
+
+DEPLOY: none
+VERIFIED: 真机测试通过
+
+**涉及文件:**
+- `CHANGELOG.md`
+
 ## [2026-08-03] 0ba0919
 
 **chore: 更新 CHANGELOG 记录 14d4975**
