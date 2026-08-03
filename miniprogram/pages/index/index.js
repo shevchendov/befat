@@ -20,7 +20,8 @@ Page({
     showCelebration: false,
     caloriePercent: 0,
     proteinPercent: 0,
-    goalProgress: null
+    goalProgress: null,
+    showGoalGuide: false
   },
 
   onShow() {
@@ -194,8 +195,12 @@ Page({
             remaining_kg: fmtW(d.remaining_kg),
             estimated_date: d.estimated_date,
             trend_data: d.trend_data
-          }
+          },
+          showGoalGuide: false
         })
+      } else if (res.result.code === -1) {
+        // 用户不存在（未完成 onboarding），目标卡片优雅降级为引导空状态
+        this.setData({ goalProgress: null, showGoalGuide: true })
       }
     } catch (err) {
       logger.error('loadGoalProgress', err)
@@ -204,6 +209,10 @@ Page({
 
   goToGoalDetail() {
     wx.navigateTo({ url: '/pages/goal-detail/goal-detail' })
+  },
+
+  goToOnboarding() {
+    wx.navigateTo({ url: '/pages/onboarding/onboarding' })
   },
 
   goToTargetEdit() {

@@ -298,6 +298,54 @@
   opacity: 0.9;
 }
 
+/* ========== 目标引导空状态 ========== */
+.goal-guide {
+  margin: 20rpx 30rpx 0;
+  padding: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, var(--card-bg-warm), #FFE9D6);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.goal-guide-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  flex: 1;
+  margin-right: 20rpx;
+}
+
+.goal-guide-emoji {
+  font-size: 44rpx;
+  line-height: 1;
+}
+
+.goal-guide-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.goal-guide-sub {
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+}
+
+.goal-guide-btn {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--card-bg-white);
+  background: var(--color-accent-orange);
+  padding: 14rpx 26rpx;
+  border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--color-border);
+  white-space: nowrap;
+}
+
 .goal-card-header {
   display: flex;
   justify-content: space-between;

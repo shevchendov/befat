@@ -85,6 +85,15 @@
     </block>
   </view>
 
+  <view class="goal-guide" wx:elif="{{showGoalGuide}}" bindtap="goToOnboarding" hover-class="goal-card-hover">
+    <view class="goal-guide-content">
+      <text class="goal-guide-emoji">🎯</text>
+      <text class="goal-guide-title">设定你的目标，开始追踪进度</text>
+      <text class="goal-guide-sub">填好身高体重，系统帮你计算增重方案</text>
+    </view>
+    <text class="goal-guide-btn">去设定 ›</text>
+  </view>
+
   <view class="section-header">
     <text class="section-title">🍱 今天吃咗啥</text>
     <text wx:if="{{meals.length > 0}}" class="section-count">{{dailySummary.total_calorie}} / {{targets.calorie}} kcal</text>
