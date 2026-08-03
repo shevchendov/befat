@@ -64,7 +64,7 @@ exports.main = async (event, context) => {
 只返回JSON，不要任何解释文字。`
 
     const resp = await axios.post('https://api.deepseek.com/chat/completions', {
-      model: 'deepseek-chat',
+      model: 'deepseek-v4-flash',
       messages: [
         { role: 'system', content: '你是一个中国食物营养分析专家。只返回JSON，不要任何解释文字。' },
         { role: 'user', content: prompt }

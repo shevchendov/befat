@@ -54,7 +54,7 @@ describe('DeepSeek HTTP 调用格式', () => {
     await parseFoodLog.main({ raw_text: '一碗米饭', meal_type: 'lunch', date: '2026-07-29' }, {})
     const call = getCall()
     expect(call.data).toHaveProperty('model')
-    expect(call.data.model).toBe('deepseek-chat')
+    expect(call.data.model).toBe('deepseek-v4-flash')
   })
 
   test('请求体包含 messages 数组（system + user）', async () => {
