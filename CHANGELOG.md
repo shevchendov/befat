@@ -1,5 +1,56 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-07-31] 14d4975
+
+**feat: 新增修改目标功能（精简重算 + 手动微调）**
+
+- 抽取目标计算逻辑至 cloudfunctions/common/targetCalc.js，calcTarget 改为复用共享模块（行为不变）
+- 新增 recalcTarget：复用已有身高/性别/年龄/活动档案重算目标，保留 BMI<16 与每周增重>1kg 安全拦截
+- 新增 updateTargetManual：手动微调热量/蛋白质/目标体重，校验热量不低于基础代谢率等边界值
+- 新建 pages/target-edit 双模式页面（重算/手动微调 Tab），首页目标卡片新增修改目标入口
+- 为两个新云函数补充 24 个 jest 测试
+DEPLOY: cloudfunctions/recalcTarget, cloudfunctions/updateTargetManual, cloudfunctions/calcTarget
+VERIFIED: 仅本地jest测试通过（415项），未做真机/云端验证
+DATA IMPACT: 更新 users 集合 target_weight_kg、daily_calorie_target、daily_protein_target_g、bmi、updated_at；不覆盖 initial_weight/current_weight_kg，无结构变化
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `cloudfunctions/calcTarget/common/targetCalc.js`
+- `cloudfunctions/calcTarget/index.js`
+- `cloudfunctions/checkMealReminder/common/targetCalc.js`
+- `cloudfunctions/common/targetCalc.js`
+- `cloudfunctions/deleteUserData/common/targetCalc.js`
+- `cloudfunctions/exportUserData/common/targetCalc.js`
+- `cloudfunctions/generateRecipeInit/common/targetCalc.js`
+- `cloudfunctions/getDailySummary/common/targetCalc.js`
+- `cloudfunctions/getFavorites/common/targetCalc.js`
+- `cloudfunctions/getShareCard/common/targetCalc.js`
+- `cloudfunctions/getWxacode/common/targetCalc.js`
+- `cloudfunctions/manageRecipe/common/targetCalc.js`
+- `cloudfunctions/parseFoodLog/common/targetCalc.js`
+- `cloudfunctions/recalcTarget/common/logger.js`
+- `cloudfunctions/recalcTarget/common/targetCalc.js`
+- `cloudfunctions/recalcTarget/index.js`
+- `cloudfunctions/recalcTarget/package.json`
+- `cloudfunctions/saveWeightLog/common/targetCalc.js`
+- `cloudfunctions/sync-common.js`
+- `cloudfunctions/toggleFavorite/common/targetCalc.js`
+- `cloudfunctions/updateTargetManual/common/logger.js`
+- `cloudfunctions/updateTargetManual/common/targetCalc.js`
+- `cloudfunctions/updateTargetManual/index.js`
+- `cloudfunctions/updateTargetManual/package.json`
+- `miniprogram/app.json`
+- `miniprogram/pages/index/index.js`
+- `miniprogram/pages/index/index.wxml`
+- `miniprogram/pages/index/index.wxss`
+- `miniprogram/pages/target-edit/target-edit.js`
+- `miniprogram/pages/target-edit/target-edit.json`
+- `miniprogram/pages/target-edit/target-edit.wxml`
+- `miniprogram/pages/target-edit/target-edit.wxss`
+- `tests/recalcTarget.test.js`
+- `tests/updateTargetManual.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/recalcTarget, cloudfunctions/updateTargetManual, cloudfunctions/calcTarget
+
 ## [2026-07-31] 31b1c90
 
 **chore: 更新 CHANGELOG 记录 e3ebb15**
