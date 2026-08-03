@@ -141,31 +141,46 @@ Page({
       canvas.width = width
       canvas.height = height
 
-      const padding = { top: 40 * dpr, right: 30 * dpr, bottom: 60 * dpr, left: 60 * dpr }
-      const chartW = width - padding.left - padding.right
-      const chartH = height - padding.top - padding.bottom
-
-      ctx.clearRect(0, 0, width, height)
-
       const weights = records.map(r => r.weight_kg)
       const minW = Math.floor(Math.min(...weights) - 1)
       const maxW = Math.ceil(Math.max(...weights) + 1)
       const range = maxW - minW || 1
 
+      // 先测量 Y 轴刻度文字宽度，据此预留左侧 padding，避免数字贴边被截断
+      ctx.font = Math.round(20 * dpr) + 'px sans-serif'
+      const yLabels = []
+      for (let i = 0; i <= 4; i++) {
+        yLabels.push((maxW - range * i / 4).toFixed(2))
+      }
+      let maxYLabelW = 0
+      yLabels.forEach(t => {
+        const w = ctx.measureText(t).width
+        if (w > maxYLabelW) maxYLabelW = w
+      })
+
+      const padding = {
+        top: 40 * dpr,
+        right: 30 * dpr,
+        bottom: 60 * dpr,
+        left: maxYLabelW + 16 * dpr
+      }
+      const chartW = width - padding.left - padding.right
+      const chartH = height - padding.top - padding.bottom
+
+      ctx.clearRect(0, 0, width, height)
+
       ctx.strokeStyle = '#F0E6D6'
       ctx.lineWidth = 1 * dpr
-      ctx.font = Math.round(20 * dpr) + 'px sans-serif'
       ctx.fillStyle = '#999'
       ctx.textAlign = 'right'
 
       for (let i = 0; i <= 4; i++) {
         const y = padding.top + chartH * i / 4
-        const val = maxW - range * i / 4
         ctx.beginPath()
         ctx.moveTo(padding.left, y)
         ctx.lineTo(width - padding.right, y)
         ctx.stroke()
-        ctx.fillText(val.toFixed(2), padding.left - 10 * dpr, y + 7 * dpr)
+        ctx.fillText(yLabels[i], padding.left - 10 * dpr, y + 7 * dpr)
       }
 
       const points = records.map((r, idx) => ({
@@ -195,11 +210,20 @@ Page({
 
       ctx.fillStyle = '#999'
       ctx.textAlign = 'center'
+      ctx.textBaseline = 'top'
       ctx.font = Math.round(20 * dpr) + 'px sans-serif'
+      const xLabels = records.map(r => r.date.slice(5))
+      let maxXLabelW = 0
+      xLabels.forEach(t => {
+        const w = ctx.measureText(t).width
+        if (w > maxXLabelW) maxXLabelW = w
+      })
+      // 根据可用宽度与标签实际宽度自适应抽样，保证相邻标签间距不小于 标签宽 + 12*dpr，避免重叠
+      const maxLabels = Math.max(1, Math.floor(chartW / (maxXLabelW + 12 * dpr)))
+      const labelStep = Math.max(1, Math.ceil(records.length / maxLabels))
       records.forEach((r, idx) => {
-        const label = r.date.slice(5)
-        if (idx % Math.max(1, Math.floor(records.length / 6)) === 0 || idx === records.length - 1) {
-          ctx.fillText(label, points[idx].x, height - padding.bottom / 2 + 10 * dpr)
+        if (idx % labelStep === 0 || idx === records.length - 1) {
+          ctx.fillText(xLabels[idx], points[idx].x, height - padding.bottom / 2 + 10 * dpr)
         }
       })
     })
