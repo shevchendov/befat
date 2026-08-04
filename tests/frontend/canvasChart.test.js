@@ -37,6 +37,11 @@ describe('computeLabelStep', () => {
     expect(canvasChart.computeLabelStep(30, 45)).toBe(2)
   })
 
+  test('临界抖动区（间距略小于投影宽）返回 1', () => {
+    expect(canvasChart.computeLabelStep(45, 46)).toBe(1)
+    expect(canvasChart.computeLabelStep(45.6, 46)).toBe(1)
+  })
+
   test('投影宽为 0 时返回 1', () => {
     expect(canvasChart.computeLabelStep(10, 0)).toBe(1)
   })

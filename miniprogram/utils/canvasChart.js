@@ -38,7 +38,8 @@ function calcXLabelMetrics(ctx, labels, opts) {
 }
 
 function computeLabelStep(pointSpacing, projectedW) {
-  return pointSpacing >= projectedW ? 1 : Math.max(1, Math.ceil(projectedW / pointSpacing))
+  // 容差 0.9：间距略小于投影宽（临界抖动区）时仍全显，允许 10% 轻微重叠
+  return pointSpacing >= projectedW * 0.9 ? 1 : Math.max(1, Math.ceil(projectedW / pointSpacing))
 }
 
 function drawXAxisLabels(ctx, opts) {
