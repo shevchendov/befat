@@ -156,7 +156,7 @@ Page({
       const xMetrics = canvasChart.calcXLabelMetrics(ctx, xLabels, { fontSize: 16 })
 
       const padding = {
-        top: 40,
+        top: 16,
         right: 30,
         bottom: xMetrics.bottomPadding,
         left: padLeft
