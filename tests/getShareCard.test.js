@@ -102,6 +102,16 @@ function daysAgo(n) {
   return fmt(d)
 }
 
+// 本周起点（周一），与 getShareCard/index.js 的 weekStart() 保持一致
+function weekStart() {
+  var now = new Date()
+  var day = now.getDay()
+  var diff = day === 0 ? 6 : day - 1
+  var m = new Date(now)
+  m.setDate(now.getDate() - diff)
+  return fmt(m)
+}
+
 function seed(name, data) {
   var doc = { _id: 's-' + Math.random().toString(36).slice(2), _openid: 'test-openid' }
   Object.assign(doc, data)
@@ -162,8 +172,9 @@ describe('getShareCard.main', function () {
   })
 
   test('calculates week weight change correctly', async function () {
-    seed('weight_logs', { date: daysAgo(3), weight_kg: 70 })
-    seed('weight_logs', { date: daysAgo(1), weight_kg: 71.2 })
+    // 用本周内的两条记录（本周一 + 今天），避免跨周边界导致日期敏感
+    seed('weight_logs', { date: weekStart(), weight_kg: 70 })
+    seed('weight_logs', { date: today(), weight_kg: 71.2 })
     var res = await getShareCard.main({}, {})
     expect(res.data.week_weight_change_kg).toBe(1.2)
   })

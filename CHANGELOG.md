@@ -1,5 +1,21 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-04] efa7852
+
+**fix: saveFoodLog 新建记录补写 _openid 修复合并失效**
+
+- saveFoodLog 的 add 补 _openid: openid，云函数服务端 add 不会自动注入 _openid
+- saveFoodLog 测试改用自有 mock（add 不自动注入 _openid），新增 _openid 回归断言
+- 修复前该测试与合并测试均失败，复现线上"晚餐写两条"根因
+DEPLOY: cloudfunctions/saveFoodLog
+VERIFIED: 仅本地jest测试通过（saveFoodLog 9/9），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `cloudfunctions/saveFoodLog/index.js`
+- `tests/saveFoodLog.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/saveFoodLog
+
 ## [2026-08-04] c62d0ed
 
 **feat: 同一天同一餐次的多次食物记录合并写入一条 food_logs**

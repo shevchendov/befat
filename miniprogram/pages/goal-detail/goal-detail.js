@@ -1,4 +1,5 @@
 const logger = require('../../utils/logger')
+const canvasChart = require('../../utils/canvasChart')
 
 function rndRect(ctx, x, y, w, h, r) {
   ctx.beginPath()
@@ -68,11 +69,7 @@ Page({
       }
 
       const canvas = node
-      const dpr = wx.getWindowInfo().pixelRatio
-      canvas.width = cssW * dpr
-      canvas.height = cssH * dpr
-      const ctx = canvas.getContext('2d')
-      ctx.scale(dpr, dpr)
+      const { ctx } = canvasChart.initCanvas(canvas, cssW, cssH)
 
       // 动态 Y 轴范围：数据(含目标值)实际 min/max 外扩 10%
       const data = trendData.slice()
@@ -85,10 +82,20 @@ Page({
       min = min - span * 0.1
       max = max + span * 0.1
 
-      const padL = 56
+      // Y 轴刻度文本，动态测量宽度得到左侧 padding，避免数字贴边
+      const gridCount = 4
+      const yLabels = []
+      for (let i = 0; i <= gridCount; i++) {
+        const gv = min + (max - min) * i / gridCount
+        yLabels.push(String(Math.round(gv * 10) / 10))
+      }
+      const padL = canvasChart.measureYAxisPadding(ctx, yLabels, { font: '20px sans-serif', margin: 10 })
       const padR = 20
       const padT = 30
-      const padB = 40
+      // X 轴日期标签（45° 斜排）测量得到底部 padding
+      const xLabels = data.map(d => d.date.slice(5))
+      const xMetrics = canvasChart.calcXLabelMetrics(ctx, xLabels, { fontSize: 20 })
+      const padB = xMetrics.bottomPadding
       const chartW = cssW - padL - padR
       const chartH = cssH - padT - padB
 
@@ -101,7 +108,6 @@ Page({
       ctx.clearRect(0, 0, cssW, cssH)
 
       // 网格 + Y 轴刻度
-      const gridCount = 4
       ctx.font = '20px sans-serif'
       ctx.textAlign = 'right'
       ctx.textBaseline = 'middle'
@@ -115,9 +121,8 @@ Page({
         ctx.lineTo(padL + chartW, gy)
         ctx.stroke()
 
-        const label = Math.round(gv * 10) / 10
         ctx.fillStyle = '#999'
-        ctx.fillText(String(label), padL - 10, gy)
+        ctx.fillText(yLabels[i], padL - 10, gy)
       }
 
       // 目标线：贯穿整个绘图区域宽度（padL 到右边界）
@@ -130,36 +135,6 @@ Page({
       ctx.lineTo(padL + chartW, targetY)
       ctx.stroke()
       ctx.setLineDash([])
-
-      // 目标标签：放在虚线右端上方（右上角方向），亮黄底 + 2px 黑描边 + 深棕文字
-      // 目标线贴近图表顶部时改放虚线下方，避免超出画布
-      const labelText = '目标 ' + target
-      ctx.font = 'bold 20px sans-serif'
-      ctx.textAlign = 'right'
-      const labelX = padL + chartW
-      const labelBelow = targetY - 38 < padT
-      const labelW = ctx.measureText(labelText).width
-      ctx.fillStyle = '#FFD23F'
-      ctx.strokeStyle = '#1A1006'
-      ctx.lineWidth = 2
-      rndRect(ctx, labelX - labelW - 15, labelBelow ? targetY + 8 : targetY - 40, labelW + 20, 30, 8)
-      ctx.fill()
-      ctx.stroke()
-      ctx.textBaseline = labelBelow ? 'top' : 'bottom'
-      ctx.fillStyle = '#2B2B2B'
-      ctx.fillText(labelText, labelX - 5, labelBelow ? targetY + 17 : targetY - 18)
-
-      // X 轴日期标签：超过 7 个点做间隔抽样
-      ctx.font = '20px sans-serif'
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'top'
-      ctx.fillStyle = '#999'
-      const labelStep = data.length > 7 ? Math.ceil(data.length / 7) : 1
-      data.forEach((d, i) => {
-        if (i % labelStep === 0 || i === data.length - 1) {
-          ctx.fillText(d.date.slice(5), xAt(i), padT + chartH + 8)
-        }
-      })
 
       // 实际体重折线（暖橙 + 黑色粗描边，贴纸风）
       const points = data.map((d, i) => ({ x: xAt(i), y: yAt(Number(d.weight_kg)) }))
@@ -188,6 +163,52 @@ Page({
         ctx.lineWidth = 2
         ctx.strokeStyle = '#1A1006'
         ctx.stroke()
+      })
+
+      // 目标标签：亮黄底 + 2px 黑描边 + 深棕文字，优先贴在虚线右端上方
+      // 用通用碰撞检测判断是否与数据点/折线段重叠，重叠时按候选位避让
+      const labelText = '目标 ' + target
+      ctx.font = 'bold 20px sans-serif'
+      ctx.textAlign = 'right'
+      const labelW = ctx.measureText(labelText).width
+      const labelBox = { w: labelW + 20, h: 30, x: padL + chartW - labelW - 15, y: 0 }
+      const clampY = (y) => Math.max(padT, Math.min(padT + chartH - labelBox.h, y))
+      const obstacles = canvasChart.buildObstacles(points, {
+        pointRadius: 6,
+        margin: 6,
+        lineWidth: 6
+      })
+      const candidates = [
+        { ...labelBox, y: clampY(targetY - 40) },
+        { ...labelBox, y: clampY(targetY + 8) },
+        { ...labelBox, y: clampY(targetY - 70) },
+        { ...labelBox, y: clampY(targetY + 40) },
+        { ...labelBox, y: padT + 4 },
+        { ...labelBox, y: padT + chartH - labelBox.h }
+      ]
+      const labelPos = canvasChart.findFirstFreeRect(candidates, obstacles) || candidates[0]
+
+      ctx.fillStyle = '#FFD23F'
+      ctx.strokeStyle = '#1A1006'
+      ctx.lineWidth = 2
+      rndRect(ctx, labelPos.x, labelPos.y, labelPos.w, labelPos.h, 8)
+      ctx.fill()
+      ctx.stroke()
+      ctx.textBaseline = 'middle'
+      ctx.fillStyle = '#2B2B2B'
+      ctx.fillText(labelText, padL + chartW - 5, labelPos.y + labelPos.h / 2)
+
+      // X 轴日期标签：45° 斜排，空间不足时回退间隔抽样兜底
+      const pointSpacing = data.length > 1 ? chartW / (data.length - 1) : chartW
+      const labelStep = canvasChart.computeLabelStep(pointSpacing, xMetrics.projectedW)
+      const labelBaseY = cssH - xMetrics.halfExtent - 10
+      canvasChart.drawXAxisLabels(ctx, {
+        labels: xLabels,
+        xPositions: points.map(p => p.x),
+        baseY: labelBaseY,
+        step: labelStep,
+        font: '20px sans-serif',
+        color: '#999'
       })
     })
   }
