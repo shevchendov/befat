@@ -79,7 +79,8 @@ describe('checkMealReminder - meals exist, interval check', () => {
       items: [],
       total_calorie: 500,
       total_protein_g: 20,
-      created_at: new Date('2026-07-29T12:00:00').toISOString()
+      created_at: new Date('2026-07-29T12:00:00').toISOString(),
+      updated_at: new Date('2026-07-29T12:00:00').toISOString()
     })
     const res = await checkMealReminder.main({}, {})
     expect(res.shouldRemind).toBe(false)
@@ -95,7 +96,8 @@ describe('checkMealReminder - meals exist, interval check', () => {
       items: [],
       total_calorie: 500,
       total_protein_g: 20,
-      created_at: new Date('2026-07-29T12:00:00').toISOString()
+      created_at: new Date('2026-07-29T12:00:00').toISOString(),
+      updated_at: new Date('2026-07-29T12:00:00').toISOString()
     })
     const res = await checkMealReminder.main({}, {})
     expect(res.shouldRemind).toBe(true)
@@ -113,7 +115,8 @@ describe('checkMealReminder - meals exist, interval check', () => {
       items: [],
       total_calorie: 500,
       total_protein_g: 20,
-      created_at: new Date('2026-07-29T12:00:00').toISOString()
+      created_at: new Date('2026-07-29T12:00:00').toISOString(),
+      updated_at: new Date('2026-07-29T12:00:00').toISOString()
     })
     const res = await checkMealReminder.main({}, {})
     expect(res.shouldRemind).toBe(true)
@@ -129,13 +132,49 @@ describe('checkMealReminder - meals exist, interval check', () => {
       items: [],
       total_calorie: 500,
       total_protein_g: 20,
-      created_at: new Date('2026-07-29T12:00:00').toISOString()
+      created_at: new Date('2026-07-29T12:00:00').toISOString(),
+      updated_at: new Date('2026-07-29T12:00:00').toISOString()
     })
     const res = await checkMealReminder.main({}, {})
     expect(res.shouldRemind).toBe(false)
   })
 
-  test('有多条记录时只取最近一条', async () => {
+  test('合并后的单条记录：以最近 updated_at 判断加餐提醒', async () => {
+    setTime('2026-07-29T18:00:00')
+    sdk.__seed('food_logs', {
+      _openid: 'test-openid',
+      date: '2026-07-29',
+      meal_type: 'lunch',
+      raw_text: '瘦肉肠\n红茶',
+      items: [],
+      total_calorie: 800,
+      total_protein_g: 35,
+      created_at: new Date('2026-07-29T08:00:00').toISOString(),
+      updated_at: new Date('2026-07-29T12:00:00').toISOString()
+    })
+    const res = await checkMealReminder.main({}, {})
+    expect(res.shouldRemind).toBe(true)
+    expect(res.mealType).toBe('snack')
+  })
+
+  test('合并后的单条记录：updated_at 距今不足5小时则不提醒（created_at 更早也不误判）', async () => {
+    setTime('2026-07-29T13:00:00')
+    sdk.__seed('food_logs', {
+      _openid: 'test-openid',
+      date: '2026-07-29',
+      meal_type: 'lunch',
+      raw_text: '鸡蛋肠\n红茶',
+      items: [],
+      total_calorie: 800,
+      total_protein_g: 35,
+      created_at: new Date('2026-07-29T08:00:00').toISOString(),
+      updated_at: new Date('2026-07-29T12:00:00').toISOString()
+    })
+    const res = await checkMealReminder.main({}, {})
+    expect(res.shouldRemind).toBe(false)
+  })
+
+  test('跨多个餐次记录时按最新 updated_at 取最近一次进餐', async () => {
     setTime('2026-07-29T18:00:00')
     sdk.__seed('food_logs', {
       _openid: 'test-openid',
@@ -145,7 +184,8 @@ describe('checkMealReminder - meals exist, interval check', () => {
       items: [],
       total_calorie: 300,
       total_protein_g: 10,
-      created_at: new Date('2026-07-29T08:00:00').toISOString()
+      created_at: new Date('2026-07-29T08:00:00').toISOString(),
+      updated_at: new Date('2026-07-29T08:30:00').toISOString()
     })
     sdk.__seed('food_logs', {
       _openid: 'test-openid',
@@ -155,7 +195,8 @@ describe('checkMealReminder - meals exist, interval check', () => {
       items: [],
       total_calorie: 600,
       total_protein_g: 25,
-      created_at: new Date('2026-07-29T14:00:00').toISOString()
+      created_at: new Date('2026-07-29T14:00:00').toISOString(),
+      updated_at: new Date('2026-07-29T14:00:00').toISOString()
     })
     const res = await checkMealReminder.main({}, {})
     expect(res.shouldRemind).toBe(false)

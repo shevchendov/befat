@@ -15,7 +15,7 @@ exports.main = async (event, context) => {
     const mealLogs = await db.collection('food_logs').where({
       _openid: openid,
       date: today
-    }).orderBy('created_at', 'desc').limit(1).get()
+    }).orderBy('updated_at', 'desc').limit(1).get()
 
     if (mealLogs.data.length === 0) {
       const now = new Date()
@@ -38,7 +38,7 @@ exports.main = async (event, context) => {
       }
     } else {
       const lastMeal = mealLogs.data[0]
-      const lastMealTime = new Date(lastMeal.created_at)
+      const lastMealTime = new Date(lastMeal.updated_at || lastMeal.created_at)
       const hoursSinceLastMeal = (Date.now() - lastMealTime.getTime()) / (1000 * 60 * 60)
 
       if (hoursSinceLastMeal >= 5) {

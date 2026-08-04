@@ -1,0 +1,9 @@
+{
+  "name": "saveFoodLog",
+  "version": "1.0.0",
+  "description": "保存食物记录（同一天同餐次合并写入）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

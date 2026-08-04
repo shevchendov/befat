@@ -20,6 +20,7 @@ beforeEach(() => {
   page.data.showResult = false
   page.data.parsing = false
   page.data.saving = false
+  page.data.showCelebration = false
 })
 
 describe('setMealType', () => {
@@ -147,8 +148,8 @@ describe('saveFoodLog', () => {
   })
 
   test('成功保存后显示庆祝弹窗', async () => {
-    collectionAdd.mockImplementation(({ data }) => {
-      return Promise.resolve({ _id: 'new-id' })
+    callFnMock.mockResolvedValue({
+      result: { code: 0, message: 'ok', data: { is_merge: false, item_count: 1 } }
     })
     page.data.parsedItems = [{ name: '米饭', portion: '1碗', calorie: 200, protein_g: 4 }]
     page.data.rawTextSaved = '米饭'
@@ -156,17 +157,30 @@ describe('saveFoodLog', () => {
     page.data.totalCalorie = 200
     page.data.totalProtein = 4
     await page.saveFoodLog()
+    expect(callFnMock).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'saveFoodLog',
+      data: expect.objectContaining({ date: expect.any(String), meal_type: 'lunch', items: expect.any(Array) })
+    }))
     expect(page.data.showCelebration).toBe(true)
     expect(page.data.celebText).toBeTruthy()
   })
 
-  test('保存失败时 toast', async () => {
-    collectionAdd.mockRejectedValue(new Error('db error'))
+  test('云函数返回非 0 code 时 toast 保存失败', async () => {
+    callFnMock.mockResolvedValue({ result: { code: 3, message: 'AI 解析失败' } })
     page.data.parsedItems = [{ name: '米饭', portion: '1碗', calorie: 200, protein_g: 4 }]
     page.data.rawTextSaved = '米饭'
     page.data.mealType = 'lunch'
-    page.data.totalCalorie = 200
-    page.data.totalProtein = 4
+    await page.saveFoodLog()
+    expect(page.data.saving).toBe(false)
+    expect(page.data.showCelebration).toBe(false)
+    expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('失败') }))
+  })
+
+  test('保存失败(网络异常)时 toast', async () => {
+    callFnMock.mockRejectedValue(new Error('db error'))
+    page.data.parsedItems = [{ name: '米饭', portion: '1碗', calorie: 200, protein_g: 4 }]
+    page.data.rawTextSaved = '米饭'
+    page.data.mealType = 'lunch'
     await page.saveFoodLog()
     expect(page.data.saving).toBe(false)
     expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('失败') }))

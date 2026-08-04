@@ -25,6 +25,7 @@ function filterItems(items, query) {
       }
     }
     if (query.recipe_id) items = items.filter(r => r.recipe_id === query.recipe_id)
+    if (query.meal_type) items = items.filter(r => r.meal_type === query.meal_type)
   }
   return items
 }

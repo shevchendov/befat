@@ -137,24 +137,27 @@ Page({
 
     try {
       const today = util.formatDate(new Date())
-      const db = wx.cloud.database()
 
-      await db.collection('food_logs').add({
+      const res = await wx.cloud.callFunction({
+        name: 'saveFoodLog',
         data: {
           date: today,
           meal_type: this.data.mealType,
           raw_text: this.data.rawTextSaved,
-          parsed_items: items.map(item => ({
+          items: items.map(item => ({
             name: item.name,
             portion: item.portion || '1份',
             calorie: Number(item.calorie) || 0,
             protein_g: Number(item.protein_g) || 0
-          })),
-          total_calorie: this.data.totalCalorie,
-          total_protein_g: this.data.totalProtein,
-          created_at: db.serverDate()
+          }))
         }
       })
+
+      if (res.result.code !== 0) {
+        wx.showToast({ title: res.result.message || '保存失败', icon: 'none' })
+        this.setData({ saving: false })
+        return
+      }
 
       const mealLabels = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '加餐' }
       const mealEmojis = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍿' }
