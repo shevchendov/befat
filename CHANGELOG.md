@@ -1,5 +1,27 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-04] 57b2a90
+
+**feat: 抽取公共Canvas绘图工具并统一两个折线图排版**
+
+- 新增 miniprogram/utils/canvasChart.js（dpr适配/Y轴padding/X轴45度斜排/通用碰撞检测）
+- goal-detail 图表改用公共工具，修复X轴日期重叠与目标标签遮挡数据点
+- weight-track 图表改用公共工具，去掉手动*dpr坐标缩放
+- 新增 tests/frontend/canvasChart.test.js 单测
+- 修复 getShareCard 本周变化测试的日期敏感问题
+- 修复 generateRecipeInit 食谱热量上限断言（CDC数据772kcal）
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过（442/442），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `miniprogram/pages/goal-detail/goal-detail.js`
+- `miniprogram/pages/weight-track/weight-track.js`
+- `miniprogram/utils/canvasChart.js`
+- `tests/frontend/canvasChart.test.js`
+- `tests/generateRecipeInit.test.js`
+- `tests/getShareCard.test.js`
+
 ## [2026-08-04] efa7852
 
 **fix: saveFoodLog 新建记录补写 _openid 修复合并失效**

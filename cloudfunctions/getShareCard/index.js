@@ -53,6 +53,7 @@ exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
   const openid = wxContext.OPENID
   logger.info(FN, 'invoke', { hasOpenid: !!openid })
+  const t0 = Date.now() - start
 
   try {
     const today = fmt(new Date())
@@ -64,6 +65,16 @@ exports.main = async (event, context) => {
       db.collection('weight_logs').where({ _openid: openid, date: _.gte(ws).lte(today) }).orderBy('date', 'asc').get(),
       db.collection('weight_logs').where({ _openid: openid }).orderBy('date', 'desc').limit(1).get()
     ])
+    const t1 = Date.now() - start
+    logger.info(FN, 'batch1', {
+      t0,
+      t1,
+      dbBatch1: t1 - t0,
+      logCount: foodLogs.data.length,
+      weekLogCount: wLogs.data.length,
+      latestLogCount: latestW.data.length,
+      hasUser: userRes.data.length > 0
+    })
     let totalCal = 0; let totalPro = 0
     foodLogs.data.forEach(l => { totalCal += l.total_calorie || 0; totalPro += l.total_protein_g || 0 })
     const user = userRes.data[0] || null
@@ -77,6 +88,7 @@ exports.main = async (event, context) => {
     if (user && user.target_weight_kg != null && lw !== null) remain = Math.round((user.target_weight_kg - lw) * 100) / 100
 
     const consDays = await countConsecutive(openid)
+    const t2 = Date.now() - start
 
     const result = {
       code: 0, message: 'ok',
@@ -93,7 +105,15 @@ exports.main = async (event, context) => {
         consecutive_days: consDays
       }
     }
-    logger.info(FN, 'success', { duration: Date.now() - start })
+    logger.info(FN, 'success', {
+      duration: Date.now() - start,
+      t0,
+      t1,
+      t2,
+      dbBatch1: t1 - t0,
+      dbBatch2: t2 - t1,
+      postBatch2: Date.now() - start - t2
+    })
     return result
   } catch (err) {
     logger.error(FN, 'crash', { error: err.message, duration: Date.now() - start })
