@@ -1,5 +1,70 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-04] c62d0ed
+
+**feat: 同一天同一餐次的多次食物记录合并写入一条 food_logs**
+
+- 新增 saveFoodLog 云函数，按 _openid+date+meal_type 查重，存在则 update 合并、不存在则新建
+- 合并时 parsed_items 追加、total 重算、raw_text 以换行拼接、created_at 保持最早、新增 updated_at
+- log-food 前端改为调用 saveFoodLog 云函数
+- checkMealReminder 排序字段改 updated_at 以适配合并记录
+DEPLOY: cloudfunctions/saveFoodLog,cloudfunctions/checkMealReminder
+VERIFIED: 仅本地jest测试通过（425项），未做真机/云端验证
+DATA IMPACT: food_logs 记录由每次一条变为每餐每天一条；新增 updated_at 字段；需在云开发控制台新建复合索引 _openid+date+meal_type
+
+**涉及文件:**
+- `__mocks__/wx-server-sdk.js`
+- `cloudfunctions/checkMealReminder/index.js`
+- `cloudfunctions/saveFoodLog/common/logger.js`
+- `cloudfunctions/saveFoodLog/index.js`
+- `cloudfunctions/saveFoodLog/package.json`
+- `miniprogram/pages/log-food/log-food.js`
+- `tests/checkMealReminder.test.js`
+- `tests/frontend/log-food.test.js`
+- `tests/saveFoodLog.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/saveFoodLog,cloudfunctions/checkMealReminder
+
+## [2026-08-03] 81f8a9e
+
+**feat: 体重趋势图X轴日期标签改为全部显示并倾斜45度**
+
+- 取消间隔抽样，默认全部日期标签按 -45° 旋转显示
+- 底部 padding 依据旋转后文字等效半高动态加大，避免标签被画布底部裁切
+- 用 measureText+45°投影宽度做相邻标签重叠检测，空间不足才回退抽样兜底
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过（414项），未做真机/云端验证
+
+**涉及文件:**
+- `miniprogram/pages/weight-track/weight-track.js`
+
+## [2026-08-03] fe49b03
+
+**fix: 修复体重打卡页面体重趋势图排版问题**
+
+- Y轴：按刻度文字实际宽度动态预留左侧 padding（原固定 60*dpr 导致 toFixed(2) 文本越过画布左缘被截断），绘图区随之缩进
+- X轴：改为按标签实际宽度自适应抽样，保证相邻日期标签间距不小于 标签宽+12*dpr，消除 5 个点时的标签重叠
+- 保持 weight-track 原有 dpr 方式，未抽取公共绘图函数
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过（414项），未做真机/云端验证
+
+**涉及文件:**
+- `miniprogram/pages/weight-track/weight-track.js`
+
+## [2026-08-03] 1afc834
+
+**fix: 新用户首页目标卡片优雅降级为引导空状态**
+
+- loadGoalProgress 收到 code -1（用户未完成 onboarding）时不再静默隐藏，改为展示引导卡片
+- 新增目标引导卡：设定目标入口，点击跳转 onboarding
+- 正常用户渲染逻辑不变
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过（414项），未做真机/云端验证
+
+**涉及文件:**
+- `miniprogram/pages/index/index.js`
+- `miniprogram/pages/index/index.wxml`
+- `miniprogram/pages/index/index.wxss`
+
 ## [2026-08-03] 0fc8512
 
 **fix: parseFoodLog 切换 DeepSeek model 至 deepseek-v4-flash**

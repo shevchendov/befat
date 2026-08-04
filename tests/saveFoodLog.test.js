@@ -1,9 +1,52 @@
-const sdk = require('wx-server-sdk')
-jest.mock('wx-server-sdk')
+let mockRecords = []
+const mockGenId = (() => { let i = 1; return () => 'rec-' + (i++) })()
+
+jest.mock('wx-server-sdk', () => {
+  const mockServerDate = jest.fn(() => '2026-07-29T00:00:00.000Z')
+
+  return {
+    init: jest.fn(),
+    DYNAMIC_CURRENT_ENV: 'env-mock',
+    database: jest.fn(() => ({
+      collection: jest.fn(() => ({
+        where: jest.fn(query => ({
+          get: jest.fn().mockImplementation(() => {
+            const filtered = mockRecords.filter(r => {
+              return (query._openid ? r._openid === query._openid : true) &&
+                     (query.date ? r.date === query.date : true) &&
+                     (query.meal_type ? r.meal_type === query.meal_type : true)
+            })
+            return Promise.resolve({ data: filtered })
+          })
+        })),
+        doc: jest.fn(id => ({
+          update: jest.fn().mockImplementation(({ data }) => {
+            const idx = mockRecords.findIndex(r => r._id === id)
+            if (idx !== -1) Object.assign(mockRecords[idx], data)
+            return Promise.resolve({})
+          })
+        })),
+        // 模拟云函数服务端 add：不会自动注入 _openid
+        add: jest.fn().mockImplementation(({ data }) => {
+          const doc = { _id: mockGenId(), ...data }
+          mockRecords.push(doc)
+          return Promise.resolve({ _id: doc._id })
+        })
+      })),
+      serverDate: mockServerDate
+    })),
+    getWXContext: jest.fn(() => ({
+      OPENID: 'test-openid',
+      APPID: 'test-appid',
+      UNIONID: null
+    }))
+  }
+})
+
 const saveFoodLog = require('../cloudfunctions/saveFoodLog/index')
 
 beforeEach(() => {
-  sdk.__resetDB()
+  mockRecords = []
 })
 
 const baseEvent = {
@@ -13,7 +56,7 @@ const baseEvent = {
   items: [{ name: '米饭', portion: '1碗', calorie: 200, protein_g: 4 }]
 }
 
-function db() { return sdk.__getDB('food_logs') }
+function db() { return mockRecords }
 
 describe('saveFoodLog.main - parameter validation', () => {
   test('缺少必要参数返回 code 1', async () => {
@@ -50,6 +93,15 @@ describe('saveFoodLog.main - create new record', () => {
     expect(doc.total_calorie).toBe(200)
     expect(doc.total_protein_g).toBe(4)
     expect(doc.created_at).toBeTruthy()
+  })
+
+  test('新建记录显式写入 _openid', async () => {
+    const res = await saveFoodLog.main(baseEvent, {})
+    expect(res.code).toBe(0)
+    expect(db()).toHaveLength(1)
+    // 云函数服务端 add 不会自动注入 _openid，必须显式写入，
+    // 否则后续按 _openid 查询无法匹配，合并永不生效
+    expect(db()[0]._openid).toBe('test-openid')
   })
 
   test('不同餐次同一天各自新建', async () => {

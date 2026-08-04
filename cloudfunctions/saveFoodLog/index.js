@@ -82,6 +82,7 @@ exports.main = async (event, context) => {
     } else {
       const addRes = await db.collection('food_logs').add({
         data: {
+          _openid: openid,
           date,
           meal_type,
           raw_text,
