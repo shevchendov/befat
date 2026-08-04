@@ -146,14 +146,14 @@ Page({
 
       // 先测量 Y 轴刻度文字宽度，据此预留左侧 padding，避免数字贴边被截断
       const yLabels = []
-      for (let i = 0; i <= 4; i++) {
-        yLabels.push((maxW - range * i / 4).toFixed(2))
+      for (let i = 0; i <= 3; i++) {
+        yLabels.push((maxW - range * i / 3).toFixed(2))
       }
-      const padLeft = canvasChart.measureYAxisPadding(ctx, yLabels, { font: '20px sans-serif', margin: 16 })
+      const padLeft = canvasChart.measureYAxisPadding(ctx, yLabels, { font: '16px sans-serif', margin: 14 })
 
       // 测量 X 轴日期标签宽度与字号（用于旋转后底部预留与相邻重叠判断）
       const xLabels = records.map(r => r.date.slice(5))
-      const xMetrics = canvasChart.calcXLabelMetrics(ctx, xLabels, { fontSize: 20 })
+      const xMetrics = canvasChart.calcXLabelMetrics(ctx, xLabels, { fontSize: 16 })
 
       const padding = {
         top: 40,
@@ -169,10 +169,11 @@ Page({
       ctx.strokeStyle = '#F0E6D6'
       ctx.lineWidth = 1
       ctx.fillStyle = '#999'
+      ctx.font = '16px sans-serif'
       ctx.textAlign = 'right'
 
-      for (let i = 0; i <= 4; i++) {
-        const y = padding.top + chartH * i / 4
+      for (let i = 0; i <= 3; i++) {
+        const y = padding.top + chartH * i / 3
         ctx.beginPath()
         ctx.moveTo(padding.left, y)
         ctx.lineTo(cssW - padding.right, y)
@@ -215,7 +216,7 @@ Page({
         xPositions: points.map(p => p.x),
         baseY: labelBaseY,
         step: labelStep,
-        font: '20px sans-serif',
+        font: '16px sans-serif',
         color: '#999'
       })
     })
