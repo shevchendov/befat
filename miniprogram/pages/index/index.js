@@ -1,5 +1,6 @@
 const app = getApp()
 const util = require('../../utils/util')
+const dateFormat = require('../../utils/dateFormat')
 const logger = require('../../utils/logger')
 
 const CELEBRATION_THRESHOLD = 0.8
@@ -32,7 +33,7 @@ Page({
     const now = new Date()
     const today = util.formatDate(now)
     const hour = now.getHours()
-    const dateText = now.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' })
+    const dateText = dateFormat.formatDateShortCN(now)
 
     let greeting
     if (hour < 9) greeting = '早起的鸟儿有虫吃，早起的人儿要加餐！🌅'
@@ -67,7 +68,7 @@ Page({
               meals.push({
                 mealLabel: util.getMealTypeLabel(type),
                 mealType: type,
-                time: log.created_at ? new Date(log.created_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : '',
+                time: log.created_at ? dateFormat.formatTimeShortCN(new Date(log.created_at)) : '',
                 items: itemList.map(item => ({
                   name: item.name,
                   calorie: item.calorie || 0,
