@@ -43,6 +43,14 @@ function parseTargetWeeks(value) {
   return { ok: true, value: n }
 }
 
+// 期望周速率：用户计划隐含的增重速度（kg/周）= (目标 - 起始) / 周期
+// 返回正数快照（不取整，避免累计精度损失）；周期非法或速率非正（如减重方向）时返回 null
+function calcExpectedWeeklyRate(targetWeightKg, startWeightKg, targetWeeks) {
+  if (!targetWeeks || targetWeeks <= 0) return null
+  const rate = (targetWeightKg - startWeightKg) / targetWeeks
+  return rate > 0 ? rate : null
+}
+
 // 安全校验（合规红线，不可绕过）：BMI 过低拦截 + 增重速率过快拦截
 // 返回 { ok: true, bmi } 或 { ok: false, code, message, data }
 // targetWeeks 为用户计划达成周期（周），决定"每周增重"的基准周数；
@@ -87,6 +95,7 @@ module.exports = {
   calcBmi,
   fmtDate,
   parseTargetWeeks,
+  calcExpectedWeeklyRate,
   validateWeights,
   computeTargets
 }

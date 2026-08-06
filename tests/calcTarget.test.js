@@ -108,6 +108,8 @@ describe('calcTarget.main - target weeks', () => {
     expect(mockAddedData.target_weeks).toBe(24)
     expect(typeof mockAddedData.target_weeks_set_at).toBe('string')
     expect(mockAddedData.target_weeks_set_at).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    // 期望周速率快照 = (目标 - 起始) / 周期 = 2 / 24
+    expect(mockAddedData.expected_weekly_rate).toBeCloseTo(2 / 24, 6)
   })
 
   test('long-period plan passes weekly gain guard that fails on default 4 weeks', async () => {
@@ -145,6 +147,7 @@ describe('calcTarget.main - target weeks', () => {
     expect(result.code).toBe(0)
     expect(mockAddedData.target_weeks).toBeUndefined()
     expect(mockAddedData.target_weeks_set_at).toBeUndefined()
+    expect(mockAddedData.expected_weekly_rate).toBeUndefined()
   })
 })
 

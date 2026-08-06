@@ -145,6 +145,8 @@ describe('recalcTarget.main - target weeks', () => {
     expect(mockUpdateData.target_weeks).toBe(24)
     expect(typeof mockUpdateData.target_weeks_set_at).toBe('string')
     expect(mockUpdateData.target_weeks_set_at).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    // 老用户速率缺失 → 补写期望周速率快照 = (65 - initial_weight 55) / 24
+    expect(mockUpdateData.expected_weekly_rate).toBeCloseTo(10 / 24, 6)
   })
 
   test('long-period plan passes weekly gain guard that fails on default 4 weeks', async () => {
@@ -176,5 +178,33 @@ describe('recalcTarget.main - target weeks', () => {
     expect(result.code).toBe(0)
     expect(mockUpdateData.target_weeks).toBeUndefined()
     expect(mockUpdateData.target_weeks_set_at).toBeUndefined()
+    expect(mockUpdateData.expected_weekly_rate).toBeUndefined()
+  })
+
+  test('recomputes expected_weekly_rate when target_weeks changes', async () => {
+    mockUsers = [{ ...USER, target_weeks: 12, expected_weekly_rate: 0.5 }]
+    // 周期从 12 → 24 视为重新规划：按新周期重算速率 = (68 - 55) / 24
+    const result = await recalcTarget.main({ current_weight_kg: 62, target_weight_kg: 68, target_weeks: 24 }, {})
+    expect(result.code).toBe(0)
+    expect(mockUpdateData.target_weeks).toBe(24)
+    expect(mockUpdateData.expected_weekly_rate).toBeCloseTo(13 / 24, 6)
+  })
+
+  test('keeps expected_weekly_rate frozen when only target changes', async () => {
+    mockUsers = [{ ...USER, target_weeks: 24, expected_weekly_rate: 0.5 }]
+    // 仅改目标、未重新传周期：冻结的速率快照必须原样保留，不随目标变化
+    const result = await recalcTarget.main({ current_weight_kg: 62, target_weight_kg: 70 }, {})
+    expect(result.code).toBe(0)
+    expect(mockUpdateData.expected_weekly_rate).toBeUndefined()
+    expect(mockUpdateData.target_weeks).toBeUndefined()
+  })
+
+  test('same target_weeks re-sent does not rewrite existing rate', async () => {
+    mockUsers = [{ ...USER, target_weeks: 24, expected_weekly_rate: 0.5 }]
+    // 周期未变（24 === 24）、速率已存在 → 不覆盖
+    const result = await recalcTarget.main({ current_weight_kg: 62, target_weight_kg: 65, target_weeks: 24 }, {})
+    expect(result.code).toBe(0)
+    expect(mockUpdateData.expected_weekly_rate).toBeUndefined()
+    expect(mockUpdateData.target_weeks).toBe(24)
   })
 })

@@ -195,6 +195,7 @@ Page({
             barWidth: progress + '%',
             remaining_kg: fmtW(d.remaining_kg),
             estimated_date: d.estimated_date,
+            estimate_basis: d.estimate_basis || null,
             trend_data: d.trend_data
           },
           showGoalGuide: false

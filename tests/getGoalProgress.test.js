@@ -237,14 +237,50 @@ describe('getGoalProgress.main', function () {
       expect(res.data.plan_expired).toBe(false)
     })
 
-    test('no recentRate but has target_weeks: falls back to planned_date', async function () {
+    test('no recentRate but has target_weeks: planned-rate estimate with basis=planned', async function () {
       seed('users', { current_weight_kg: 60, target_weight_kg: 70, target_weeks: 12, target_weeks_set_at: daysAgo(0) })
 
       var res = await getGoalProgress.main({}, {})
       expect(res.code).toBe(0)
+      // 无速率数据时用计划隐含速率 (70-60)/12 推算 → 恰好 12 周 = 84 天
       expect(res.data.estimated_date).toBe(daysAhead(84))
+      expect(res.data.estimate_basis).toBe('planned')
       expect(res.data.planned_date).toBe(daysAhead(84))
       expect(res.data.plan_expired).toBe(false)
+    })
+
+    test('planned estimate responds to target change via frozen expected_weekly_rate', async function () {
+      // 快照速率 0.5kg/周（如原计划 60→65 共 10 周），改目标到 70 后：
+      // remainingWeeks = 10/0.5 = 20 → 140 天
+      seed('users', { current_weight_kg: 60, target_weight_kg: 70, target_weeks: 10, expected_weekly_rate: 0.5 })
+
+      var res = await getGoalProgress.main({}, {})
+      expect(res.code).toBe(0)
+      expect(res.data.estimated_date).toBe(daysAhead(140))
+      expect(res.data.estimate_basis).toBe('planned')
+    })
+
+    test('measured estimate reports basis=measured', async function () {
+      seed('users', { current_weight_kg: 60, target_weight_kg: 70 })
+      seed('weight_logs', { date: daysAgo(6), weight_kg: 60 })
+      seed('weight_logs', { date: daysAgo(4), weight_kg: 60.8 })
+      seed('weight_logs', { date: daysAgo(2), weight_kg: 61.6 })
+      seed('weight_logs', { date: daysAgo(0), weight_kg: 62 })
+
+      var res = await getGoalProgress.main({}, {})
+      expect(res.code).toBe(0)
+      expect(res.data.estimate_basis).toBe('measured')
+    })
+
+    test('loss direction: no rate snapshot, no planned estimate', async function () {
+      // 目标(65) < 起始(70) 为减重方向，calcExpectedWeeklyRate 返回 null 不落库，
+      // branch C 因计划速率缺失也不给出预估
+      seed('users', { current_weight_kg: 70, target_weight_kg: 65, target_weeks: 10 })
+
+      var res = await getGoalProgress.main({}, {})
+      expect(res.code).toBe(0)
+      expect(res.data.estimated_date).toBeNull()
+      expect(res.data.estimate_basis).toBeNull()
     })
 
     test('direction mismatch: target_weeks must NOT override the existing no-estimate downgrade', async function () {

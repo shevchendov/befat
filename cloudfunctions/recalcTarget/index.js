@@ -2,7 +2,7 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const logger = require('./common/logger')
-const { validateWeights, computeTargets, parseTargetWeeks, fmtDate } = require('./common/targetCalc')
+const { validateWeights, computeTargets, parseTargetWeeks, fmtDate, calcExpectedWeeklyRate } = require('./common/targetCalc')
 const FN = 'recalcTarget'
 
 exports.main = async (event, context) => {
@@ -77,6 +77,17 @@ exports.main = async (event, context) => {
     if (weeks.value !== null) {
       updateData.target_weeks = weeks.value
       updateData.target_weeks_set_at = fmtDate(new Date())
+
+      // 期望周速率冻结策略：
+      // - 周期变化（用户重新规划节奏）或速率缺失（老用户兼容引导）时重算，覆盖/补写
+      // - 仅改目标体重、周期未变时沿用冻结速率，避免日期频繁抖动
+      const startKg = user.initial_weight != null ? user.initial_weight : user.current_weight_kg
+      const weeksChanged = user.target_weeks == null || Number(user.target_weeks) !== weeks.value
+      const rateMissing = user.expected_weekly_rate == null
+      if (weeksChanged || rateMissing) {
+        const planRate = calcExpectedWeeklyRate(targetWeightKg, startKg, weeks.value)
+        if (planRate !== null) updateData.expected_weekly_rate = planRate
+      }
     }
     await db.collection('users').doc(user._id).update({ data: updateData })
 

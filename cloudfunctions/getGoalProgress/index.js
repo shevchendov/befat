@@ -110,6 +110,8 @@ exports.main = async (event, context) => {
 
     // 预计达成日期：速率方向与目标方向一致且未达成时才按实测速率计算
     let estimatedDate = null
+    // 预计日期依据：'measured' 实测节奏 / 'planned' 计划周期推算 / null 无预估
+    let estimateBasis = null
     const rate = recentRate(logs)
     const rateAvailable = rate !== null && !achieved
     if (rateAvailable) {
@@ -119,15 +121,28 @@ exports.main = async (event, context) => {
         const days = Math.ceil((gap / Math.abs(rate)) - 1e-9)
         if (days > 0 && days < 3650) {
           estimatedDate = fmt(addDays(new Date(), days))
+          estimateBasis = 'measured'
         }
       }
     }
 
-    // 数据不足兜底：仅当"无速率数据"（记录不足）而非"方向相反"时才用计划周期兜底；
+    // 数据不足兜底：仅当"无速率数据"（记录不足）而非"方向相反"时才用计划推算；
     // 方向相反必须保持 estimated_date=null 的安全设计（不显示与目标方向相反的误导性预估），
     // 不能被计划值覆盖
-    if (!rateAvailable && !achieved && hasPlan) {
-      estimatedDate = plannedDate
+    if (!rateAvailable && !achieved && hasPlan && isGain) {
+      // 用"计划隐含的期望周速率"推算，使日期能响应目标体重变化；
+      // 期望速率取用户固定快照（onboarding/重算时冻结），缺失时退化为按当前目标/周期现场估算
+      const planRate = user.expected_weekly_rate != null && user.expected_weekly_rate > 0
+        ? user.expected_weekly_rate
+        : (targetWeight - initialWeight) / user.target_weeks
+      if (planRate > 0) {
+        const remainingWeeks = Math.abs(targetWeight - currentWeight) / planRate
+        const days = Math.ceil(remainingWeeks * 7 - 1e-9)
+        if (days > 0 && days < 3650) {
+          estimatedDate = fmt(addDays(new Date(), days))
+          estimateBasis = 'planned'
+        }
+      }
     }
 
     // 节奏对比：仅当 estimated_date 与 planned_date 都存在时计算
@@ -157,13 +172,14 @@ exports.main = async (event, context) => {
         remaining_kg: remainingKg,
         achieved,
         estimated_date: estimatedDate,
+        estimate_basis: estimateBasis,
         planned_date: plannedDate,
         pace_status: paceStatus,
         plan_expired: planExpired,
         trend_data: logs.map(r => ({ date: r.date, weight_kg: r.weight_kg }))
       }
     }
-    logger.info(FN, 'success', { duration: Date.now() - start, logCount: logs.length, achieved, hasEstimate: !!estimatedDate, hasPlan, hasPace: !!paceStatus })
+    logger.info(FN, 'success', { duration: Date.now() - start, logCount: logs.length, achieved, hasEstimate: !!estimatedDate, estimateBasis, hasPlan, hasPace: !!paceStatus })
     return result
   } catch (err) {
     logger.error(FN, 'crash', { error: err.message, duration: Date.now() - start })
