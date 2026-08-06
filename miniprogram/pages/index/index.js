@@ -235,5 +235,9 @@ Page({
 
   goToShareCard() {
     wx.navigateTo({ url: '/pages/share-card/share-card' })
+  },
+
+  goToProfile() {
+    wx.navigateTo({ url: '/pages/profile/profile' })
   }
 })

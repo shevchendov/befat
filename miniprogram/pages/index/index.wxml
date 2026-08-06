@@ -1,5 +1,6 @@
 <view class="page-container">
   <view class="hero-banner">
+    <view class="hero-profile-btn" bindtap="goToProfile" hover-class="hero-profile-btn-hover">👤 我的</view>
     <text class="hero-date">{{dateText}}</text>
     <text class="hero-greeting">{{greeting}}</text>
     <view class="hero-badge" wx:if="{{caloriePercent >= 1}}">🎯 今日目标达成！</view>

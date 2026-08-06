@@ -41,6 +41,23 @@
   z-index: 1;
 }
 
+/* 顶部"我的"入口：复用 hero-badge 半透明白胶囊风格，右上角绝对定位 */
+.hero-profile-btn {
+  position: absolute;
+  top: 24rpx;
+  right: 24rpx;
+  z-index: 2;
+  padding: 8rpx 22rpx;
+  background: rgba(255,255,255,0.25);
+  border-radius: 30rpx;
+  font-size: 24rpx;
+  color: #fff;
+}
+
+.hero-profile-btn-hover {
+  opacity: 0.85;
+}
+
 .hero-greeting {
   font-size: 40rpx;
   font-weight: 700;
