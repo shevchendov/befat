@@ -92,10 +92,27 @@ exports.main = async (event, context) => {
     // 剩余差距（带方向）：target - current，未达成时为正（还差多少），达成后为 0 或负数（超出）
     const remainingKg = Math.round((targetWeight - currentWeight) * 100) / 100
 
-    // 预计达成日期：速率方向与目标方向一致且未达成时才计算
+    // 计划周期（周）：仅当为 1~104 的合法整数时视为已设置
+    const hasPlan = user.target_weeks != null && Number.isInteger(user.target_weeks) && user.target_weeks >= 1 && user.target_weeks <= 104
+
+    // 计划日期：锚定到"设置计划当天"（target_weeks_set_at）+ 周期×7，而非当前日期。
+    // 只有固定锚点，"计划是否已到期"才有意义（到期=今天已过计划期限）；
+    // 锚点缺失（历史数据/防御）时回退到今天。
+    let plannedDate = null
+    let planExpired = null
+    if (hasPlan) {
+      const anchorRaw = user.target_weeks_set_at ? new Date(user.target_weeks_set_at) : null
+      const anchor = anchorRaw && !isNaN(anchorRaw.getTime()) ? anchorRaw : new Date()
+      plannedDate = fmt(addDays(anchor, user.target_weeks * 7))
+      // 今天已过或等于计划期限视为到期（对应"剩余天数<=0"）
+      planExpired = fmt(new Date()) >= plannedDate
+    }
+
+    // 预计达成日期：速率方向与目标方向一致且未达成时才按实测速率计算
     let estimatedDate = null
     const rate = recentRate(logs)
-    if (rate !== null && !achieved) {
+    const rateAvailable = rate !== null && !achieved
+    if (rateAvailable) {
       const directionOk = isGain ? rate > 0 : rate < 0
       if (directionOk) {
         const gap = Math.abs(initialWeight === targetWeight ? 0 : targetWeight - currentWeight)
@@ -103,6 +120,29 @@ exports.main = async (event, context) => {
         if (days > 0 && days < 3650) {
           estimatedDate = fmt(addDays(new Date(), days))
         }
+      }
+    }
+
+    // 数据不足兜底：仅当"无速率数据"（记录不足）而非"方向相反"时才用计划周期兜底；
+    // 方向相反必须保持 estimated_date=null 的安全设计（不显示与目标方向相反的误导性预估），
+    // 不能被计划值覆盖
+    if (!rateAvailable && !achieved && hasPlan) {
+      estimatedDate = plannedDate
+    }
+
+    // 节奏对比：仅当 estimated_date 与 planned_date 都存在时计算
+    let paceStatus = null
+    if (estimatedDate && plannedDate) {
+      // 14 天容差阈值：避免 estimated_date 与 planned_date 在临界附近因微小数值变化
+      // 而抖动、导致状态来回跳变——与 X 轴标签抽样"临界抖动 bug"同性质；
+      // 容差内一律判为 on_track，请勿删减该容差
+      const diffDays = Math.abs(dayDiff(estimatedDate, plannedDate))
+      if (diffDays <= 14) {
+        paceStatus = 'on_track'
+      } else if (estimatedDate < plannedDate) {
+        paceStatus = 'ahead'
+      } else {
+        paceStatus = 'behind'
       }
     }
 
@@ -117,10 +157,13 @@ exports.main = async (event, context) => {
         remaining_kg: remainingKg,
         achieved,
         estimated_date: estimatedDate,
+        planned_date: plannedDate,
+        pace_status: paceStatus,
+        plan_expired: planExpired,
         trend_data: logs.map(r => ({ date: r.date, weight_kg: r.weight_kg }))
       }
     }
-    logger.info(FN, 'success', { duration: Date.now() - start, logCount: logs.length, achieved, hasEstimate: !!estimatedDate })
+    logger.info(FN, 'success', { duration: Date.now() - start, logCount: logs.length, achieved, hasEstimate: !!estimatedDate, hasPlan, hasPace: !!paceStatus })
     return result
   } catch (err) {
     logger.error(FN, 'crash', { error: err.message, duration: Date.now() - start })

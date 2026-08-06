@@ -57,6 +57,9 @@ Page({
     } else if (field === 'current_weight_kg' || field === 'target_weight_kg') {
       value = sanitizeDigit(value)
       if (value.length > 3) value = value.slice(0, 3)
+    } else if (field === 'target_weeks') {
+      value = sanitizeNumber(value)
+      if (value.length > 3) value = value.slice(0, 3)
     }
 
     this.setData({ ['form.' + field]: value })
@@ -81,6 +84,7 @@ Page({
       const h = parseFloat(this.data.form.height_cm)
       const cw = parseFloat(this.data.form.current_weight_kg)
       const tw = parseFloat(this.data.form.target_weight_kg)
+      const weeks = parseInt(this.data.form.target_weeks)
       if (!h || h < 100 || h > 250) {
         wx.showToast({ title: '请输入有效身高(100-250cm)', icon: 'none' })
         return
@@ -91,6 +95,10 @@ Page({
       }
       if (!tw || tw <= cw) {
         wx.showToast({ title: '目标体重应大于当前体重', icon: 'none' })
+        return
+      }
+      if (!weeks || weeks < 1 || weeks > 104) {
+        wx.showToast({ title: '请输入有效计划周期(1-104周)', icon: 'none' })
         return
       }
     }
@@ -111,7 +119,8 @@ Page({
           height_cm: parseFloat(form.height_cm),
           current_weight_kg: parseFloat(form.current_weight_kg),
           target_weight_kg: parseFloat(form.target_weight_kg),
-          activity_level: form.activity_level
+          activity_level: form.activity_level,
+          target_weeks: parseInt(form.target_weeks)
         }
       })
 

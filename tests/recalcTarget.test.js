@@ -136,3 +136,45 @@ describe('recalcTarget.main - success', () => {
     expect(result.data.tdee).toBe(tdee)
   })
 })
+
+describe('recalcTarget.main - target weeks', () => {
+  test('stores target_weeks and set date when provided', async () => {
+    mockUsers = [USER]
+    const result = await recalcTarget.main({ current_weight_kg: 62, target_weight_kg: 65, target_weeks: 24 }, {})
+    expect(result.code).toBe(0)
+    expect(mockUpdateData.target_weeks).toBe(24)
+    expect(typeof mockUpdateData.target_weeks_set_at).toBe('string')
+    expect(mockUpdateData.target_weeks_set_at).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+
+  test('long-period plan passes weekly gain guard that fails on default 4 weeks', async () => {
+    mockUsers = [USER]
+    const result = await recalcTarget.main({ current_weight_kg: 55, target_weight_kg: 85, target_weeks: 40 }, {})
+    expect(result.code).toBe(0)
+    expect(mockUpdateData.target_weight_kg).toBe(85)
+  })
+
+  test('rejects invalid target_weeks and does not update db', async () => {
+    mockUsers = [USER]
+    const result = await recalcTarget.main({ current_weight_kg: 62, target_weight_kg: 65, target_weeks: 0 }, {})
+    expect(result.code).toBe(1)
+    expect(mockUpdateData).toBeNull()
+  })
+
+  test('reuses stored target_weeks for rate guard when not re-sent', async () => {
+    mockUsers = [{ ...USER, target_weeks: 40 }]
+    // 55→85kg：默认 4 周会触发 code 3，但库中已存 40 周应通过
+    const result = await recalcTarget.main({ current_weight_kg: 55, target_weight_kg: 85 }, {})
+    expect(result.code).toBe(0)
+    // 未重新填写周期：不覆盖库中原值
+    expect(mockUpdateData.target_weeks).toBeUndefined()
+  })
+
+  test('omits target_weeks fields when not provided', async () => {
+    mockUsers = [USER]
+    const result = await recalcTarget.main({ current_weight_kg: 62, target_weight_kg: 65 }, {})
+    expect(result.code).toBe(0)
+    expect(mockUpdateData.target_weeks).toBeUndefined()
+    expect(mockUpdateData.target_weeks_set_at).toBeUndefined()
+  })
+})

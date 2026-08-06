@@ -8,11 +8,13 @@ const mockWhere = jest.fn(() => ({
   get: mockGet,
   limit: jest.fn(() => ({ get: mockGet }))
 }))
+let mockAddedData = null
+let mockUpdatedData = null
 const mockDoc = jest.fn(() => ({
-  update: jest.fn().mockResolvedValue({}),
+  update: jest.fn(({ data }) => { mockUpdatedData = data; return Promise.resolve({}) }),
   remove: jest.fn().mockResolvedValue({})
 }))
-const mockAdd = jest.fn().mockResolvedValue({ _id: 'new-user-id' })
+const mockAdd = jest.fn(({ data }) => { mockAddedData = data; return Promise.resolve({ _id: 'new-user-id' }) })
 const mockServerDate = jest.fn(() => '2026-07-29T00:00:00.000Z')
 
 const mockCollection = jest.fn(() => ({
@@ -36,6 +38,11 @@ jest.mock('wx-server-sdk', () => ({
 }))
 
 const calcTarget = require('../cloudfunctions/calcTarget/index')
+
+beforeEach(() => {
+  mockAddedData = null
+  mockUpdatedData = null
+})
 
 describe('calcTarget.main - parameter validation', () => {
   test('returns code 1 when missing parameters', async () => {
@@ -88,6 +95,56 @@ describe('calcTarget.main - weekly gain guard', () => {
       gender: 'male', activity_level: 'moderate', age: 25
     }, {})
     expect(result.code).toBe(0)
+  })
+})
+
+describe('calcTarget.main - target weeks', () => {
+  test('stores target_weeks and set date when provided', async () => {
+    const result = await calcTarget.main({
+      height_cm: 175, current_weight_kg: 60, target_weight_kg: 62,
+      gender: 'male', activity_level: 'moderate', age: 25, target_weeks: 24
+    }, {})
+    expect(result.code).toBe(0)
+    expect(mockAddedData.target_weeks).toBe(24)
+    expect(typeof mockAddedData.target_weeks_set_at).toBe('string')
+    expect(mockAddedData.target_weeks_set_at).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+
+  test('long-period plan passes weekly gain guard that fails on default 4 weeks', async () => {
+    // 30kg / 4 周 = 7.5kg/周会触发 code 3；延长到 40 周后 0.75kg/周应通过
+    const result = await calcTarget.main({
+      height_cm: 175, current_weight_kg: 55, target_weight_kg: 85,
+      gender: 'male', activity_level: 'moderate', age: 25, target_weeks: 40
+    }, {})
+    expect(result.code).toBe(0)
+  })
+
+  test('rejects invalid target_weeks (0)', async () => {
+    const result = await calcTarget.main({
+      height_cm: 175, current_weight_kg: 60, target_weight_kg: 62,
+      gender: 'male', activity_level: 'moderate', age: 25, target_weeks: 0
+    }, {})
+    expect(result.code).toBe(1)
+    expect(mockAddedData).toBeNull()
+  })
+
+  test('rejects target_weeks over 104', async () => {
+    const result = await calcTarget.main({
+      height_cm: 175, current_weight_kg: 60, target_weight_kg: 62,
+      gender: 'male', activity_level: 'moderate', age: 25, target_weeks: 105
+    }, {})
+    expect(result.code).toBe(1)
+    expect(mockAddedData).toBeNull()
+  })
+
+  test('omits target_weeks fields when not provided', async () => {
+    const result = await calcTarget.main({
+      height_cm: 175, current_weight_kg: 60, target_weight_kg: 62,
+      gender: 'male', activity_level: 'moderate', age: 25
+    }, {})
+    expect(result.code).toBe(0)
+    expect(mockAddedData.target_weeks).toBeUndefined()
+    expect(mockAddedData.target_weeks_set_at).toBeUndefined()
   })
 })
 

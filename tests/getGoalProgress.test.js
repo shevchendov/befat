@@ -218,6 +218,68 @@ describe('getGoalProgress.main', function () {
     expect(est).toBe(daysAhead(24))
   })
 
+  describe('target weeks: planned_date / pace_status / plan_expired', function () {
+    test('has recentRate AND target_weeks: estimated from rate, planned_date separate', async function () {
+      seed('users', { current_weight_kg: 60, target_weight_kg: 70, target_weeks: 12, target_weeks_set_at: daysAgo(0) })
+      seed('weight_logs', { date: daysAgo(6), weight_kg: 60 })
+      seed('weight_logs', { date: daysAgo(4), weight_kg: 60.8 })
+      seed('weight_logs', { date: daysAgo(2), weight_kg: 61.6 })
+      seed('weight_logs', { date: daysAgo(0), weight_kg: 62 })
+
+      var res = await getGoalProgress.main({}, {})
+      expect(res.code).toBe(0)
+      // estimated 仍按实测速率：(62-60)/6 = 0.333，剩余 8kg → 24 天
+      expect(res.data.estimated_date).toBe(daysAhead(24))
+      // planned 按周期单独返回：今天 + 12*7 = 84 天
+      expect(res.data.planned_date).toBe(daysAhead(84))
+      // 实际节奏(24天) 远早于计划(84天)，超出 14 天容差 → ahead
+      expect(res.data.pace_status).toBe('ahead')
+      expect(res.data.plan_expired).toBe(false)
+    })
+
+    test('no recentRate but has target_weeks: falls back to planned_date', async function () {
+      seed('users', { current_weight_kg: 60, target_weight_kg: 70, target_weeks: 12, target_weeks_set_at: daysAgo(0) })
+
+      var res = await getGoalProgress.main({}, {})
+      expect(res.code).toBe(0)
+      expect(res.data.estimated_date).toBe(daysAhead(84))
+      expect(res.data.planned_date).toBe(daysAhead(84))
+      expect(res.data.plan_expired).toBe(false)
+    })
+
+    test('direction mismatch: target_weeks must NOT override the existing no-estimate downgrade', async function () {
+      // 增重目标但体重在下降，即使存了 target_weeks，estimated_date 仍须为 null
+      seed('users', { current_weight_kg: 60, target_weight_kg: 70, target_weeks: 12, target_weeks_set_at: daysAgo(0) })
+      seed('weight_logs', { date: daysAgo(6), weight_kg: 62 })
+      seed('weight_logs', { date: daysAgo(3), weight_kg: 61 })
+      seed('weight_logs', { date: daysAgo(1), weight_kg: 60.5 })
+
+      var res = await getGoalProgress.main({}, {})
+      expect(res.code).toBe(0)
+      expect(res.data.achieved).toBe(false)
+      expect(res.data.estimated_date).toBeNull()
+      expect(res.data.planned_date).toBe(daysAhead(84))
+      expect(res.data.pace_status).toBeNull()
+      expect(res.data.plan_expired).toBe(false)
+    })
+
+    test('expired plan: planned_date stays a real (past) date with plan_expired=true, no crash', async function () {
+      // 20 天前设置 2 周计划 → 期限 = 20天前 + 14天 = 6天前，已过期
+      seed('users', { current_weight_kg: 60, target_weight_kg: 70, target_weeks: 2, target_weeks_set_at: daysAgo(20) })
+      seed('weight_logs', { date: daysAgo(6), weight_kg: 61 })
+      seed('weight_logs', { date: daysAgo(3), weight_kg: 61.5 })
+      seed('weight_logs', { date: daysAgo(1), weight_kg: 62 })
+
+      var res = await getGoalProgress.main({}, {})
+      expect(res.code).toBe(0)
+      expect(res.data.planned_date).toBe(daysAgo(6))
+      expect(res.data.plan_expired).toBe(true)
+      // 实测速率 (62-61)/5 = 0.2，剩余 8kg → 40 天，远晚于已过期计划 → behind
+      expect(res.data.estimated_date).toBe(daysAhead(40))
+      expect(res.data.pace_status).toBe('behind')
+    })
+  })
+
   test('returns error -1 on db crash', async function () {
     seed('users', { current_weight_kg: 60, target_weight_kg: 70 })
     mockDbError = true

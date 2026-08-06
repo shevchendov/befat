@@ -2,7 +2,7 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const logger = require('./common/logger')
-const { validateWeights, computeTargets } = require('./common/targetCalc')
+const { validateWeights, computeTargets, parseTargetWeeks, fmtDate } = require('./common/targetCalc')
 const FN = 'calcTarget'
 
 exports.main = async (event, context) => {
@@ -26,7 +26,15 @@ exports.main = async (event, context) => {
       return result
     }
 
-    const guard = validateWeights(current_weight_kg, target_weight_kg, height_cm)
+    // 计划周期（周）：1~104；缺省允许（未填则不定周期，速率校验回退到默认 4 周）
+    const weeks = parseTargetWeeks(event.target_weeks)
+    if (!weeks.ok) {
+      const result = { code: 1, message: weeks.message }
+      logger.info(FN, 'return', { code: 1, duration: Date.now() - start })
+      return result
+    }
+
+    const guard = validateWeights(current_weight_kg, target_weight_kg, height_cm, weeks.value)
     if (!guard.ok) {
       logger.info(FN, 'return', { code: guard.code, bmi: guard.data.bmi, duration: Date.now() - start })
       return { code: guard.code, message: guard.message, data: guard.data }
@@ -48,6 +56,12 @@ exports.main = async (event, context) => {
       daily_protein_target_g: dailyProteinTargetG,
       bmi,
       updated_at: db.serverDate()
+    }
+
+    // 填写了计划周期则连同设置日期一并入库；未填写不落这两字段（老用户/未填保持原状）
+    if (weeks.value !== null) {
+      userData.target_weeks = weeks.value
+      userData.target_weeks_set_at = fmtDate(new Date())
     }
 
     const existing = await db.collection('users').where({ _openid: openid }).get()

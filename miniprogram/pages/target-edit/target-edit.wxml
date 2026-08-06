@@ -35,6 +35,14 @@
         </view>
       </view>
 
+      <view class="form-item">
+        <text class="form-label">计划周期</text>
+        <view class="input-wrap">
+          <input class="input-number" type="number" value="{{form.target_weeks}}" bindinput="onInput" data-field="target_weeks" placeholder="预计多少周达成(1-104)" />
+          <text class="input-unit">周</text>
+        </view>
+      </view>
+
       <view class="profile-note">
         <text>档案复用：{{profileText}}</text>
       </view>

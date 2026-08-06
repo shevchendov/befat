@@ -2,7 +2,7 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const logger = require('./common/logger')
-const { validateWeights, computeTargets } = require('./common/targetCalc')
+const { validateWeights, computeTargets, parseTargetWeeks, fmtDate } = require('./common/targetCalc')
 const FN = 'recalcTarget'
 
 exports.main = async (event, context) => {
@@ -43,8 +43,20 @@ exports.main = async (event, context) => {
       return result
     }
 
+    // 计划周期（周）：1~104；未重新填写时沿用库中原有 target_weeks（不覆盖不清除）
+    const weeks = parseTargetWeeks(event.target_weeks)
+    if (!weeks.ok) {
+      const result = { code: 1, message: weeks.message }
+      logger.info(FN, 'return', { code: 1, duration: Date.now() - start })
+      return result
+    }
+
+    // 速率校验基准周数：优先用本次填写的周期；未填写则回退到库中已存周期；都没有才默认 4 周
+    const storedWeeksOk = user.target_weeks != null && Number.isInteger(user.target_weeks) && user.target_weeks >= 1 && user.target_weeks <= 104
+    const effectiveWeeks = weeks.value !== null ? weeks.value : (storedWeeksOk ? user.target_weeks : null)
+
     // 复用 calcTarget 的安全校验（BMI 过低拦截、增重速率过快拦截），校验不通过不写库
-    const guard = validateWeights(currentWeightKg, targetWeightKg, height_cm)
+    const guard = validateWeights(currentWeightKg, targetWeightKg, height_cm, effectiveWeeks)
     if (!guard.ok) {
       logger.info(FN, 'return', { code: guard.code, bmi: guard.data.bmi, duration: Date.now() - start })
       return { code: guard.code, message: guard.message, data: guard.data }
@@ -59,6 +71,12 @@ exports.main = async (event, context) => {
       daily_protein_target_g: targets.daily_protein_target_g,
       bmi,
       updated_at: db.serverDate()
+    }
+
+    // 重算时填写了计划周期则连同设置日期一起更新；未填写保持库中原值不变
+    if (weeks.value !== null) {
+      updateData.target_weeks = weeks.value
+      updateData.target_weeks_set_at = fmtDate(new Date())
     }
     await db.collection('users').doc(user._id).update({ data: updateData })
 

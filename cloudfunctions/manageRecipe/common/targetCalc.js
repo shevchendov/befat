@@ -22,9 +22,32 @@ function calcBmi(weightKg, heightCm) {
   return weightKg / ((heightCm / 100) ** 2)
 }
 
+// 本地日期 YYYY-MM-DD（与 getGoalProgress 的 fmt 口径一致），用于记录计划设置日期锚点
+function fmtDate(d) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+// 解析并校验计划周期（周）：合法为 1~104 的整数；
+// 未设置返回 { ok: true, value: null }（走默认 4 周校验）；非法值返回 { ok: false, message }
+function parseTargetWeeks(value) {
+  if (value === undefined || value === null || value === '') {
+    return { ok: true, value: null }
+  }
+  const n = Number(value)
+  if (!Number.isInteger(n) || n < 1 || n > 104) {
+    return { ok: false, message: '计划周期需为 1~104 周的整数' }
+  }
+  return { ok: true, value: n }
+}
+
 // 安全校验（合规红线，不可绕过）：BMI 过低拦截 + 增重速率过快拦截
 // 返回 { ok: true, bmi } 或 { ok: false, code, message, data }
-function validateWeights(currentWeightKg, targetWeightKg, heightCm) {
+// targetWeeks 为用户计划达成周期（周），决定"每周增重"的基准周数；
+// 不传或非正整数时回退到默认 4 周（保持旧调用方行为不变）
+function validateWeights(currentWeightKg, targetWeightKg, heightCm, targetWeeks) {
   const bmi = calcBmi(currentWeightKg, heightCm)
 
   if (bmi < 16) {
@@ -36,12 +59,13 @@ function validateWeights(currentWeightKg, targetWeightKg, heightCm) {
     }
   }
 
-  const weeklyGain = (targetWeightKg - currentWeightKg) / 4
+  const weeks = targetWeeks && targetWeeks > 0 ? targetWeeks : 4
+  const weeklyGain = (targetWeightKg - currentWeightKg) / weeks
   if (weeklyGain > 1) {
     return {
       ok: false,
       code: 3,
-      message: '您设定的目标体重增长过快（每周约' + weeklyGain.toFixed(1) + 'kg），建议将每周增重目标控制在 0.5~1kg。请调整目标体重。',
+      message: '您设定的目标体重增长过快（每周约' + weeklyGain.toFixed(1) + 'kg），建议将每周增重目标控制在 0.5~1kg。请调整目标体重或延长计划周期。',
       data: { bmi: Math.round(bmi * 10) / 10 }
     }
   }
@@ -61,6 +85,8 @@ module.exports = {
   ACTIVITY_MULTIPLIERS,
   calcTDEE,
   calcBmi,
+  fmtDate,
+  parseTargetWeeks,
   validateWeights,
   computeTargets
 }

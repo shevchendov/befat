@@ -61,8 +61,14 @@
       <text class="hint">建议每月增重 2~4kg</text>
     </view>
 
+    <view class="form-group">
+      <text class="label">计划周期 (周)</text>
+      <input class="input-number" type="number" placeholder="例如 24" value="{{form.target_weeks}}" bindinput="onInput" data-field="target_weeks" maxlength="3" />
+      <text class="hint">预计用多少周达成目标（1-104 周）</text>
+    </view>
+
     <view class="btn-next">
-      <button class="btn-primary" bindtap="nextStep" disabled="{{!form.height_cm || !form.current_weight_kg || !form.target_weight_kg}}">下一步</button>
+      <button class="btn-primary" bindtap="nextStep" disabled="{{!form.height_cm || !form.current_weight_kg || !form.target_weight_kg || !form.target_weeks}}">下一步</button>
     </view>
   </view>
 

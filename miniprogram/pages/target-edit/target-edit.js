@@ -12,7 +12,8 @@ Page({
       current_weight_kg: '',
       target_weight_kg: '',
       daily_calorie_target: '',
-      daily_protein_target_g: ''
+      daily_protein_target_g: '',
+      target_weeks: ''
     },
     profileText: ''
   },
@@ -40,7 +41,8 @@ Page({
           current_weight_kg: currentWeight != null ? String(currentWeight) : '',
           target_weight_kg: targetWeight != null ? String(targetWeight) : '',
           daily_calorie_target: user && user.daily_calorie_target != null ? String(user.daily_calorie_target) : '',
-          daily_protein_target_g: user && user.daily_protein_target_g != null ? String(user.daily_protein_target_g) : ''
+          daily_protein_target_g: user && user.daily_protein_target_g != null ? String(user.daily_protein_target_g) : '',
+          target_weeks: user && user.target_weeks != null ? String(user.target_weeks) : ''
         },
         profileText: user ? [
           user.gender === 'male' ? '男' : user.gender === 'female' ? '女' : '未知',
@@ -78,7 +80,10 @@ Page({
   onInput(e) {
     const field = e.currentTarget.dataset.field
     let value = sanitizeDigit(e.detail.value)
-    if (field === 'daily_calorie_target' || field === 'daily_protein_target_g') {
+    if (field === 'target_weeks') {
+      value = value.replace(/\./g, '')
+      if (value.length > 3) value = value.slice(0, 3)
+    } else if (field === 'daily_calorie_target' || field === 'daily_protein_target_g') {
       value = value.replace(/\./g, '')
       if (value.length > 5) value = value.slice(0, 5)
     } else {
@@ -94,6 +99,7 @@ Page({
   async submitRecalc() {
     const currentWeight = parseFloat(this.data.form.current_weight_kg)
     const targetWeight = parseFloat(this.data.form.target_weight_kg)
+    const targetWeeks = parseInt(this.data.form.target_weeks)
 
     if (!currentWeight || currentWeight < 20 || currentWeight > 300) {
       wx.showToast({ title: '请输入有效当前体重(20-300kg)', icon: 'none' })
@@ -103,6 +109,10 @@ Page({
       wx.showToast({ title: '请输入有效目标体重(20-300kg)', icon: 'none' })
       return
     }
+    if (!targetWeeks || targetWeeks < 1 || targetWeeks > 104) {
+      wx.showToast({ title: '请输入有效计划周期(1-104周)', icon: 'none' })
+      return
+    }
 
     this.setData({ submitting: true })
     try {
@@ -110,7 +120,8 @@ Page({
         name: 'recalcTarget',
         data: {
           current_weight_kg: currentWeight,
-          target_weight_kg: targetWeight
+          target_weight_kg: targetWeight,
+          target_weeks: targetWeeks
         }
       })
       this.handleSubmitResult(res.result, '目标已更新!')
