@@ -63,6 +63,61 @@ describe('loadUserData', () => {
     expect(page.data.healthWarning).toEqual({ level: 'normal', text: expect.any(String) })
   })
 
+  test('当前体重优先取 getGoalProgress 最新打卡记录而非起始快照', async () => {
+    callFnMock.mockResolvedValue({
+      result: { code: 0, message: 'ok', data: { current_weight: 59.6, target_weight: 65, initial_weight: 59.4 } }
+    })
+    const db = wx.cloud.database()
+    const col = db.collection('users')
+    col.where = jest.fn(() => ({
+      get: jest.fn(() => Promise.resolve({
+        data: [{
+          current_weight_kg: 59.4, height_cm: 175, activity_level: 'sedentary', target_weight_kg: 65,
+          bmi: 19.4, daily_calorie_target: 2400, daily_protein_target_g: 108
+        }]
+      }))
+    }))
+    await page.loadUserData()
+    // 档案 59.4 是 onboarding 起始快照，最新打卡 59.6 应胜出
+    expect(page.data.currentWeightDisplay).toBe('59.60')
+    // BMI 按最新体重 59.6 计算（59.6/1.75^2 ≈ 19.46），而非起始 59.4 的 19.4
+    expect(page.data.bmi).toBe('19.5')
+  })
+
+  test('getGoalProgress 失败时回退到 users.current_weight_kg', async () => {
+    callFnMock.mockResolvedValue({ result: { code: -1, message: '用户不存在' } })
+    const db = wx.cloud.database()
+    const col = db.collection('users')
+    col.where = jest.fn(() => ({
+      get: jest.fn(() => Promise.resolve({
+        data: [{
+          current_weight_kg: 59.4, height_cm: 175, activity_level: 'sedentary', target_weight_kg: 65,
+          bmi: 19.4, daily_calorie_target: 2400, daily_protein_target_g: 108
+        }]
+      }))
+    }))
+    await page.loadUserData()
+    expect(page.data.currentWeightDisplay).toBe('59.40')
+    expect(page.data.bmi).toBe('19.4')
+  })
+
+  test('getGoalProgress 抛异常时不阻断档案加载，回退起始值', async () => {
+    callFnMock.mockRejectedValue(new Error('timeout'))
+    const db = wx.cloud.database()
+    const col = db.collection('users')
+    col.where = jest.fn(() => ({
+      get: jest.fn(() => Promise.resolve({
+        data: [{
+          current_weight_kg: 59.4, height_cm: 175, activity_level: 'sedentary', target_weight_kg: 65,
+          bmi: 19.4, daily_calorie_target: 2400, daily_protein_target_g: 108
+        }]
+      }))
+    }))
+    await page.loadUserData()
+    expect(page.data.currentWeightDisplay).toBe('59.40')
+    expect(page.data.bmi).toBe('19.4')
+  })
+
   test('BMI 在展示域内时游标位置按公式计算', async () => {
     seedBmiUser(60, 175)
     await page.loadUserData()

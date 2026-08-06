@@ -37,33 +37,55 @@ Page({
   async loadUserData() {
     try {
       const db = wx.cloud.database()
-      const res = await db.collection('users').where({ _openid: '{openid}' }).get()
+      const [res, gpRes] = await Promise.all([
+        db.collection('users').where({ _openid: '{openid}' }).get(),
+        // getGoalProgress 仅用于取"当前体重"，失败不阻断档案加载（回退 users.current_weight_kg）
+        wx.cloud.callFunction({ name: 'getGoalProgress' }).catch(() => null)
+      ])
       // 已初始化（填过目标）才展示档案；重置后的文档 target_weight_kg 为空，
       // 按无用户处理，避免展示全空档案
       if (res.data.length > 0 && res.data[0].target_weight_kg != null) {
         const user = res.data[0]
-        const bmi = util.calcBMI(user.current_weight_kg, user.height_cm)
-        const healthWarning = util.getHealthWarning(bmi)
+        // 当前体重：优先取 getGoalProgress 返回的最新体重打卡记录（与首页目标进度卡同源，
+        // 无打卡记录时云函数内部已回退到起始体重）；云函数失败时兜底 users.current_weight_kg。
+        // users.current_weight_kg 是 onboarding 起始体重快照，打卡不回写，不能直接当"当前体重"用。
+        const gp = gpRes && gpRes.result && gpRes.result.code === 0 ? gpRes.result.data : null
+        const currentWeight = gp && gp.current_weight != null ? gp.current_weight : (user.current_weight_kg != null ? user.current_weight_kg : null)
 
-        const span = BMI_DISPLAY_MAX - BMI_DISPLAY_MIN
-        const pctUnder = (BMI_UNDER - BMI_DISPLAY_MIN) / span * 100
-        const pctNormal = (BMI_NORMAL - BMI_DISPLAY_MIN) / span * 100
-        const markerPct = Math.min(MARKER_CLAMP_MAX, Math.max(MARKER_CLAMP_MIN, (bmi - BMI_DISPLAY_MIN) / span * 100))
+        let bmi = null
+        let healthWarning = {}
+        let bmiBar = null
+        let markerLeft = null
+        let bound18 = null
+        let bound24 = null
+        if (currentWeight != null) {
+          bmi = util.calcBMI(currentWeight, user.height_cm)
+          healthWarning = util.getHealthWarning(bmi)
 
-        this.setData({
-          user,
-          currentWeightDisplay: user.current_weight_kg != null ? Number(user.current_weight_kg).toFixed(2) : '--',
-          targetWeightDisplay: user.target_weight_kg != null ? Number(user.target_weight_kg).toFixed(2) : '--',
-          bmi: bmi.toFixed(1),
-          healthWarning,
-          bmiBar: {
+          const span = BMI_DISPLAY_MAX - BMI_DISPLAY_MIN
+          const pctUnder = (BMI_UNDER - BMI_DISPLAY_MIN) / span * 100
+          const pctNormal = (BMI_NORMAL - BMI_DISPLAY_MIN) / span * 100
+          const markerPct = Math.min(MARKER_CLAMP_MAX, Math.max(MARKER_CLAMP_MIN, (bmi - BMI_DISPLAY_MIN) / span * 100))
+          bmiBar = {
             under: pctUnder.toFixed(2) + '%',
             normal: (pctNormal - pctUnder).toFixed(2) + '%',
             over: (100 - pctNormal).toFixed(2) + '%'
-          },
-          markerLeft: markerPct.toFixed(2) + '%',
-          bound18: pctUnder.toFixed(2) + '%',
-          bound24: pctNormal.toFixed(2) + '%',
+          }
+          markerLeft = markerPct.toFixed(2) + '%'
+          bound18 = pctUnder.toFixed(2) + '%'
+          bound24 = pctNormal.toFixed(2) + '%'
+        }
+
+        this.setData({
+          user,
+          currentWeightDisplay: currentWeight != null ? Number(currentWeight).toFixed(2) : '--',
+          targetWeightDisplay: user.target_weight_kg != null ? Number(user.target_weight_kg).toFixed(2) : '--',
+          bmi: bmi != null ? bmi.toFixed(1) : null,
+          healthWarning,
+          bmiBar,
+          markerLeft,
+          bound18,
+          bound24,
           activityLabel: util.getActivityLevelLabel(user.activity_level)
         })
 
