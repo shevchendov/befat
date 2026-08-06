@@ -2,8 +2,10 @@ require('./setup')
 const { getLastPageConfig, createPage, callFnMock } = require('./setup')
 
 let page
+const appInstance = { globalData: { userInfo: null, dailyTargets: null } }
 
 beforeAll(() => {
+  global.getApp = jest.fn(() => appInstance)
   require('../../miniprogram/pages/profile/profile')
   const config = getLastPageConfig()
   page = createPage(config)
@@ -15,6 +17,8 @@ beforeEach(() => {
   page.data.bmi = null
   page.data.healthWarning = {}
   page.data.activityLabel = ''
+  appInstance.globalData.userInfo = null
+  appInstance.globalData.dailyTargets = null
 })
 
 describe('loadUserData', () => {
@@ -28,13 +32,26 @@ describe('loadUserData', () => {
     expect(page.data.user).toBeNull()
   })
 
+  test('文档存在但 target_weight_kg 为空（重置后）按无用户处理', async () => {
+    const db = wx.cloud.database()
+    const col = db.collection('users')
+    col.where = jest.fn(() => ({
+      get: jest.fn(() => Promise.resolve({
+        data: [{ current_weight_kg: 60, height_cm: 175, target_weight_kg: null, daily_calorie_target: null }]
+      }))
+    }))
+    await page.loadUserData()
+    expect(page.data.user).toBeNull()
+    expect(page.data.bmi).toBeNull()
+  })
+
   test('有用户时设置 BMI 和活动标签', async () => {
     const db = wx.cloud.database()
     const col = db.collection('users')
     col.where = jest.fn(() => ({
       get: jest.fn(() => Promise.resolve({
         data: [{
-          current_weight_kg: 60, height_cm: 175, activity_level: 'moderate',
+          current_weight_kg: 60, height_cm: 175, activity_level: 'moderate', target_weight_kg: 65,
           bmi: 19.6, daily_calorie_target: 2400, daily_protein_target_g: 108
         }]
       }))
@@ -84,6 +101,45 @@ describe('exportData', () => {
   test('导出异常', async () => {
     callFnMock.mockRejectedValue(new Error('timeout'))
     await page.exportData()
+    expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('异常') }))
+  })
+})
+
+describe('resetUserData', () => {
+  test('确认后调用云函数并传入 confirm=true', async () => {
+    callFnMock.mockResolvedValue({ result: { code: 0, message: '已重置为新用户' } })
+    await page.confirmResetData()
+    expect(wx.showModal).toHaveBeenCalledWith(expect.objectContaining({
+      title: '重置为新用户',
+      confirmText: '重置'
+    }))
+    expect(callFnMock).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'resetUserData',
+      data: { confirm: true }
+    }))
+  })
+
+  test('重置成功后清空 globalData 并跳转 onboarding', async () => {
+    appInstance.globalData.userInfo = { name: 'x' }
+    appInstance.globalData.dailyTargets = { calorie: 2600, protein: 108 }
+    callFnMock.mockResolvedValue({ result: { code: 0 } })
+    await page.resetUserData()
+    expect(appInstance.globalData.userInfo).toBeNull()
+    expect(appInstance.globalData.dailyTargets).toBeNull()
+    expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('已重置') }))
+  })
+
+  test('重置失败时 toast 错误信息', async () => {
+    callFnMock.mockResolvedValue({ result: { code: 1, message: '缺少确认参数，操作已取消' } })
+    wx.showToast.mockClear()
+    await page.resetUserData()
+    expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('缺少确认参数') }))
+  })
+
+  test('重置异常时 toast 提示', async () => {
+    callFnMock.mockRejectedValue(new Error('timeout'))
+    wx.showToast.mockClear()
+    await page.resetUserData()
     expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('异常') }))
   })
 })

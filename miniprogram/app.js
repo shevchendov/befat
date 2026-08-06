@@ -34,7 +34,9 @@ App({
     db.collection('users').where({
       _openid: '{openid}'
     }).get().then(res => {
-      if (res.data.length > 0) {
+      // 仅当已初始化（填过目标）才算正式用户；
+      // 重置后文档仍在但 target_weight_kg 为空，此时保持未登录状态以放行 onboarding
+      if (res.data.length > 0 && res.data[0].target_weight_kg != null) {
         const user = res.data[0]
         this.globalData.userInfo = user
         this.globalData.dailyTargets = {

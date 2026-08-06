@@ -1,4 +1,4 @@
-const DB = { users: [], food_logs: [], weight_logs: [], recipes: [], user_favorites: [] }
+const DB = { users: [], food_logs: [], weight_logs: [], recipes: [], user_favorites: [], error_logs: [] }
 let idSeq = 1
 const _serverDate = () => new Date().toISOString()
 

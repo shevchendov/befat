@@ -1,0 +1,9 @@
+{
+  "name": "resetUserData",
+  "version": "1.0.0",
+  "description": "重置为新用户：保留账号身份，清空全部业务数据",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

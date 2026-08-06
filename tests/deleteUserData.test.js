@@ -19,6 +19,7 @@ describe('deleteUserData - empty database', () => {
     expect(db.users).toHaveLength(0)
     expect(db.food_logs).toHaveLength(0)
     expect(db.weight_logs).toHaveLength(0)
+    expect(db.user_favorites).toHaveLength(0)
   })
 })
 
@@ -48,6 +49,14 @@ describe('deleteUserData - deletes data', () => {
     await deleteUserData.main({}, {})
     const db = sdk.__getDB()
     expect(db.weight_logs).toHaveLength(0)
+  })
+
+  test('删除 user_favorites 集合', async () => {
+    seedAll()
+    sdk.__seed('user_favorites', { _openid: 'test-openid', recipe_id: 'r1' })
+    await deleteUserData.main({}, {})
+    const db = sdk.__getDB()
+    expect(db.user_favorites).toHaveLength(0)
   })
 
   test('删除后返回成功', async () => {

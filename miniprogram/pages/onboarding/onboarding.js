@@ -24,7 +24,9 @@ Page({
     }
     const db = wx.cloud.database()
     db.collection('users').where({ _openid: '{openid}' }).get().then(res => {
-      if (res.data.length > 0) {
+      // 已初始化（填过目标）才放回首页；文档存在但 target_weight_kg 为空
+      // （重置后状态）则继续显示表单
+      if (res.data.length > 0 && res.data[0].target_weight_kg != null) {
         wx.reLaunch({ url: '/pages/index/index' })
       } else {
         this.setData({ loading: false })

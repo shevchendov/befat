@@ -19,7 +19,9 @@ Page({
     try {
       const db = wx.cloud.database()
       const res = await db.collection('users').where({ _openid: '{openid}' }).get()
-      if (res.data.length > 0) {
+      // 已初始化（填过目标）才展示档案；重置后的文档 target_weight_kg 为空，
+      // 按无用户处理，避免展示全空档案
+      if (res.data.length > 0 && res.data[0].target_weight_kg != null) {
         const user = res.data[0]
         const bmi = util.calcBMI(user.current_weight_kg, user.height_cm)
         const healthWarning = util.getHealthWarning(bmi)
@@ -95,6 +97,43 @@ Page({
       wx.hideLoading()
       logger.error('exportData', err)
       wx.showToast({ title: '导出异常', icon: 'none' })
+    }
+  },
+
+  confirmResetData() {
+    wx.showModal({
+      title: '重置为新用户',
+      content: '将清空所有目标、打卡和收藏数据，但保留账号，需要重新设置目标。此操作不可恢复！',
+      confirmText: '重置',
+      confirmColor: '#F44336',
+      success: (res) => {
+        if (res.confirm) {
+          this.resetUserData()
+        }
+      }
+    })
+  },
+
+  async resetUserData() {
+    wx.showLoading({ title: '重置中...' })
+    try {
+      const res = await wx.cloud.callFunction({ name: 'resetUserData', data: { confirm: true } })
+      wx.hideLoading()
+      if (res.result.code === 0) {
+        app.globalData.userInfo = null
+        app.globalData.dailyTargets = null
+
+        wx.showToast({ title: '已重置', icon: 'success' })
+        setTimeout(() => {
+          wx.reLaunch({ url: '/pages/onboarding/onboarding' })
+        }, 1500)
+      } else {
+        wx.showToast({ title: res.result.message || '重置失败', icon: 'none' })
+      }
+    } catch (err) {
+      wx.hideLoading()
+      logger.error('resetUserData', err)
+      wx.showToast({ title: '重置异常', icon: 'none' })
     }
   },
 
