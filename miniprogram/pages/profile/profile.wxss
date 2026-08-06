@@ -7,7 +7,7 @@
 }
 
 .user-name {
-  font-size: 32rpx;
+  font-size: 40rpx;
   font-weight: 600;
   display: block;
   margin-bottom: 24rpx;
@@ -16,7 +16,7 @@
 .user-stats {
   display: flex;
   justify-content: space-around;
-  margin-bottom: 20rpx;
+  margin-bottom: 24rpx;
 }
 
 .user-stat {
@@ -24,33 +24,33 @@
 }
 
 .us-val {
-  font-size: 40rpx;
+  font-size: 60rpx;
   font-weight: 700;
   color: var(--primary);
   display: block;
 }
 
 .us-label {
-  font-size: 24rpx;
+  font-size: 30rpx;
   color: var(--text-secondary);
-  margin-top: 4rpx;
+  margin-top: 6rpx;
 }
 
 .bmi-display {
-  padding: 16rpx;
+  padding: 20rpx;
   border-radius: 12rpx;
   background: var(--card-bg-light);
 }
 
 .bmi-value {
-  font-size: 28rpx;
+  font-size: 44rpx;
   font-weight: 600;
   display: block;
-  margin-bottom: 8rpx;
+  margin-bottom: 12rpx;
 }
 
 .bmi-status {
-  font-size: 26rpx;
+  font-size: 32rpx;
 }
 
 .bmi-status.danger {
@@ -72,7 +72,7 @@
 .bmi-range-wrap {
   position: relative;
   margin-top: 16rpx;
-  padding-bottom: 24rpx;
+  padding-bottom: 48rpx;
 }
 
 .bmi-range-bar {
@@ -101,9 +101,9 @@
 
 .bmi-marker {
   position: absolute;
-  top: -8rpx;
+  top: -10rpx;
   width: 6rpx;
-  height: 36rpx;
+  height: 44rpx;
   border-radius: 3rpx;
   background: var(--text-primary);
   box-shadow: 0 0 0 4rpx rgba(255, 255, 255, 0.9);
@@ -112,8 +112,8 @@
 
 .bmi-range-bound {
   position: absolute;
-  top: 28rpx;
-  font-size: 18rpx;
+  top: 36rpx;
+  font-size: 24rpx;
   color: var(--text-light);
   transform: translateX(-50%);
 }
@@ -125,7 +125,7 @@
 
 .bmi-range-label {
   text-align: center;
-  font-size: 20rpx;
+  font-size: 32rpx;
   color: var(--text-light);
 }
 
