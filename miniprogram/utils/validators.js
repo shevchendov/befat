@@ -7,7 +7,10 @@ function clampNumber(value, min, max) {
 }
 
 function sanitizeDigit(value) {
-  return value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1')
+  let s = value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1')
+  const dot = s.indexOf('.')
+  if (dot !== -1) s = s.slice(0, dot + 3)
+  return s
 }
 
 function sanitizeNumber(value) {

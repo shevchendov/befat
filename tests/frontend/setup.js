@@ -102,9 +102,20 @@ function createPage(config) {
         const m = key.match(/^([^\[]+)\[(\d+)\]\.(.+)$/)
         if (m && this.data[m[1]] && this.data[m[1]][m[2]]) {
           this.data[m[1]][m[2]][m[3]] = newData[key]
-        } else {
-          this.data[key] = newData[key]
+          continue
         }
+        const dm = key.match(/^([^.]+)\.(.+)$/)
+        if (dm && this.data[dm[1]] && typeof this.data[dm[1]] === 'object') {
+          const parts = dm[2].split('.')
+          let obj = this.data[dm[1]]
+          for (let i = 0; i < parts.length - 1; i++) {
+            if (obj[parts[i]] == null) obj[parts[i]] = {}
+            obj = obj[parts[i]]
+          }
+          obj[parts[parts.length - 1]] = newData[key]
+          continue
+        }
+        this.data[key] = newData[key]
       }
       if (cb) cb()
     })

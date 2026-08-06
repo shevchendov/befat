@@ -2,6 +2,7 @@ const app = getApp()
 const util = require('../../utils/util')
 const logger = require('../../utils/logger')
 const { sanitizeDigit } = require('../../utils/validators')
+const { validateTargetInput } = require('../../utils/targetGuard')
 
 Page({
   data: {
@@ -44,6 +45,8 @@ Page({
           daily_protein_target_g: user && user.daily_protein_target_g != null ? String(user.daily_protein_target_g) : '',
           target_weeks: user && user.target_weeks != null ? String(user.target_weeks) : ''
         },
+        height_cm: user && user.height_cm != null ? user.height_cm : null,
+        userWeeks: user && user.target_weeks != null ? user.target_weeks : null,
         profileText: user ? [
           user.gender === 'male' ? '男' : user.gender === 'female' ? '女' : '未知',
           '身高 ' + (user.height_cm || '-') + 'cm',
@@ -87,11 +90,7 @@ Page({
       value = value.replace(/\./g, '')
       if (value.length > 5) value = value.slice(0, 5)
     } else {
-      const parts = value.split('.')
-      if (parts.length > 1 && parts[1].length > 1) {
-        value = parts[0] + '.' + parts[1].slice(0, 1)
-      }
-      if (value.length > 4) value = value.slice(0, 4)
+      if (value.length > 6) value = value.slice(0, 6)
     }
     this.setData({ ['form.' + field]: value })
   },
@@ -111,6 +110,22 @@ Page({
     }
     if (!targetWeeks || targetWeeks < 1 || targetWeeks > 104) {
       wx.showToast({ title: '请输入有效计划周期(1-104周)', icon: 'none' })
+      return
+    }
+
+    // 与云函数 recalcTarget 的 validateWeights 同口径的前端预校验，提前拦截避免白填
+    const guard = validateTargetInput({
+      height_cm: this.data.height_cm,
+      current_weight_kg: currentWeight,
+      target_weight_kg: targetWeight,
+      target_weeks: targetWeeks || this.data.userWeeks || null
+    })
+    if (!guard.ok) {
+      if (guard.code) {
+        wx.showModal({ title: '温馨提示', content: guard.message, showCancel: false })
+      } else {
+        wx.showToast({ title: guard.message, icon: 'none' })
+      }
       return
     }
 

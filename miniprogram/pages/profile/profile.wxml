@@ -7,11 +7,11 @@
         <text class="us-label">身高 cm</text>
       </view>
       <view class="user-stat">
-        <text class="us-val">{{user.current_weight_kg}}</text>
+        <text class="us-val">{{currentWeightDisplay}}</text>
         <text class="us-label">当前体重 kg</text>
       </view>
       <view class="user-stat">
-        <text class="us-val">{{user.target_weight_kg}}</text>
+        <text class="us-val">{{targetWeightDisplay}}</text>
         <text class="us-label">目标体重 kg</text>
       </view>
     </view>

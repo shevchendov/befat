@@ -184,7 +184,7 @@ Page({
       if (res.result.code === 0) {
         const d = res.result.data
         const progress = Math.max(0, Math.min(d.progress_percent, 100))
-        const fmtW = v => Number(v).toFixed(1)
+        const fmtW = v => Number(v).toFixed(2)
         this.setData({
           goalProgress: {
             achieved: d.achieved,

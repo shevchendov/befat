@@ -1,6 +1,7 @@
 const app = getApp()
 const logger = require('../../utils/logger')
 const { sanitizeDigit, sanitizeNumber, clampNumber } = require('../../utils/validators')
+const { validateTargetInput } = require('../../utils/targetGuard')
 
 Page({
   data: {
@@ -58,7 +59,7 @@ Page({
       if (value.length > 3) value = value.slice(0, 3)
     } else if (field === 'current_weight_kg' || field === 'target_weight_kg') {
       value = sanitizeDigit(value)
-      if (value.length > 3) value = value.slice(0, 3)
+      if (value.length > 5) value = value.slice(0, 5)
     } else if (field === 'target_weeks') {
       value = sanitizeNumber(value)
       if (value.length > 3) value = value.slice(0, 3)
@@ -101,6 +102,21 @@ Page({
       }
       if (!weeks || weeks < 1 || weeks > 104) {
         wx.showToast({ title: '请输入有效计划周期(1-104周)', icon: 'none' })
+        return
+      }
+
+      const guard = validateTargetInput({
+        height_cm: h,
+        current_weight_kg: cw,
+        target_weight_kg: tw,
+        target_weeks: weeks
+      })
+      if (!guard.ok) {
+        if (guard.code) {
+          wx.showModal({ title: '温馨提示', content: guard.message, showCancel: false })
+        } else {
+          wx.showToast({ title: guard.message, icon: 'none' })
+        }
         return
       }
     }

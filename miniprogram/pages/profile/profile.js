@@ -28,6 +28,8 @@ Page({
 
         this.setData({
           user,
+          currentWeightDisplay: user.current_weight_kg != null ? Number(user.current_weight_kg).toFixed(2) : '--',
+          targetWeightDisplay: user.target_weight_kg != null ? Number(user.target_weight_kg).toFixed(2) : '--',
           bmi: bmi.toFixed(1),
           healthWarning,
           activityLabel: util.getActivityLevelLabel(user.activity_level)

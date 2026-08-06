@@ -23,6 +23,11 @@ describe('onWeightInput', () => {
     page.onWeightInput({ detail: { value: '65.5' } })
     expect(page.data.inputWeight).toBe('65.5')
   })
+
+  test('超过 2 位小数截断到 2 位', () => {
+    page.onWeightInput({ detail: { value: '65.12345' } })
+    expect(page.data.inputWeight).toBe('65.12')
+  })
 })
 
 describe('saveWeight', () => {

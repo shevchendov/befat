@@ -49,3 +49,66 @@ describe('onboarding onShow - onboarding gate', () => {
     expect(page.data.loading).toBe(false)
   })
 })
+
+describe('onboarding nextStep - step2 前端预校验', () => {
+  function seedStep2Form(overrides) {
+    page.data.step = 2
+    page.data.form = {
+      gender: 'male',
+      age: '25',
+      height_cm: '175',
+      current_weight_kg: '59',
+      target_weight_kg: '70',
+      target_weeks: '24',
+      activity_level: '',
+      ...overrides
+    }
+  }
+
+  beforeEach(() => {
+    wx.showModal.mockClear()
+    wx.showToast.mockClear()
+  })
+
+  test('目标体重 600kg 时被预校验拦截（toast），不进入 step3', () => {
+    seedStep2Form({ target_weight_kg: '600' })
+    page.nextStep()
+    expect(wx.showToast).toHaveBeenCalledWith({ title: '目标体重不能超过300kg', icon: 'none' })
+    expect(wx.showModal).not.toHaveBeenCalled()
+    expect(page.data.step).toBe(2)
+  })
+
+  test('BMI 过低时以 showModal 拦截，文案与云函数一致', () => {
+    seedStep2Form({ height_cm: '175', current_weight_kg: '40', target_weight_kg: '55' })
+    page.nextStep()
+    expect(wx.showModal).toHaveBeenCalledWith(expect.objectContaining({ title: '温馨提示' }))
+    expect(page.data.step).toBe(2)
+  })
+
+  test('增重速率过快时以 showModal 拦截', () => {
+    seedStep2Form({ current_weight_kg: '50', target_weight_kg: '90', target_weeks: '4' })
+    page.nextStep()
+    expect(wx.showModal).toHaveBeenCalledWith(expect.objectContaining({ title: '温馨提示' }))
+    expect(page.data.step).toBe(2)
+  })
+
+  test('合法输入通过预校验进入 step3', () => {
+    seedStep2Form()
+    page.nextStep()
+    expect(wx.showModal).not.toHaveBeenCalled()
+    expect(wx.showToast).not.toHaveBeenCalled()
+    expect(page.data.step).toBe(3)
+  })
+})
+
+describe('onboarding onInput - 体重统一 2 位小数', () => {
+  test('体重字段截断到 2 位小数且字符上限 5', () => {
+    page.onInput({ currentTarget: { dataset: { field: 'current_weight_kg' } }, detail: { value: '59.12345' } })
+    expect(page.data.form.current_weight_kg).toBe('59.12')
+  })
+
+  test('目标体重可输入 2 位小数', () => {
+    page.onInput({ currentTarget: { dataset: { field: 'target_weight_kg' } }, detail: { value: '59.12' } })
+    expect(page.data.form.target_weight_kg).toBe('59.12')
+  })
+})

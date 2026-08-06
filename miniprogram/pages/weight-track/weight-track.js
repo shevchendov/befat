@@ -60,10 +60,6 @@ Page({
 
   onWeightInput(e) {
     let value = sanitizeDigit(e.detail.value)
-    const parts = value.split('.')
-    if (parts.length > 1 && parts[1].length > 2) {
-      value = parts[0] + '.' + parts[1].slice(0, 2)
-    }
     if (value.length > 6) value = value.slice(0, 6)
     this.setData({ inputWeight: value })
   },
