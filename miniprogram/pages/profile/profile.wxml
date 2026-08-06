@@ -19,6 +19,21 @@
     <view class="bmi-display" wx:if="{{bmi}}">
       <text class="bmi-value">BMI {{bmi}}</text>
       <text class="bmi-status {{healthWarning.level}}">{{healthWarning.text}}</text>
+      <view class="bmi-range-wrap">
+        <view class="bmi-range-bar">
+          <view class="bmi-range-seg seg-under" style="width: {{bmiBar.under}};"></view>
+          <view class="bmi-range-seg seg-normal" style="width: {{bmiBar.normal}};"></view>
+          <view class="bmi-range-seg seg-over" style="width: {{bmiBar.over}};"></view>
+        </view>
+        <view class="bmi-marker" style="left: {{markerLeft}};"></view>
+        <view class="bmi-range-bound" style="left: {{bound18}};">18.5</view>
+        <view class="bmi-range-bound" style="left: {{bound24}};">24</view>
+      </view>
+      <view class="bmi-range-labels">
+        <text class="bmi-range-label" style="width: {{bmiBar.under}};">偏瘦</text>
+        <text class="bmi-range-label" style="width: {{bmiBar.normal}};">正常</text>
+        <text class="bmi-range-label" style="width: {{bmiBar.over}};">偏高</text>
+      </view>
     </view>
   </view>
 

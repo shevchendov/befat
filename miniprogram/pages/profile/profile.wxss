@@ -69,6 +69,66 @@
   color: var(--text-secondary);
 }
 
+.bmi-range-wrap {
+  position: relative;
+  margin-top: 16rpx;
+  padding-bottom: 24rpx;
+}
+
+.bmi-range-bar {
+  display: flex;
+  height: 20rpx;
+  border-radius: 10rpx;
+  overflow: hidden;
+  background: var(--card-bg-light);
+}
+
+.bmi-range-seg {
+  height: 100%;
+}
+
+.seg-under {
+  background: var(--warning);
+}
+
+.seg-normal {
+  background: var(--success);
+}
+
+.seg-over {
+  background: var(--color-accent-orange);
+}
+
+.bmi-marker {
+  position: absolute;
+  top: -8rpx;
+  width: 6rpx;
+  height: 36rpx;
+  border-radius: 3rpx;
+  background: var(--text-primary);
+  box-shadow: 0 0 0 4rpx rgba(255, 255, 255, 0.9);
+  transform: translateX(-50%);
+}
+
+.bmi-range-bound {
+  position: absolute;
+  top: 28rpx;
+  font-size: 18rpx;
+  color: var(--text-light);
+  transform: translateX(-50%);
+}
+
+.bmi-range-labels {
+  display: flex;
+  margin-top: 2rpx;
+}
+
+.bmi-range-label {
+  text-align: center;
+  font-size: 20rpx;
+  color: var(--text-light);
+}
+
 .section-title-inner {
   font-size: 30rpx;
   font-weight: 600;

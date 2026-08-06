@@ -62,7 +62,46 @@ describe('loadUserData', () => {
     expect(page.data.activityLabel).toBe('中度活动')
     expect(page.data.healthWarning).toEqual({ level: 'normal', text: expect.any(String) })
   })
+
+  test('BMI 在展示域内时游标位置按公式计算', async () => {
+    seedBmiUser(60, 175)
+    await page.loadUserData()
+    // bmi = 60/1.75^2 ≈ 19.59，(19.59-14)/16*100 ≈ 34.95%
+    expect(page.data.markerLeft).toBe('34.95%')
+    expect(page.data.bmiBar).toEqual({ under: '28.13%', normal: '34.38%', over: '37.50%' })
+    expect(page.data.bound18).toBe('28.13%')
+    expect(page.data.bound24).toBe('62.50%')
+  })
+
+  test('BMI < 14 时游标钳制在左边界 2%', async () => {
+    seedBmiUser(30, 150)
+    await page.loadUserData()
+    // bmi = 30/1.5^2 ≈ 13.33，低于展示域下限，钳制到 2%
+    expect(page.data.markerLeft).toBe('2.00%')
+    expect(page.data.healthWarning.level).toBe('danger')
+  })
+
+  test('BMI > 30 时游标钳制在右边界 98%', async () => {
+    seedBmiUser(100, 150)
+    await page.loadUserData()
+    // bmi = 100/1.5^2 ≈ 44.44，高于展示域上限，钳制到 98%
+    expect(page.data.markerLeft).toBe('98.00%')
+    expect(page.data.healthWarning.level).toBe('info')
+  })
 })
+
+function seedBmiUser(currentWeightKg, heightCm) {
+  const db = wx.cloud.database()
+  const col = db.collection('users')
+  col.where = jest.fn(() => ({
+    get: jest.fn(() => Promise.resolve({
+      data: [{
+        current_weight_kg: currentWeightKg, height_cm: heightCm, activity_level: 'sedentary', target_weight_kg: 70,
+        bmi: null, daily_calorie_target: 2400, daily_protein_target_g: 108
+      }]
+    }))
+  }))
+}
 
 describe('toggleHealthInfo', () => {
   test('切换健康信息显示状态', () => {

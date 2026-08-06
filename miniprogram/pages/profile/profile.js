@@ -2,13 +2,32 @@ const app = getApp()
 const util = require('../../utils/util')
 const logger = require('../../utils/logger')
 
+// ============ BMI 范围条常量 ============
+// 展示域取 14~30：将 BMI 值映射为条形图上的百分比位置。
+// 14 略低于极低 BMI 红线（util.getHealthWarning 中 <16 为 danger），
+// 30 覆盖严重偏高端，使正常区间 18.5~24 落在条形图中部、比例合理。
+// 分界值 18.5 / 24 与 util.getHealthWarning 的档位阈值严格一致。
+// 段宽百分比、分界数值位置均由这两个边界值推导，勿单独改动某一处。
+const BMI_DISPLAY_MIN = 14
+const BMI_DISPLAY_MAX = 30
+const BMI_UNDER = 18.5
+const BMI_NORMAL = 24
+// 游标钳制范围 [2%, 98%]：极端 BMI（<14 或 >30）时游标贴条形两端内侧，
+// 保证游标不跑出可视区域；代价是极值位置略有偏差（可接受）。
+const MARKER_CLAMP_MIN = 2
+const MARKER_CLAMP_MAX = 98
+
 Page({
   data: {
     user: null,
     bmi: null,
     healthWarning: {},
     activityLabel: '',
-    showHealthInfo: false
+    showHealthInfo: false,
+    bmiBar: null,
+    markerLeft: null,
+    bound18: null,
+    bound24: null
   },
 
   onShow() {
@@ -26,12 +45,25 @@ Page({
         const bmi = util.calcBMI(user.current_weight_kg, user.height_cm)
         const healthWarning = util.getHealthWarning(bmi)
 
+        const span = BMI_DISPLAY_MAX - BMI_DISPLAY_MIN
+        const pctUnder = (BMI_UNDER - BMI_DISPLAY_MIN) / span * 100
+        const pctNormal = (BMI_NORMAL - BMI_DISPLAY_MIN) / span * 100
+        const markerPct = Math.min(MARKER_CLAMP_MAX, Math.max(MARKER_CLAMP_MIN, (bmi - BMI_DISPLAY_MIN) / span * 100))
+
         this.setData({
           user,
           currentWeightDisplay: user.current_weight_kg != null ? Number(user.current_weight_kg).toFixed(2) : '--',
           targetWeightDisplay: user.target_weight_kg != null ? Number(user.target_weight_kg).toFixed(2) : '--',
           bmi: bmi.toFixed(1),
           healthWarning,
+          bmiBar: {
+            under: pctUnder.toFixed(2) + '%',
+            normal: (pctNormal - pctUnder).toFixed(2) + '%',
+            over: (100 - pctNormal).toFixed(2) + '%'
+          },
+          markerLeft: markerPct.toFixed(2) + '%',
+          bound18: pctUnder.toFixed(2) + '%',
+          bound24: pctNormal.toFixed(2) + '%',
           activityLabel: util.getActivityLevelLabel(user.activity_level)
         })
 
