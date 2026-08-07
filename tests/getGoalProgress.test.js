@@ -33,13 +33,16 @@ jest.mock('wx-server-sdk', () => {
             var filtered = function () { return filter(coll(name), query) }
             return {
               orderBy: jest.fn(function (field, dir) {
+                // 模拟云函数侧单次 get 默认 100 条上限；显式 limit 时按 limit 截断
+                var sorted = filtered().sort(function (a, b) {
+                  var va = a[field] || '', vb = b[field] || ''
+                  return dir === 'desc' ? String(vb).localeCompare(va) : String(va).localeCompare(vb)
+                })
                 return {
-                  get: jest.fn().mockResolvedValue({
-                    data: filtered().sort(function (a, b) {
-                      var va = a[field] || '', vb = b[field] || ''
-                      return dir === 'desc' ? String(vb).localeCompare(va) : String(va).localeCompare(vb)
-                    })
-                  })
+                  limit: jest.fn(function (n) {
+                    return { get: jest.fn().mockResolvedValue({ data: sorted.slice(0, n || 100) }) }
+                  }),
+                  get: jest.fn().mockResolvedValue({ data: sorted.slice(0, 100) })
                 }
               }),
               get: jest.fn().mockResolvedValue({ data: filtered() })
@@ -314,6 +317,19 @@ describe('getGoalProgress.main', function () {
       expect(res.data.estimated_date).toBe(daysAhead(40))
       expect(res.data.pace_status).toBe('behind')
     })
+  })
+
+  test('超过 100 条记录时 current_weight 取最新而非被截断成最旧 100 条', async function () {
+    seed('users', { current_weight_kg: 60, target_weight_kg: 70 })
+    for (var i = 0; i < 110; i++) {
+      seed('weight_logs', { date: daysAgo(109 - i), weight_kg: 60 + i * 0.5 })
+    }
+    var res = await getGoalProgress.main({}, {})
+    expect(res.code).toBe(0)
+    // 最新记录 = daysAgo(0)，体重 60 + 109*0.5 = 114.5；旧实现会返回最旧 100 条里的最后一条 = 110
+    expect(res.data.current_weight).toBe(114.5)
+    // 趋势数据只保留最近 100 条
+    expect(res.data.trend_data).toHaveLength(100)
   })
 
   test('returns error -1 on db crash', async function () {

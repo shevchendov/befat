@@ -50,7 +50,7 @@ exports.main = async (event, context) => {
 
     const [userRes, wLogsRes] = await Promise.all([
       db.collection('users').where({ _openid: openid }).get(),
-      db.collection('weight_logs').where({ _openid: openid }).orderBy('date', 'asc').get()
+      db.collection('weight_logs').where({ _openid: openid }).orderBy('date', 'desc').limit(100).get()
     ])
 
     const user = userRes.data[0] || null
@@ -70,7 +70,9 @@ exports.main = async (event, context) => {
       return result
     }
 
-    const logs = (wLogsRes.data || []).slice()
+    // desc 查询取最新 100 条记录，reverse 回升序供后续逻辑使用；
+    // 避免单次 get 默认 100 条上限把趋势数据截断成最旧的 100 条
+    const logs = (wLogsRes.data || []).slice().reverse()
     const currentWeight = logs.length > 0 ? logs[logs.length - 1].weight_kg : initialWeight
 
     // 增重目标判定：目标体重 >= 初始体重视为增重方向

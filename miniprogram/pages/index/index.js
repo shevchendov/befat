@@ -4,6 +4,15 @@ const dateFormat = require('../../utils/dateFormat')
 const logger = require('../../utils/logger')
 
 const CELEBRATION_THRESHOLD = 0.8
+// 首页数据 TTL：30s 内从只读来源页返回时使用缓存，跳过云函数调用（配额优化）
+const DATA_TTL = 30000
+// 返回首页时可能改动首页展示数据的来源页（写操作后返回 → 强制刷新，不能走缓存）
+const DIRTY_SOURCE_ROUTES = [
+  'pages/log-food/log-food',
+  'pages/weight-track/weight-track',
+  'pages/target-edit/target-edit',
+  'pages/profile/profile'
+]
 
 Page({
   data: {
@@ -29,6 +38,21 @@ Page({
     this.loadData()
   },
 
+  // 判断是否刷新数据：reLaunch 场景（onboarding 提交后）用显式标记；
+  // navigateBack 场景用上一页 route 判断是否写数据；其余走 30s TTL + 跨天兜底
+  shouldRefresh(today) {
+    if (app.globalData.forceIndexRefresh) {
+      app.globalData.forceIndexRefresh = false
+      return true
+    }
+    const pages = getCurrentPages()
+    const prev = pages.length >= 2 ? pages[pages.length - 2].route : null
+    if (prev && DIRTY_SOURCE_ROUTES.indexOf(prev) !== -1) return true
+    if (this._lastLoadDate !== today) return true
+    if (!this._lastLoadTs) return true
+    return Date.now() - this._lastLoadTs > DATA_TTL
+  },
+
   async loadData() {
     const now = new Date()
     const today = util.formatDate(now)
@@ -43,11 +67,19 @@ Page({
     else greeting = '夜宵时间！做大只的黄金时刻！🌙'
 
     this.setData({ dateText, greeting })
-    this.loadGoalProgress()
 
     if (app.globalData.dailyTargets) {
       this.setData({ targets: app.globalData.dailyTargets })
     }
+
+    // 缓存命中：跳过云函数调用（问候语/目标数据已在上面本地更新）
+    if (!this.shouldRefresh(today)) {
+      return
+    }
+    this._lastLoadTs = Date.now()
+    this._lastLoadDate = today
+
+    this.loadGoalProgress()
 
     try {
       const res = await wx.cloud.callFunction({

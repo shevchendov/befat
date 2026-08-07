@@ -1,5 +1,54 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-07] 594d248
+
+**feat: 新增达标统计入口替换生成战绩**
+
+- 首页第3入口由「生成战绩」改为「📈 达标统计」，跳转新增 pages/stats 页面
+- stats 页展示 7/30 天热量/蛋白达标率概览、体重曲线叠加达标/未达标/无记录色点、每周达标率 vs 体重变化对照条，标注"按当前目标计算"
+- 新增 getStats 云函数：服务端聚合 food_logs/weight_logs/users，按当前目标回溯计算达标率，返回精简结果（含 100 条分页拉取）
+- 彻底删除 share-card 页面、getShareCard/getWxacode 云函数及相关测试，sync-common TARGETS 同步移除
+- 清理 __mocks__ 中已无调用方的 wxacode/uploadFile mock
+DEPLOY: cloudfunctions/getStats
+VERIFIED: 仅本地jest测试通过（512/512，含新增getStats 9项），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `__mocks__/wx-server-sdk.js`
+- `cloudfunctions/getShareCard/common/deleteHelper.js`
+- `cloudfunctions/getShareCard/common/logger.js`
+- `cloudfunctions/getShareCard/common/targetCalc.js`
+- `cloudfunctions/getShareCard/index.js`
+- `cloudfunctions/getShareCard/package.json`
+- `cloudfunctions/getStats/common/deleteHelper.js`
+- `cloudfunctions/getStats/common/logger.js`
+- `cloudfunctions/getStats/common/targetCalc.js`
+- `cloudfunctions/getStats/index.js`
+- `cloudfunctions/getStats/package.json`
+- `cloudfunctions/getWxacode/common/deleteHelper.js`
+- `cloudfunctions/getWxacode/common/logger.js`
+- `cloudfunctions/getWxacode/common/targetCalc.js`
+- `cloudfunctions/getWxacode/config.json`
+- `cloudfunctions/getWxacode/index.js`
+- `cloudfunctions/getWxacode/package.json`
+- `cloudfunctions/sync-common.js`
+- `miniprogram/app.json`
+- `miniprogram/common/theme.wxss`
+- `miniprogram/pages/index/index.js`
+- `miniprogram/pages/index/index.wxml`
+- `miniprogram/pages/share-card/share-card.js`
+- `miniprogram/pages/share-card/share-card.json`
+- `miniprogram/pages/share-card/share-card.wxml`
+- `miniprogram/pages/share-card/share-card.wxss`
+- `miniprogram/pages/stats/stats.js`
+- `miniprogram/pages/stats/stats.json`
+- `miniprogram/pages/stats/stats.wxml`
+- `miniprogram/pages/stats/stats.wxss`
+- `tests/getShareCard.test.js`
+- `tests/getStats.test.js`
+- `tests/getWxacode.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getStats
+
 ## [2026-08-06] 92d85ab
 
 **feat: 放大我的档案卡片字体与间距**

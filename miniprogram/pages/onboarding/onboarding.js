@@ -167,6 +167,8 @@ Page({
       }
 
       wx.showToast({ title: '设置成功!', icon: 'success' })
+      // calcTarget 已写库，标记首页强制刷新（reLaunch 后拿不到来源页，必须显式标记）
+      app.globalData.forceIndexRefresh = true
       setTimeout(() => {
         wx.reLaunch({ url: '/pages/index/index' })
       }, 1500)

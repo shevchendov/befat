@@ -1,4 +1,8 @@
 const logger = require('../../utils/logger')
+const app = getApp()
+
+// getFavorites 结果 30s TTL 缓存（配额优化），共享给 recipe-list/my-favorites/recipe-detail
+const FAV_TTL = 30000
 
 Page({
   data: {
@@ -33,8 +37,15 @@ Page({
 
   async checkFavorited() {
     try {
+      const cached = app.globalData.favoritesCache
+      if (cached && Array.isArray(cached.recipes) && Date.now() - cached.ts < FAV_TTL) {
+        const ids = cached.recipes.map(r => r._id)
+        this.setData({ favorited: ids.includes(this.recipeId) })
+        return
+      }
       const res = await wx.cloud.callFunction({ name: 'getFavorites' })
-      if (res.result.code === 0) {
+      if (res.result.code === 0 && Array.isArray(res.result.data.recipes)) {
+        app.globalData.favoritesCache = { ts: Date.now(), recipes: res.result.data.recipes }
         const ids = res.result.data.recipes.map(r => r._id)
         this.setData({ favorited: ids.includes(this.recipeId) })
       }
@@ -52,6 +63,8 @@ Page({
       if (res.result.code !== 0) {
         this.setData({ favorited: !!wasFav })
         wx.showToast({ title: '操作失败', icon: 'none' })
+      } else {
+        app.globalData.favoritesCache = null
       }
     } catch (err) {
       this.setData({ favorited: !!wasFav })

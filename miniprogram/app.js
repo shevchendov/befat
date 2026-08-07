@@ -8,7 +8,9 @@ wx.cloud.init({
 App({
   globalData: {
     userInfo: null,
-    dailyTargets: null
+    dailyTargets: null,
+    favoritesCache: null,
+    forceIndexRefresh: false
   },
 
   onLaunch() {

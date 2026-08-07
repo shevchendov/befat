@@ -16,6 +16,8 @@ const BMI_NORMAL = 24
 // 保证游标不跑出可视区域；代价是极值位置略有偏差（可接受）。
 const MARKER_CLAMP_MIN = 2
 const MARKER_CLAMP_MAX = 98
+// getGoalProgress 结果 30s TTL 缓存（配额优化）：返回本页时体重数据基本不变
+const DATA_TTL = 30000
 
 Page({
   data: {
@@ -37,11 +39,19 @@ Page({
   async loadUserData() {
     try {
       const db = wx.cloud.database()
-      const [res, gpRes] = await Promise.all([
+      const now = Date.now()
+      const cached = this._gpCache && now - this._gpCache.ts < DATA_TTL
+      const [res, gpResult] = await Promise.all([
         db.collection('users').where({ _openid: '{openid}' }).get(),
         // getGoalProgress 仅用于取"当前体重"，失败不阻断档案加载（回退 users.current_weight_kg）
-        wx.cloud.callFunction({ name: 'getGoalProgress' }).catch(() => null)
+        cached
+          ? Promise.resolve(this._gpCache.value)
+          : wx.cloud.callFunction({ name: 'getGoalProgress' })
+              .then(gpRes => (gpRes.result && gpRes.result.code === 0 ? gpRes.result.data : null))
+              .catch(() => null)
       ])
+      // 只缓存成功的 getGoalProgress 结果；失败/无数据不缓存，避免掩盖瞬时故障
+      if (!cached && gpResult) this._gpCache = { ts: now, value: gpResult }
       // 已初始化（填过目标）才展示档案；重置后的文档 target_weight_kg 为空，
       // 按无用户处理，避免展示全空档案
       if (res.data.length > 0 && res.data[0].target_weight_kg != null) {
@@ -49,7 +59,7 @@ Page({
         // 当前体重：优先取 getGoalProgress 返回的最新体重打卡记录（与首页目标进度卡同源，
         // 无打卡记录时云函数内部已回退到起始体重）；云函数失败时兜底 users.current_weight_kg。
         // users.current_weight_kg 是 onboarding 起始体重快照，打卡不回写，不能直接当"当前体重"用。
-        const gp = gpRes && gpRes.result && gpRes.result.code === 0 ? gpRes.result.data : null
+        const gp = gpResult
         const currentWeight = gp && gp.current_weight != null ? gp.current_weight : (user.current_weight_kg != null ? user.current_weight_kg : null)
 
         let bmi = null

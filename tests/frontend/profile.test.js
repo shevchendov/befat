@@ -17,6 +17,7 @@ beforeEach(() => {
   page.data.bmi = null
   page.data.healthWarning = {}
   page.data.activityLabel = ''
+  page._gpCache = null
   appInstance.globalData.userInfo = null
   appInstance.globalData.dailyTargets = null
 })

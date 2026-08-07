@@ -34,6 +34,8 @@ beforeAll(() => {
 beforeEach(() => {
   page.setData.mockClear()
   page.data.showCelebration = false
+  page._lastLoadTs = 0
+  page._lastLoadDate = null
 })
 
 function mealLog(cal) {

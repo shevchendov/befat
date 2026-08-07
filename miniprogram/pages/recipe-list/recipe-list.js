@@ -1,4 +1,8 @@
 const logger = require('../../utils/logger')
+const app = getApp()
+
+// getFavorites 结果 30s TTL 缓存（配额优化），共享给 recipe-list/my-favorites/recipe-detail
+const FAV_TTL = 30000
 
 Page({
   data: {
@@ -49,20 +53,30 @@ Page({
 
   async loadFavorites() {
     try {
+      const cached = app.globalData.favoritesCache
+      if (cached && Array.isArray(cached.recipes) && Date.now() - cached.ts < FAV_TTL) {
+        this.applyFavorites(cached.recipes)
+        return
+      }
       const res = await wx.cloud.callFunction({ name: 'getFavorites' })
-      if (res.result.code === 0) {
-        const ids = {}
-        res.result.data.recipes.forEach(r => { ids[r._id] = true })
-        this.setData({ favoritedIds: ids })
-        if (this.data.selectedTag === '__favorites__') {
-          const filtered = this.data.recipes.filter(r => ids[r._id])
-          this.setData({ filteredRecipes: filtered })
-        } else {
-          this.setData({ filteredRecipes: this._sortFavFirst(this.data.filteredRecipes) })
-        }
+      if (res.result.code === 0 && Array.isArray(res.result.data.recipes)) {
+        app.globalData.favoritesCache = { ts: Date.now(), recipes: res.result.data.recipes }
+        this.applyFavorites(res.result.data.recipes)
       }
     } catch (err) {
       logger.error('loadFavorites', err)
+    }
+  },
+
+  applyFavorites(recipes) {
+    const ids = {}
+    recipes.forEach(r => { ids[r._id] = true })
+    this.setData({ favoritedIds: ids })
+    if (this.data.selectedTag === '__favorites__') {
+      const filtered = this.data.recipes.filter(r => ids[r._id])
+      this.setData({ filteredRecipes: filtered })
+    } else {
+      this.setData({ filteredRecipes: this._sortFavFirst(this.data.filteredRecipes) })
     }
   },
 
@@ -104,6 +118,7 @@ Page({
         this.setData({ ['favoritedIds.' + id]: !!wasFav })
         wx.showToast({ title: '操作失败', icon: 'none' })
       } else {
+        app.globalData.favoritesCache = null
         if (this.data.selectedTag === '__favorites__' && wasFav) {
           const filtered = this.data.filteredRecipes.filter(r => r._id !== id)
           this.setData({ filteredRecipes: filtered })
