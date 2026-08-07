@@ -1,0 +1,8 @@
+{
+  "name": "getStats",
+  "version": "1.0.0",
+  "description": "聚合营养达标率与体重关联统计",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

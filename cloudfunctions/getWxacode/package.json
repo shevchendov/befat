@@ -1,8 +1,0 @@
-{
-  "name": "getWxacode",
-  "version": "1.0.0",
-  "description": "生成小程序码",
-  "dependencies": {
-    "wx-server-sdk": "latest"
-  }
-}

@@ -1,5 +1,332 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-06] 92d85ab
+
+**feat: 放大我的档案卡片字体与间距**
+
+- 标题32->40、大数字40->60、标签24->30、BMI数值28->44、状态字26->32、分界值18->24、段名标签20->32
+- 连带调整 user-stats/bmi-display padding、bmi-range-wrap padding-bottom、分界值 top、游标高度与位置
+- 分界值 top 取36、padding-bottom 取48：游标底边与分界值数字严格不重叠，长文案（danger）单行不破版
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过（519/519），未做真机/云端验证
+
+**涉及文件:**
+- `miniprogram/pages/profile/profile.wxss`
+
+## [2026-08-06] 8190680
+
+**fix: 档案页当前体重与BMI改用最新打卡记录**
+
+- profile.js loadUserData 并行调用 getGoalProgress，当前体重优先取最新体重打卡记录（与首页目标进度卡同源），不再用 onboarding 起始快照 users.current_weight_kg
+- BMI/健康提示/范围条游标同步改用最新体重计算
+- getGoalProgress 返回非0或抛异常时兜底 users.current_weight_kg，不阻断档案加载
+- 新增3个测试：最新打卡胜出起始快照、返回非0回退起始值、抛异常不阻断加载
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过（519/519），未做真机/云端验证
+
+**涉及文件:**
+- `miniprogram/pages/profile/profile.js`
+- `tests/frontend/profile.test.js`
+
+## [2026-08-06] 5b39cc6
+
+**fix: 档案页当前体重与BMI改用最新打卡记录**
+
+- profile.js loadUserData 并行调用 getGoalProgress，当前体重优先取最新体重打卡记录（与首页目标进度卡同源），不再用 onboarding 起始快照 users.current_weight_kg
+- BMI/健康提示/范围条游标同步改用最新体重计算
+- getGoalProgress 返回非0或抛异常时兜底 users.current_weight_kg，不阻断档案加载
+- 新增3个测试：最新打卡胜出起始快照、返回非0回退起始值、抛异常不阻断加载
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过（519/519），未做真机/云端验证
+
+**涉及文件:**
+- `miniprogram/pages/profile/profile.js`
+- `miniprogram/pages/profile/profile.wxss`
+- `tests/frontend/profile.test.js`
+
+## [2026-08-06] d7215c5
+
+**feat: profile 页 BMI 展示升级为范围条可视化**
+
+- 将 BMI 展示区由单行参考文字改为三段色条：偏瘦(<18.5)/正常(18.5~24)/偏高(>=24)，配色复用现有 warning/success/accent-orange 变量
+- 当前 BMI 值用深色游标标记在条上对应位置，展示域 14~30 将 BMI 映射为百分比位置
+- 极端值（BMI<14 或 >30）游标钳制在 [2%,98%] 内不越出可视区域
+- 分界值 18.5/24 以绝对定位对齐真实边界，段名标签按段宽对齐
+- profile.js 顶部注释说明展示域/钳制等魔法数字的由来，阈值与 util.getHealthWarning 严格一致
+- 新增 3 个游标定位测试：正常值计算、左右两端钳制
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过（516/516），未做真机/云端验证
+
+**涉及文件:**
+- `miniprogram/pages/profile/profile.js`
+- `miniprogram/pages/profile/profile.wxml`
+- `miniprogram/pages/profile/profile.wxss`
+- `tests/frontend/profile.test.js`
+
+## [2026-08-06] 9db1984
+
+**feat: 体重输入统一2位小数并增加目标前端预校验**
+
+- validators.sanitizeDigit 统一限制小数2位，作为输入过滤单一规则源
+- 新增 targetGuard.js 前端轻量预校验：目标体重>300 用 toast、BMI<16 与每周增重>1kg 用 modal，文案与云函数 validateWeights 逐字对齐
+- onboarding step2 下一步接入预校验，目标体重600此类非法输入在step2即被拦截，不再白填到step3
+- target-edit 重算模式接入同一预校验（身高取自用户档案），手动模式保持原设计不变
+- onboarding 体重输入 maxlength 3改5，支持输入2位小数；target-edit 删除手动1位小数限制、字符上限放宽到6
+- weight-track 删除冗余手动小数切片，统一走 sanitizeDigit
+- 展示层体重统一2位小数：首页 goal 卡 fmtW 改 toFixed(2)、profile 页新增展示字段
+- 测试：新增 validators/targetGuard/target-edit，扩展 onboarding/weight-track，setup.js 支持点路径 setData
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过（513/513），未做真机/云端验证
+
+**涉及文件:**
+- `miniprogram/pages/index/index.js`
+- `miniprogram/pages/onboarding/onboarding.js`
+- `miniprogram/pages/onboarding/onboarding.wxml`
+- `miniprogram/pages/profile/profile.js`
+- `miniprogram/pages/profile/profile.wxml`
+- `miniprogram/pages/target-edit/target-edit.js`
+- `miniprogram/pages/weight-track/weight-track.js`
+- `miniprogram/utils/targetGuard.js`
+- `miniprogram/utils/validators.js`
+- `tests/frontend/onboarding.test.js`
+- `tests/frontend/setup.js`
+- `tests/frontend/target-edit.test.js`
+- `tests/frontend/targetGuard.test.js`
+- `tests/frontend/validators.test.js`
+- `tests/frontend/weight-track.test.js`
+
+## [2026-08-06] 94e41e1
+
+**feat: 首页新增"我的"入口跳转 profile 页**
+
+- index 页 hero-banner 右上角新增"我的"胶囊按钮（复用 hero-badge 半透明白样式）
+- profile 页此前为死页面（无任何跳转入口），现可从首页进入使用导出/重置/删除功能
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `miniprogram/pages/index/index.js`
+- `miniprogram/pages/index/index.wxml`
+- `miniprogram/pages/index/index.wxss`
+
+## [2026-08-06] d5f4e89
+
+**feat: 新增"重置为新用户"功能并修复 deleteUserData 漏删收藏**
+
+- 新增 resetUserData 云函数：保留 users 文档(_id/_openid/created_at)，清空全部业务字段与 food_logs/weight_logs/user_favorites，要求 confirm===true 且仅操作自身 openid，操作写入 error_logs(action=reset_user) 审计
+- 抽出公共 batchDeleteByOpenid 供 deleteUserData/resetUserData 共用
+- 修复 deleteUserData 漏删 user_favorites 的既有 bug
+- onboarding/app/profile 三处"是否已初始化"判断改为 target_weight_kg != null，重置后能正确重新走 onboarding
+DEPLOY: cloudfunctions/resetUserData,cloudfunctions/deleteUserData
+VERIFIED: 仅本地jest测试通过（483/483），未做真机/云端验证
+DATA IMPACT: 无数据结构变化；resetUserData 仅清空既有字段值并新增 error_logs 审计记录
+
+**涉及文件:**
+- `__mocks__/wx-server-sdk.js`
+- `cloudfunctions/calcTarget/common/deleteHelper.js`
+- `cloudfunctions/checkMealReminder/common/deleteHelper.js`
+- `cloudfunctions/common/deleteHelper.js`
+- `cloudfunctions/deleteUserData/common/deleteHelper.js`
+- `cloudfunctions/deleteUserData/index.js`
+- `cloudfunctions/exportUserData/common/deleteHelper.js`
+- `cloudfunctions/generateRecipeInit/common/deleteHelper.js`
+- `cloudfunctions/getDailySummary/common/deleteHelper.js`
+- `cloudfunctions/getFavorites/common/deleteHelper.js`
+- `cloudfunctions/getShareCard/common/deleteHelper.js`
+- `cloudfunctions/getWxacode/common/deleteHelper.js`
+- `cloudfunctions/manageRecipe/common/deleteHelper.js`
+- `cloudfunctions/parseFoodLog/common/deleteHelper.js`
+- `cloudfunctions/recalcTarget/common/deleteHelper.js`
+- `cloudfunctions/resetUserData/common/deleteHelper.js`
+- `cloudfunctions/resetUserData/common/logger.js`
+- `cloudfunctions/resetUserData/common/targetCalc.js`
+- `cloudfunctions/resetUserData/index.js`
+- `cloudfunctions/resetUserData/package.json`
+- `cloudfunctions/saveWeightLog/common/deleteHelper.js`
+- `cloudfunctions/sync-common.js`
+- `cloudfunctions/toggleFavorite/common/deleteHelper.js`
+- `cloudfunctions/updateTargetManual/common/deleteHelper.js`
+- `miniprogram/app.js`
+- `miniprogram/pages/onboarding/onboarding.js`
+- `miniprogram/pages/profile/profile.js`
+- `miniprogram/pages/profile/profile.wxml`
+- `tests/deleteUserData.test.js`
+- `tests/frontend/app.test.js`
+- `tests/frontend/onboarding.test.js`
+- `tests/frontend/profile.test.js`
+- `tests/resetUserData.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/resetUserData,cloudfunctions/deleteUserData
+
+## [2026-08-06] 3b51898
+
+**fix: 目标预计达成日期改为跟随目标体重变化**
+
+- 修复 target-edit 修改目标后首页预计日期不变：branch C 兜底从固定计划日期改为按冻结期望周速率推算
+- 新增 users.expected_weekly_rate 快照（onboarding 写入，recalcTarget 仅在周期变化/首次设置/老用户缺失时重算）
+- getGoalProgress 新增 estimate_basis 字段区分实测/计划推算，前端按 basis 切换文案（照这个节奏/按你的计划）
+DEPLOY: cloudfunctions/calcTarget,cloudfunctions/recalcTarget,cloudfunctions/getGoalProgress
+VERIFIED: 仅本地jest测试通过（463/463），未做真机/云端验证
+DATA IMPACT: users 新增可空 expected_weekly_rate(number)，旧文档不迁移，走重算补写
+
+**涉及文件:**
+- `cloudfunctions/calcTarget/common/targetCalc.js`
+- `cloudfunctions/calcTarget/index.js`
+- `cloudfunctions/checkMealReminder/common/targetCalc.js`
+- `cloudfunctions/common/targetCalc.js`
+- `cloudfunctions/deleteUserData/common/targetCalc.js`
+- `cloudfunctions/exportUserData/common/targetCalc.js`
+- `cloudfunctions/generateRecipeInit/common/targetCalc.js`
+- `cloudfunctions/getDailySummary/common/targetCalc.js`
+- `cloudfunctions/getFavorites/common/targetCalc.js`
+- `cloudfunctions/getGoalProgress/index.js`
+- `cloudfunctions/getShareCard/common/targetCalc.js`
+- `cloudfunctions/getWxacode/common/targetCalc.js`
+- `cloudfunctions/manageRecipe/common/targetCalc.js`
+- `cloudfunctions/parseFoodLog/common/targetCalc.js`
+- `cloudfunctions/recalcTarget/common/targetCalc.js`
+- `cloudfunctions/recalcTarget/index.js`
+- `cloudfunctions/saveWeightLog/common/targetCalc.js`
+- `cloudfunctions/toggleFavorite/common/targetCalc.js`
+- `cloudfunctions/updateTargetManual/common/targetCalc.js`
+- `miniprogram/pages/goal-detail/goal-detail.wxml`
+- `miniprogram/pages/index/index.js`
+- `miniprogram/pages/index/index.wxml`
+- `tests/calcTarget.test.js`
+- `tests/getGoalProgress.test.js`
+- `tests/recalcTarget.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/calcTarget,cloudfunctions/recalcTarget,cloudfunctions/getGoalProgress
+
+## [2026-08-06] 3adacf4
+
+**feat: 目标周期可配置化，getGoalProgress 新增计划日期与节奏对比**
+
+- validateWeights 新增 targetWeeks 参数，速率校验周期可配置（默认4周不回归）
+- calcTarget/recalcTarget 透传并存储 target_weeks + target_weeks_set_at
+- recalcTarget 未重新填周期时速率校验回退到库中已存周期
+- getGoalProgress 新增 planned_date/pace_status/plan_expired 三字段
+- pace_status 采用 14 天容差防临界抖动（on_track/ahead/behind）
+- 方向相反时不被计划周期兜底覆盖，保持原有安全降级
+- onboarding/target-edit 重算模式新增周期输入，手动模式不变
+DEPLOY: cloudfunctions/calcTarget, cloudfunctions/recalcTarget, cloudfunctions/getGoalProgress
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+DATA IMPACT: users 表新增可空字段 target_weeks(整数1-104)与 target_weeks_set_at(YYYY-MM-DD)，旧文档不迁移
+
+**涉及文件:**
+- `cloudfunctions/calcTarget/common/targetCalc.js`
+- `cloudfunctions/calcTarget/index.js`
+- `cloudfunctions/checkMealReminder/common/targetCalc.js`
+- `cloudfunctions/common/targetCalc.js`
+- `cloudfunctions/deleteUserData/common/targetCalc.js`
+- `cloudfunctions/exportUserData/common/targetCalc.js`
+- `cloudfunctions/generateRecipeInit/common/targetCalc.js`
+- `cloudfunctions/getDailySummary/common/targetCalc.js`
+- `cloudfunctions/getFavorites/common/targetCalc.js`
+- `cloudfunctions/getGoalProgress/index.js`
+- `cloudfunctions/getShareCard/common/targetCalc.js`
+- `cloudfunctions/getWxacode/common/targetCalc.js`
+- `cloudfunctions/manageRecipe/common/targetCalc.js`
+- `cloudfunctions/parseFoodLog/common/targetCalc.js`
+- `cloudfunctions/recalcTarget/common/targetCalc.js`
+- `cloudfunctions/recalcTarget/index.js`
+- `cloudfunctions/saveWeightLog/common/targetCalc.js`
+- `cloudfunctions/toggleFavorite/common/targetCalc.js`
+- `cloudfunctions/updateTargetManual/common/targetCalc.js`
+- `miniprogram/pages/onboarding/onboarding.js`
+- `miniprogram/pages/onboarding/onboarding.wxml`
+- `miniprogram/pages/target-edit/target-edit.js`
+- `miniprogram/pages/target-edit/target-edit.wxml`
+- `tests/calcTarget.test.js`
+- `tests/getGoalProgress.test.js`
+- `tests/recalcTarget.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/calcTarget, cloudfunctions/recalcTarget, cloudfunctions/getGoalProgress
+
+## [2026-08-05] e9733c9
+
+**fix: 修复日期时间本地化格式化真机显示为英文**
+
+- 新增 utils/dateFormat.js 统一日期时间中文格式化工具模块
+- 首页首屏日期改用 formatDateShortCN（8月4日 周二，无年份，语义不变）
+- 用餐记录时间改用 formatTimeShortCN（08:30 时:分，语义不变）
+- 修复真机 JSCore/V8 下 toLocaleDateString/toLocaleTimeString 输出英文格式
+DEPLOY: none
+VERIFIED: 未测试
+
+**涉及文件:**
+- `miniprogram/pages/index/index.js`
+- `miniprogram/utils/dateFormat.js`
+
+## [2026-08-04] 1d3bef5
+
+**fix: goal-detail 折线图字号统一与目标标签定位调整**
+
+- Y/X轴刻度字号 20→16px，Y轴网格 4格→3格增大行距
+- X轴底部padding额外+10px并按完整投影宽预留，修复斜排日期底部裁切
+- 目标标签简化为紧贴目标虚线上方、水平居中，移除碰撞检测候选逻辑
+DEPLOY: none
+VERIFIED: 未测试
+
+**涉及文件:**
+- `miniprogram/pages/goal-detail/goal-detail.js`
+
+## [2026-08-04] 27d9428
+
+**fix: 调整体重打卡页标题与图表间距**
+
+- .chart-canvas 设 display:block 消除行内基线间隙
+- 绘图区顶部 padding 40→16，标题到图表距离与另两处一致
+- 顶部Y轴刻度不贴边，goal-detail 独立padT不受影响
+DEPLOY: none
+VERIFIED: 未测试
+
+**涉及文件:**
+- `miniprogram/pages/weight-track/weight-track.js`
+- `miniprogram/pages/weight-track/weight-track.wxss`
+
+## [2026-08-04] d04e0ea
+
+**fix: X轴标签抽样临界抖动加容差**
+
+- computeLabelStep 判定改为 pointSpacing >= projectedW*0.9 才全显
+- 消除间距仅比投影宽小几像素时 step 在1/2间跳变
+- 新增临界区单测验证（45/46、45.6/46 均返回1）
+DEPLOY: none
+VERIFIED: 未测试
+
+**涉及文件:**
+- `miniprogram/utils/canvasChart.js`
+- `tests/frontend/canvasChart.test.js`
+
+## [2026-08-04] 0841175
+
+**fix: weight-track 折线图刻度字号与Y轴行数调整**
+
+- Y轴刻度字号 20→16px，左侧 padding margin 16→14，避免数字视觉拥挤
+- X轴日期标签字号同步 16px，与Y轴一致
+- Y轴水平网格线 4格(5条)减为 3格(4条)，增大行间距
+- 仅 weight-track 单独调整，goal-detail 保持原样不复用相同字号
+DEPLOY: none
+VERIFIED: 未测试
+
+**涉及文件:**
+- `miniprogram/pages/weight-track/weight-track.js`
+
+## [2026-08-04] 346f530
+
+**chore: getShareCard 增加分段耗时埋点便于定位慢查询**
+
+- invoke 后记 t0，批次1（今日/用户/本周/最新体重4条并行查询）完成后记 t1
+- countConsecutive（批次2 连续天数2条并行查询）完成后记 t2
+- 日志输出 dbBatch1/dbBatch2/postBatch2 分段耗时，区分冷启动 vs 查询耗时
+- 实际耗时归因：三次调用 106-262ms，两批查询各 50-165ms，无慢查询；
+  此前的 2.13s 大概率是云函数冷启动，索引已确认存在排除查询瓶颈
+DEPLOY: cloudfunctions/getShareCard
+VERIFIED: 云函数控制台日志确认埋点生效，三次调用分段耗时正常；未做额外真机验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `cloudfunctions/getShareCard/index.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getShareCard
+
 ## [2026-08-04] 57b2a90
 
 **feat: 抽取公共Canvas绘图工具并统一两个折线图排版**

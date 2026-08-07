@@ -127,12 +127,8 @@ const cloud = {
   openapi: {
     security: {
       msgSecCheck: jest.fn().mockResolvedValue({ errCode: 0, errMsg: 'ok' })
-    },
-    wxacode: {
-      getUnlimited: jest.fn().mockResolvedValue({ buffer: Buffer.from('fake-png-data') })
     }
   },
-  uploadFile: jest.fn().mockResolvedValue({ fileID: 'cloud://test/wxacode/test-openid.png' }),
   __resetDB() {
     Object.keys(DB).forEach(k => { DB[k] = [] })
     idSeq = 1

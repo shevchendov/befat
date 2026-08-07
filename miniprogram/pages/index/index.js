@@ -233,8 +233,8 @@ Page({
     wx.navigateTo({ url: '/pages/recipe-list/recipe-list' })
   },
 
-  goToShareCard() {
-    wx.navigateTo({ url: '/pages/share-card/share-card' })
+  goToStats() {
+    wx.navigateTo({ url: '/pages/stats/stats' })
   },
 
   goToProfile() {

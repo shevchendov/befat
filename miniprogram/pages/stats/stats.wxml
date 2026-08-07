@@ -1,0 +1,60 @@
+<view class="stats-page">
+  <view wx:if="{{loading}}" class="loading">加载中...</view>
+
+  <view wx:elif="{{error}}" class="error-state">
+    <text class="error-text">{{error}}</text>
+    <button class="retry-btn" bindtap="loadData">重新加载</button>
+  </view>
+
+  <block wx:else>
+    <view class="summary-card">
+      <view class="summary-header">
+        <text class="summary-title">📈 营养达标率</text>
+        <text class="summary-note">按当前目标计算</text>
+      </view>
+      <view class="summary-grid">
+        <view class="summary-item" wx:for="{{summaryItems}}" wx:key="label">
+          <text class="summary-label">{{item.label}}</text>
+          <text class="summary-value">{{item.rateText}}</text>
+          <text class="summary-sub">{{item.recorded}} 天有记录</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="stats-section">
+      <view class="stats-section-title">⚖️ 体重趋势</view>
+      <view class="chart-card" wx:if="{{weights.length > 0}}">
+        <view class="chart-legend">
+          <view class="legend-item">
+            <view class="legend-dot dot-ok"></view>
+            <text>达标</text>
+          </view>
+          <view class="legend-item">
+            <view class="legend-dot dot-fail"></view>
+            <text>未达标</text>
+          </view>
+          <view class="legend-item">
+            <view class="legend-dot dot-none"></view>
+            <text>无记录</text>
+          </view>
+        </view>
+        <canvas type="2d" id="weightChart" class="trend-canvas"></canvas>
+      </view>
+      <view wx:else class="empty-state">打卡体重后，这里会显示趋势与达标情况</view>
+    </view>
+
+    <view class="stats-section" wx:if="{{weeks.length > 0}}">
+      <view class="stats-section-title">📅 每周达标率 vs 体重变化</view>
+      <view class="week-card">
+        <view class="week-row" wx:for="{{weeks}}" wx:key="label">
+          <text class="week-label">{{item.label}}</text>
+          <view class="week-bar">
+            <view class="week-bar-fill" style="width: {{item.barWidth}}%;"></view>
+          </view>
+          <text class="week-rate">{{item.rateText}}</text>
+          <text class="week-delta">{{item.deltaText}}</text>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>
