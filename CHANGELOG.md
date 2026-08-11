@@ -1,5 +1,32 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-07] 498e13d
+
+**feat: 云函数配额优化与 getGoalProgress 截断修复**
+
+- 首页 onShow 数据加 30s TTL 缓存：navigateBack 按来源页 route 判断脏/净强制刷新（写数据的 log-food/weight-track/target-edit/profile 走脏），reLaunch 场景（onboarding 提交后）用 globalData.forceIndexRefresh 标记兜底，跨天自动刷新；本地问候语/目标数据缓存命中时照常更新
+- 食谱相关三页（recipe-list/my-favorites/recipe-detail）共享 getFavorites 30s 缓存到 globalData.favoritesCache，toggleFavorite 成功后失效
+- 我的档案页 getGoalProgress 结果 30s TTL 缓存，只缓存成功结果，失败不缓存避免掩盖瞬时故障
+- 修复 getGoalProgress 体重记录超 100 条时被截断成最旧数据导致 current_weight 错位的 bug：改 orderBy desc + limit(100) + reverse，趋势/速率/预估分支逻辑零改动，新增 110 条记录回归测试
+- getGoalProgress 测试 mock 模拟云函数单次 get 100 条上限并支持 limit()
+DEPLOY: cloudfunctions/getGoalProgress
+VERIFIED: 真机测试通过，验证了首页缓存命中与写操作后强制刷新（体重打卡/记录饮食/修改目标返回首页数据即时更新）、onboarding 提交后回首页数据正确、我的档案体重显示、收藏页缓存与取消失效
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `cloudfunctions/getGoalProgress/index.js`
+- `miniprogram/app.js`
+- `miniprogram/pages/index/index.js`
+- `miniprogram/pages/my-favorites/my-favorites.js`
+- `miniprogram/pages/onboarding/onboarding.js`
+- `miniprogram/pages/profile/profile.js`
+- `miniprogram/pages/recipe-detail/recipe-detail.js`
+- `miniprogram/pages/recipe-list/recipe-list.js`
+- `tests/frontend/index.test.js`
+- `tests/frontend/profile.test.js`
+- `tests/getGoalProgress.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getGoalProgress
+
 ## [2026-08-07] 594d248
 
 **feat: 新增达标统计入口替换生成战绩**
