@@ -24,9 +24,18 @@ Page({
   async loadRecipe(id) {
     this.setData({ loading: true })
     try {
-      const db = wx.cloud.database()
-      const res = await db.collection('recipes').doc(id).get()
-      this.setData({ recipe: res.data, loading: false })
+      const res = await wx.cloud.callFunction({
+        name: 'getRecipeDetail',
+        data: { id }
+      })
+      if (res.result.code !== 0) {
+        logger.error('loadRecipe', res.result)
+        wx.showToast({ title: '加载失败', icon: 'none' })
+        this.setData({ loading: false })
+        return
+      }
+      const recipe = res.result.data
+      this.setData({ recipe, loading: false })
       this.checkFavorited()
     } catch (err) {
       logger.error('loadRecipe', err)
@@ -39,14 +48,14 @@ Page({
     try {
       const cached = app.globalData.favoritesCache
       if (cached && Array.isArray(cached.recipes) && Date.now() - cached.ts < FAV_TTL) {
-        const ids = cached.recipes.map(r => r._id)
+        const ids = cached.recipes.map(r => r.id || r._id)
         this.setData({ favorited: ids.includes(this.recipeId) })
         return
       }
       const res = await wx.cloud.callFunction({ name: 'getFavorites' })
       if (res.result.code === 0 && Array.isArray(res.result.data.recipes)) {
         app.globalData.favoritesCache = { ts: Date.now(), recipes: res.result.data.recipes }
-        const ids = res.result.data.recipes.map(r => r._id)
+        const ids = res.result.data.recipes.map(r => r.id || r._id)
         this.setData({ favorited: ids.includes(this.recipeId) })
       }
     } catch (err) {

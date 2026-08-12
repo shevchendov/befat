@@ -1,0 +1,9 @@
+{
+  "name": "getPublishedRecipes",
+  "version": "1.0.0",
+  "description": "获取已发布食谱列表（分页）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

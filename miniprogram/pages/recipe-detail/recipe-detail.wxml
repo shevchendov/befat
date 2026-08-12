@@ -24,7 +24,7 @@
     <text class="section-title-inner">食材清单</text>
     <view class="ingredient-item" wx:for="{{recipe.ingredients}}" wx:key="index">
       <text class="ingredient-bullet">•</text>
-      <text>{{item}}</text>
+      <text>{{item.name}}{{item.amount ? ' ' + item.amount + (item.unit || '') : ''}}{{item.note ? '（' + item.note + '）' : ''}}</text>
     </view>
   </view>
 

@@ -1,0 +1,9 @@
+{
+  "name": "recipeDataCleanup",
+  "version": "1.0.0",
+  "description": "清理历史 recipes 与孤儿收藏（dry-run / execute，仅管理员）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

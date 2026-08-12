@@ -31,9 +31,16 @@ Page({
   async loadRecipes() {
     this.setData({ loading: true })
     try {
-      const db = wx.cloud.database()
-      const res = await db.collection('recipes').get()
-      const recipes = res.data
+      const res = await wx.cloud.callFunction({
+        name: 'getPublishedRecipes',
+        data: { limit: 100 }
+      })
+      if (res.result.code !== 0) {
+        logger.error('loadRecipes', res.result)
+        this.setData({ loading: false })
+        return
+      }
+      const recipes = (res.result.data.list || []).map(r => ({ ...r, _id: r.id }))
       const tagSet = new Set()
       recipes.forEach(r => {
         if (r.tags) r.tags.forEach(t => tagSet.add(t))

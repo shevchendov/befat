@@ -1,8 +1,7 @@
 require('./setup')
-const { getLastPageConfig, createPage } = require('./setup')
+const { getLastPageConfig, createPage, callFnMock } = require('./setup')
 
 let page
-let collectionGet
 
 beforeAll(() => {
   require('../../miniprogram/pages/recipe-list/recipe-list')
@@ -20,27 +19,36 @@ beforeEach(() => {
 })
 
 describe('loadRecipes', () => {
-  test('加载食谱并提取标签', async () => {
-    const db = wx.cloud.database()
-    const col = db.collection('recipes')
-    col.get = jest.fn(() => Promise.resolve({
-      data: [
-        { _id: '1', title: '食谱A', tags: ['早餐', '快手'] },
-        { _id: '2', title: '食谱B', tags: ['午餐', '高蛋白'] },
-        { _id: '3', title: '食谱C', tags: ['早餐', '高蛋白'] }
-      ]
-    }))
+  test('通过 getPublishedRecipes 云函数加载食谱并提取标签', async () => {
+    callFnMock.mockResolvedValue({
+      result: {
+        code: 0,
+        data: {
+          list: [
+            { id: '1', title: '食谱A', tags: ['早餐', '快手'] },
+            { id: '2', title: '食谱B', tags: ['午餐', '高蛋白'] },
+            { id: '3', title: '食谱C', tags: ['早餐', '高蛋白'] }
+          ]
+        }
+      }
+    })
     await page.loadRecipes()
+    expect(callFnMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'getPublishedRecipes' }))
     expect(page.data.recipes).toHaveLength(3)
+    expect(page.data.recipes[0]._id).toBe('1')
     expect(page.data.filteredRecipes).toHaveLength(3)
     expect(page.data.tags).toEqual(expect.arrayContaining(['早餐', '快手', '午餐', '高蛋白']))
     expect(page.data.loading).toBe(false)
   })
 
-  test('加载失败不崩溃', async () => {
-    const db = wx.cloud.database()
-    const col = db.collection('recipes')
-    col.get = jest.fn(() => Promise.reject(new Error('db error')))
+  test('云函数返回非 0 时加载失败不崩溃', async () => {
+    callFnMock.mockResolvedValue({ result: { code: 1, message: 'error' } })
+    await page.loadRecipes()
+    expect(page.data.loading).toBe(false)
+  })
+
+  test('云函数调用异常时不崩溃', async () => {
+    callFnMock.mockRejectedValue(new Error('network error'))
     await page.loadRecipes()
     expect(page.data.loading).toBe(false)
   })

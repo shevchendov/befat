@@ -1,0 +1,9 @@
+{
+  "name": "validateRecipe",
+  "version": "1.0.0",
+  "description": "食谱程序化校验（非 LLM）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

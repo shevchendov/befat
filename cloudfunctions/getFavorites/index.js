@@ -4,6 +4,20 @@ const db = cloud.database()
 const logger = require('./common/logger')
 const FN = 'getFavorites'
 const _ = db.command
+const PUBLISHED = 'PUBLISHED'
+
+function toFavoriteDto(recipe) {
+  const nutrition = recipe.nutrition || {}
+  return {
+    id: recipe._id,
+    _id: recipe._id,
+    title: recipe.title,
+    calorie: nutrition.calorie || 0,
+    protein_g: nutrition.protein_g || 0,
+    tags: recipe.tags || [],
+    image_url: recipe.image_url || ''
+  }
+}
 
 exports.main = async (event, context) => {
   const start = Date.now()
@@ -24,12 +38,16 @@ exports.main = async (event, context) => {
     }
 
     const recipeRes = await db.collection('recipes').where({
-      _id: _.in(recipeIds)
+      _id: _.in(recipeIds),
+      status: PUBLISHED
     }).get()
 
     const recipeMap = {}
     recipeRes.data.forEach(r => { recipeMap[r._id] = r })
-    const recipes = favRes.data.map(f => recipeMap[f.recipe_id]).filter(Boolean)
+    const recipes = favRes.data
+      .map(f => recipeMap[f.recipe_id])
+      .filter(Boolean)
+      .map(toFavoriteDto)
 
     const result = { code: 0, message: 'ok', data: { recipes } }
     logger.info(FN, 'success', { count: recipes.length, duration: Date.now() - start })

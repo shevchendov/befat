@@ -4,7 +4,8 @@ const path = require('path')
 const TARGETS = [
   'calcTarget', 'parseFoodLog', 'getDailySummary', 'saveWeightLog',
   'deleteUserData', 'exportUserData', 'checkMealReminder', 'generateRecipeInit',
-  'manageRecipe', 'toggleFavorite', 'getFavorites',
+  'manageRecipe', 'toggleFavorite', 'getFavorites', 'getPublishedRecipes',
+  'getRecipeDetail', 'validateRecipe', 'recipeDataCleanup',
   'recalcTarget', 'updateTargetManual', 'resetUserData', 'getStats'
 ]
 
