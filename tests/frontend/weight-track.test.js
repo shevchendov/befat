@@ -16,6 +16,7 @@ beforeEach(() => {
   page.data.weightChange = null
   page.data.records = []
   page.data.saving = false
+  getApp().globalData.forceIndexRefresh = false
 })
 
 describe('onWeightInput', () => {
@@ -71,6 +72,22 @@ describe('saveWeight', () => {
     await page.saveWeight()
     expect(page.data.saving).toBe(false)
     expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('网络异常') }))
+  })
+})
+
+describe('saveWeight - forceIndexRefresh 写后强制刷新', () => {
+  test('保存成功后设置 forceIndexRefresh', async () => {
+    page.data.inputWeight = '65.5'
+    callFnMock.mockResolvedValue({ result: { code: 0, data: { records: [{ date: '2026-07-29', weight_kg: 65.5 }] } } })
+    await page.saveWeight()
+    expect(getApp().globalData.forceIndexRefresh).toBe(true)
+  })
+
+  test('保存失败不设置 forceIndexRefresh', async () => {
+    page.data.inputWeight = '65'
+    callFnMock.mockResolvedValue({ result: { code: 1, message: '缺少参数' } })
+    await page.saveWeight()
+    expect(getApp().globalData.forceIndexRefresh).toBe(false)
   })
 })
 

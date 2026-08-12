@@ -1,6 +1,7 @@
 const util = require('../../utils/util')
 const logger = require('../../utils/logger')
 const { sanitizeDigit } = require('../../utils/validators')
+const app = getApp()
 
 Page({
   data: {
@@ -158,6 +159,9 @@ Page({
         this.setData({ saving: false })
         return
       }
+
+      // 写库成功：标记首页强制刷新，返回首页后立即展示最新数据（不依赖 30s TTL）
+      app.globalData.forceIndexRefresh = true
 
       const mealLabels = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '加餐' }
       const mealEmojis = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍿' }

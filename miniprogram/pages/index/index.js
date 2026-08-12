@@ -76,16 +76,21 @@ Page({
     if (!this.shouldRefresh(today)) {
       return
     }
-    this._lastLoadTs = Date.now()
-    this._lastLoadDate = today
 
-    this.loadGoalProgress()
+    // P2 竞态防护：每次加载自增请求序号，旧请求返回时不得覆盖新请求结果
+    this._loadToken = (this._loadToken || 0) + 1
+    const token = this._loadToken
+
+    this.loadGoalProgress(token)
 
     try {
       const res = await wx.cloud.callFunction({
         name: 'getDailySummary',
         data: { date: today }
       })
+
+      // 存在更新的请求时，本次为过期响应，直接丢弃
+      if (token !== this._loadToken) return
 
       if (res.result.code === 0) {
         const data = res.result.data
@@ -138,8 +143,14 @@ Page({
           wx.setStorageSync(storageKey, true)
           setTimeout(() => this.setData({ showCelebration: false }), 3000)
         }
+
+        // P1: 请求成功且数据落地后再更新 TTL；失败不更新，以便下一次 onShow 重试
+        this._lastLoadTs = Date.now()
+        this._lastLoadDate = today
       }
     } catch (err) {
+      // 过期请求的报错不记录，避免干扰最新请求
+      if (token !== this._loadToken) return
       logger.error('loadData', err)
     }
   },
@@ -207,11 +218,14 @@ Page({
     this.setData({ showCelebration: false })
   },
 
-  async loadGoalProgress() {
+  async loadGoalProgress(token) {
     try {
       const res = await wx.cloud.callFunction({
         name: 'getGoalProgress'
       })
+
+      // P2: 旧请求返回时丢弃，不覆盖最新结果
+      if (token !== this._loadToken) return
 
       if (res.result.code === 0) {
         const d = res.result.data
@@ -237,6 +251,8 @@ Page({
         this.setData({ goalProgress: null, showGoalGuide: true })
       }
     } catch (err) {
+      // 过期请求的报错不记录，避免干扰最新请求
+      if (token !== this._loadToken) return
       logger.error('loadGoalProgress', err)
     }
   },

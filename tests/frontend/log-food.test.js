@@ -21,6 +21,7 @@ beforeEach(() => {
   page.data.parsing = false
   page.data.saving = false
   page.data.showCelebration = false
+  getApp().globalData.forceIndexRefresh = false
 })
 
 describe('setMealType', () => {
@@ -184,6 +185,35 @@ describe('saveFoodLog', () => {
     await page.saveFoodLog()
     expect(page.data.saving).toBe(false)
     expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('失败') }))
+  })
+})
+
+describe('saveFoodLog - forceIndexRefresh 写后强制刷新', () => {
+  test('保存成功后设置 forceIndexRefresh', async () => {
+    callFnMock.mockResolvedValue({ result: { code: 0, message: 'ok', data: { is_merge: false, item_count: 1 } } })
+    page.data.parsedItems = [{ name: '米饭', portion: '1碗', calorie: 200, protein_g: 4 }]
+    page.data.rawTextSaved = '米饭'
+    page.data.mealType = 'lunch'
+    await page.saveFoodLog()
+    expect(getApp().globalData.forceIndexRefresh).toBe(true)
+  })
+
+  test('保存失败（code 非 0）不设置 forceIndexRefresh', async () => {
+    callFnMock.mockResolvedValue({ result: { code: 3, message: 'AI 解析失败' } })
+    page.data.parsedItems = [{ name: '米饭', portion: '1碗', calorie: 200, protein_g: 4 }]
+    page.data.rawTextSaved = '米饭'
+    page.data.mealType = 'lunch'
+    await page.saveFoodLog()
+    expect(getApp().globalData.forceIndexRefresh).toBe(false)
+  })
+
+  test('保存失败（网络异常）不设置 forceIndexRefresh', async () => {
+    callFnMock.mockRejectedValue(new Error('network error'))
+    page.data.parsedItems = [{ name: '米饭', portion: '1碗', calorie: 200, protein_g: 4 }]
+    page.data.rawTextSaved = '米饭'
+    page.data.mealType = 'lunch'
+    await page.saveFoodLog()
+    expect(getApp().globalData.forceIndexRefresh).toBe(false)
   })
 })
 

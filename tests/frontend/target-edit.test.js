@@ -23,6 +23,7 @@ beforeEach(() => {
   }
   page.data.height_cm = null
   page.data.userWeeks = null
+  getApp().globalData.forceIndexRefresh = false
   wx.showModal.mockClear()
   wx.showToast.mockClear()
   callFnMock.mockClear()
@@ -71,5 +72,31 @@ describe('target-edit onInput - 体重统一 2 位小数', () => {
   test('target_weeks 仍为纯整数（去小数点）', () => {
     page.onInput({ currentTarget: { dataset: { field: 'target_weeks' } }, detail: { value: '24.5' } })
     expect(page.data.form.target_weeks).toBe('245')
+  })
+})
+
+describe('target-edit 保存成功 - forceIndexRefresh 写后强制刷新', () => {
+  test('recalcTarget 成功后设置 forceIndexRefresh', async () => {
+    callFnMock.mockResolvedValue({ result: { code: 0, message: 'ok', data: { tdee: 2000, daily_calorie_target: 2350, daily_protein_target_g: 108 } } })
+    page.data.form = { current_weight_kg: '59', target_weight_kg: '70', target_weeks: '24' }
+    page.data.height_cm = 175
+    await page.submitRecalc()
+    expect(getApp().globalData.forceIndexRefresh).toBe(true)
+  })
+
+  test('updateTargetManual 成功后设置 forceIndexRefresh', async () => {
+    callFnMock.mockResolvedValue({ result: { code: 0, message: 'ok', data: { daily_calorie_target: 2400 } } })
+    page.data.mode = 'manual'
+    page.data.form = { current_weight_kg: '', target_weight_kg: '', daily_calorie_target: '2400', daily_protein_target_g: '', target_weeks: '' }
+    await page.submitManual()
+    expect(getApp().globalData.forceIndexRefresh).toBe(true)
+  })
+
+  test('修改目标失败不设置 forceIndexRefresh', async () => {
+    callFnMock.mockResolvedValue({ result: { code: 1, message: '失败' } })
+    page.data.form = { current_weight_kg: '59', target_weight_kg: '70', target_weeks: '24' }
+    page.data.height_cm = 175
+    await page.submitRecalc()
+    expect(getApp().globalData.forceIndexRefresh).toBe(false)
   })
 })

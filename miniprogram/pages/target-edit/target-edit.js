@@ -202,6 +202,8 @@ Page({
 
     if (result.code === 0) {
       wx.showToast({ title: successText, icon: 'success' })
+      // 写库成功：标记首页强制刷新，返回首页后立即展示最新数据（不依赖 30s TTL）
+      app.globalData.forceIndexRefresh = true
       const fallbackCal = this.data.form.daily_calorie_target ? parseInt(this.data.form.daily_calorie_target) : null
       const fallbackPro = this.data.form.daily_protein_target_g ? parseInt(this.data.form.daily_protein_target_g) : null
       app.globalData.dailyTargets = {
