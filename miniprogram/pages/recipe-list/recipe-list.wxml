@@ -30,5 +30,5 @@
     <text>没有找到相关食谱</text>
   </view>
 
-  <view class="disclaimer">本内容由AI生成，仅供参考，不构成医疗建议</view>
+  <view class="disclaimer">食谱及营养信息仅供参考，不构成医疗建议</view>
 </view>

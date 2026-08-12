@@ -12,20 +12,20 @@
   <view class="card">
     <text class="label">说说你今天吃了啥 🍽️</text>
     <textarea class="food-input" placeholder="例：两个大鸡腿➕一碗米饭➕一杯全脂牛奶" value="{{rawText}}" bindinput="onTextInput" maxlength="500" auto-height />
-    <view class="input-hint">💡 描述得越细，AI 猜得越准哦</view>
+    <view class="input-hint">💡 描述得越详细，估算结果越准确</view>
   </view>
 
   <view class="card" wx:if="{{!showResult}}">
     <button class="btn-primary" bindtap="parseFood" disabled="{{!canParse || parsing}}">
-      <text wx:if="{{!parsing}}">🤖 让 AI 猜猜热量</text>
-      <text wx:if="{{parsing}}">🤖 AI 正在努力...</text>
+      <text wx:if="{{!parsing}}">智能估算热量</text>
+      <text wx:if="{{parsing}}">正在分析，请稍候...</text>
     </button>
-    <view class="disclaimer">AI 估算热量，仅供参考</view>
+    <view class="disclaimer">热量为估算值，仅供参考</view>
   </view>
 
   <view class="card result-card" wx:if="{{showResult}}">
     <view class="result-header">
-      <text class="result-title">🎯 AI 猜的</text>
+      <text class="result-title">估算结果</text>
       <text class="result-hint">✏️ 不对可以改</text>
     </view>
 
@@ -64,7 +64,7 @@
     </view>
   </view>
 
-  <view class="disclaimer" wx:if="{{showResult}}">本内容由AI生成，仅供参考，不构成医疗建议</view>
+  <view class="disclaimer" wx:if="{{showResult}}">以上结果仅供参考，不构成医疗建议</view>
 
   <view class="celebrate-overlay" wx:if="{{showCelebration}}" catchtap="dismissCelebration">
     <view class="celebrate-modal">

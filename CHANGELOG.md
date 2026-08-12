@@ -1,5 +1,40 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-12] 090d56f
+
+**fix: 首页写操作后强制刷新，修复 TTL 时机与请求竞态**
+
+- log-food/weight-track/target-edit 写库成功后设置 forceIndexRefresh，返回首页立即刷新，不再依赖 30s TTL 兜底；失败路径不设置
+- 首页 _lastLoadTs/_lastLoadDate 改为请求成功且数据落地后再更新，失败不更新以便下次 onShow 重试
+- loadData/loadGoalProgress 增加请求序号，旧请求返回不得覆盖新请求结果
+- 测试 setup 的 getApp 改为稳定单例，新增 16 个用例覆盖写后刷新/TTL/竞态场景
+DEPLOY: none
+VERIFIED: 仅本地 jest 测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `miniprogram/pages/index/index.js`
+- `miniprogram/pages/log-food/log-food.js`
+- `miniprogram/pages/target-edit/target-edit.js`
+- `miniprogram/pages/weight-track/weight-track.js`
+- `tests/frontend/index.test.js`
+- `tests/frontend/log-food.test.js`
+- `tests/frontend/setup.js`
+- `tests/frontend/target-edit.test.js`
+- `tests/frontend/weight-track.test.js`
+
+## [2026-08-11] 61584bd
+
+**docs: 更新 README 项目文档与 CHANGELOG**
+
+- README 重构：更新功能/云函数/页面清单、新增数据库集合说明、完善配置部署章节与踩坑记录
+- CHANGELOG 追加上一条提交 498e13d 的迭代记录
+DEPLOY: none
+VERIFIED: 仅本地 jest 测试通过，未做真机/云端验证（纯文档改动）
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `README.md`
+
 ## [2026-08-07] 498e13d
 
 **feat: 云函数配额优化与 getGoalProgress 截断修复**

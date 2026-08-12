@@ -95,11 +95,11 @@
     <view class="health-info-content" wx:if="{{showHealthInfo}}">
       <text class="health-info-text">• 本应用提供的信息仅供参考，不构成医疗建议</text>
       <text class="health-info-text">• 如果你有甲亢、糖尿病、消化道疾病等健康问题，请先咨询医生</text>
-      <text class="health-info-text">• AI 估算的食物热量存在 ±30% 误差</text>
+      <text class="health-info-text">• 食物热量估算可能存在一定误差</text>
       <text class="health-info-text">• 建议逐步增重，每周 0.5~1kg 为宜</text>
       <text class="health-info-text">• 本产品面向 18 岁以上用户</text>
     </view>
   </view>
 
-  <view class="disclaimer">本内容由AI生成，仅供参考，不构成医疗建议</view>
+  <view class="disclaimer">以上健康信息仅供参考，不构成医疗建议</view>
 </view>
