@@ -18,7 +18,7 @@
 3. **每日进度页**：当日已摄入热量/蛋白质 vs 目标，环形进度条
 4. **体重打卡**：每日/每周记录体重，生成体重趋势折线图
 5. **吃饭提醒**：定时提醒（微信订阅消息），核心是"两餐间隔过长"提醒，而不是固定时间闹钟
-6. **高热量食谱库**：预置30~50个"增肥友好"食谱（静态数据，不用做成CMS后台，先写死在数据库里）
+6. **高热量食谱库**：动态食谱系统，管理员通过 `manageRecipe` 云函数走审核发布流程（DRAFT→VALIDATING→APPROVED→PUBLISHED），用户通过 `getPublishedRecipes`/`getRecipeDetail` 浏览已发布食谱，支持标签筛选、收藏；已废弃 MVP 阶段的 32 条硬编码静态食谱
 
 ### 值得做但不阻塞上线（P1，MVP之后再排期）
 - 拍照识别食物热量（技术方案见第5节，有替代方案前先不做）
@@ -39,9 +39,13 @@ pages/
   index/             首页：今日热量/蛋白质进度环 + 快速记录入口
   log-food/          记录一餐（文字输入 → LLM解析 → 确认/编辑 → 保存）
   weight-track/      体重打卡 + 趋势图
-  recipe-list/       高热量食谱列表
+  recipe-list/       高热量食谱列表（标签筛选 + 收藏排序）
   recipe-detail/     食谱详情
-  profile/           个人中心：目标调整、提醒设置
+  my-favorites/      我的收藏（独立收藏页）
+  stats/             达标统计（7/30天热量蛋白达标率+体重曲线）
+  goal-detail/       目标详情（进度/预计达成/节奏）
+  target-edit/       修改目标（重算或手动微调）
+  profile/           个人中心：目标调整、提醒设置、数据导出/重置/删除
 ```
 
 ---
@@ -72,13 +76,33 @@ weight_logs
   weight_kg
   created_at
 
-recipes  // 静态数据，管理端直接在云数据库控制台维护，不做后台
-  title, calorie, protein_g, ingredients[], steps[], image_url, tags[]
+recipes
+  title             // 食谱标题
+  status            // 状态机：DRAFT→VALIDATING→PENDING_REVIEW→APPROVED→PUBLISHED→ARCHIVED
+  version           // 当前版本号，单调递增（回滚不降）
+  nutrition         // { calorie, protein_g, fat_g, carb_g, fiber_g }
+  ingredients       // [{ name, amount, unit, food_id, note }]
+  steps             // 烹饪步骤字符串数组
+  tags              // 标签数组（如"早餐""高蛋白"）
+  image_url         // 食谱图片
+  source_id         // 来源标识（如 admin-manual）
+  source_version    // 来源版本号
+  source_url        // 来源链接
+  generation_job_id // 生成任务 ID（Phase 2 预留）
+  created_at, updated_at, published_at, archived_at
+  nutrition_snapshot  // { source_id, source_version, retrieved_at, calculation_method, reviewer, reviewed_at }
+  review_record       // { reviewer, review_type, action, note, at }
+  base_nutrition_checked // { calorie_in_range, protein_in_reasonable, missing_nutrition, ingredients_valid, duplicate_of_id }
+  versions          // [{ version, nutrition, ingredients, steps, tags, timestamp, reason }]
+
+  // 安全规则：仅管理员可写（manageRecipe 内 ADMIN_OPENID 鉴权），
+  // 所有用户可读已发布食谱（getPublishedRecipes/getRecipeDetail 仅返回 status=PUBLISHED）
 ```
 
 **关键设计点（写给DeepSeek的约束条件）**：
 - `food_logs.date` 单独存字符串字段，不要只存 `created_at` 时间戳，否则按天聚合要做时区换算，云函数里容易出错
 - LLM解析食物这一步必须允许用户在保存前编辑修正（LLM估算热量误差可能到±30%，不能让用户觉得不可控）
+- 食谱系统已改为动态审核发布流程：客户端不可直设 `status=PUBLISHED`，仅管理员通过 `manageRecipe` 走 `DRAFT→VALIDATING→APPROVED→PUBLISHED` 状态流转；DeepSeek 不负责决定营养数据，仅辅助生成食谱创意/食材组合/步骤
 
 ---
 
@@ -132,9 +156,10 @@ recipes  // 静态数据，管理端直接在云数据库控制台维护，不�
 
 ## 7. 路线图
 
-1. **Week 1-2**：onboarding + index + log-food（纯文字）+ weight-track，跑通核心闭环
-2. **Week 3**：recipe-list/detail 静态内容 + 订阅消息提醒
-3. **上线后看数据**：如果日活留存过得去，再排拍照识别和打卡激励系统
+1. **Week 1-2**：onboarding + index + log-food（纯文字）+ weight-track，跑通核心闭环 ✅
+2. **Week 3**：recipe-list/detail 动态食谱系统 + 订阅消息提醒 ✅（食谱改为动态审核发布流程，废弃 32 条硬编码静态数据）
+3. **Phase 2（规划中）**：DeepSeek 自动生成食谱 + 定时任务触发 + foods 营养数据自动同步 + 个性化推荐
+4. **上线后看数据**：如果日活留存过得去，再排拍照识别和打卡激励系统
 
 ---
 

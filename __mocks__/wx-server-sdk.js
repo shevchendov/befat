@@ -93,6 +93,16 @@ const cloud = {
         }),
         count: jest.fn().mockResolvedValue({ total: DB[name].length }),
         orderBy: jest.fn((field, dir) => ({
+          limit: jest.fn(n => ({
+            get: jest.fn().mockImplementation(() => {
+              const items = DB[name] || []
+              const sorted = items.slice().sort((a, b) => {
+                const va = a[field] || '', vb = b[field] || ''
+                return dir === 'desc' ? vb.localeCompare(va) : va.localeCompare(vb)
+              })
+              return Promise.resolve({ data: sorted.slice(0, n) })
+            })
+          })),
           get: jest.fn().mockImplementation(() => {
             const items = DB[name] || []
             const sorted = items.slice().sort((a, b) => {

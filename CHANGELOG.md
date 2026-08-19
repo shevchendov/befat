@@ -1,5 +1,104 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-12] 82cecf9
+
+**feat: Phase 1 动态食谱系统——废弃历史食谱，重建新 schema 与安全读取/审核链路**
+
+- 删除 generateRecipeInit 中 32 条硬编码 RECIPES，函数退役为空占位；migrateRecipesNutrition 同步退役
+- 新建 recipeDataCleanup 云函数：dry_run 默认统计，execute 需 dry_run=false + confirm=DELETE_ALL_LEGACY_RECIPES 双重确认，仅清理 recipes 与孤儿 user_favorites，执行前后输出计数
+- 新建 getPublishedRecipes / getRecipeDetail：仅返回 status=PUBLISHED，DTO 扁平化 calorie/protein_g 兼容 UI，支持分页
+- 新建 validateRecipe 云函数 + common/recipeValidation.js 纯函数校验（标题/食材/步骤/标签/营养区间/source/重复检测，非 LLM）
+- manageRecipe 重构：新 schema（nutrition 嵌套/status/version/versions/nutrition_snapshot），状态流 add→DRAFT→submit(VALIDATING)→review(approve→APPROVED/reject→REJECTED)→approve→PUBLISHED，archive/rollback，version 永远递增，客户端不可直接设 PUBLISHED
+- getFavorites 仅返回 PUBLISHED 食谱并 DTO 扁平化
+- recipe-list / recipe-detail 前端由客户端直读 DB 改为云函数；detail wxml 适配结构化 ingredients
+- 新增/更新测试：getPublishedRecipes/getRecipeDetail/validateRecipe/recipeDataCleanup/manageRecipe/getFavorites/frontend 共 595 用例全部通过
+- common/recipeValidation.js 经 sync-common 同步至各云函数 common/ 目录
+DEPLOY: cloudfunctions/manageRecipe,cloudfunctions/getFavorites,cloudfunctions/getPublishedRecipes,cloudfunctions/getRecipeDetail,cloudfunctions/validateRecipe,cloudfunctions/recipeDataCleanup,cloudfunctions/generateRecipeInit,cloudfunctions/migrateRecipesNutrition
+VERIFIED: 仅本地jest测试通过（595/595），未做真机/云端验证；线上真实删库需部署 recipeDataCleanup 后手动 dry-run→confirm 执行
+DATA IMPACT: recipes 集合从旧顶层 calorie/protein_g 改为嵌套 nutrition+status/version/versions 新结构，历史数据经 recipeDataCleanup 清空重建；user_favorites 结构不变但需清理孤儿记录
+
+**涉及文件:**
+- `cloudfunctions/calcTarget/common/recipeValidation.js`
+- `cloudfunctions/checkMealReminder/common/recipeValidation.js`
+- `cloudfunctions/common/recipeValidation.js`
+- `cloudfunctions/deleteUserData/common/recipeValidation.js`
+- `cloudfunctions/exportUserData/common/recipeValidation.js`
+- `cloudfunctions/generateRecipeInit/common/recipeValidation.js`
+- `cloudfunctions/generateRecipeInit/index.js`
+- `cloudfunctions/getDailySummary/common/recipeValidation.js`
+- `cloudfunctions/getFavorites/common/recipeValidation.js`
+- `cloudfunctions/getFavorites/index.js`
+- `cloudfunctions/getPublishedRecipes/common/deleteHelper.js`
+- `cloudfunctions/getPublishedRecipes/common/logger.js`
+- `cloudfunctions/getPublishedRecipes/common/recipeValidation.js`
+- `cloudfunctions/getPublishedRecipes/common/targetCalc.js`
+- `cloudfunctions/getPublishedRecipes/index.js`
+- `cloudfunctions/getPublishedRecipes/package.json`
+- `cloudfunctions/getRecipeDetail/common/deleteHelper.js`
+- `cloudfunctions/getRecipeDetail/common/logger.js`
+- `cloudfunctions/getRecipeDetail/common/recipeValidation.js`
+- `cloudfunctions/getRecipeDetail/common/targetCalc.js`
+- `cloudfunctions/getRecipeDetail/index.js`
+- `cloudfunctions/getRecipeDetail/package.json`
+- `cloudfunctions/getStats/common/recipeValidation.js`
+- `cloudfunctions/manageRecipe/common/recipeValidation.js`
+- `cloudfunctions/manageRecipe/index.js`
+- `cloudfunctions/migrateRecipesNutrition/index.js`
+- `cloudfunctions/parseFoodLog/common/recipeValidation.js`
+- `cloudfunctions/recalcTarget/common/recipeValidation.js`
+- `cloudfunctions/recipeDataCleanup/common/deleteHelper.js`
+- `cloudfunctions/recipeDataCleanup/common/logger.js`
+- `cloudfunctions/recipeDataCleanup/common/recipeValidation.js`
+- `cloudfunctions/recipeDataCleanup/common/targetCalc.js`
+- `cloudfunctions/recipeDataCleanup/index.js`
+- `cloudfunctions/recipeDataCleanup/package.json`
+- `cloudfunctions/resetUserData/common/recipeValidation.js`
+- `cloudfunctions/saveWeightLog/common/recipeValidation.js`
+- `cloudfunctions/sync-common.js`
+- `cloudfunctions/toggleFavorite/common/recipeValidation.js`
+- `cloudfunctions/updateTargetManual/common/recipeValidation.js`
+- `cloudfunctions/validateRecipe/common/deleteHelper.js`
+- `cloudfunctions/validateRecipe/common/logger.js`
+- `cloudfunctions/validateRecipe/common/recipeValidation.js`
+- `cloudfunctions/validateRecipe/common/targetCalc.js`
+- `cloudfunctions/validateRecipe/index.js`
+- `cloudfunctions/validateRecipe/package.json`
+- `miniprogram/pages/recipe-detail/recipe-detail.js`
+- `miniprogram/pages/recipe-detail/recipe-detail.wxml`
+- `miniprogram/pages/recipe-list/recipe-list.js`
+- `tests/frontend/recipe-detail.test.js`
+- `tests/frontend/recipe-list.test.js`
+- `tests/generateRecipeInit.test.js`
+- `tests/getFavorites.test.js`
+- `tests/getPublishedRecipes.test.js`
+- `tests/getRecipeDetail.test.js`
+- `tests/manageRecipe.test.js`
+- `tests/recipeDataCleanup.test.js`
+- `tests/validateRecipe.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/manageRecipe,cloudfunctions/getFavorites,cloudfunctions/getPublishedRecipes,cloudfunctions/getRecipeDetail,cloudfunctions/validateRecipe,cloudfunctions/recipeDataCleanup,cloudfunctions/generateRecipeInit,cloudfunctions/migrateRecipesNutrition
+
+## [2026-08-12] 0220ef7
+
+**docs: 优化小程序审核用户可见的 AI 相关文案**
+
+- log-food 输入提示/按钮/结果标题改为功能描述：估算结果、智能估算热量、正在分析请稍候
+- 各页面免责声明由『本内容由AI生成』改为功能性描述：以上内容/食谱及营养信息/相关建议/以上健康信息 仅供参考，不构成医疗建议
+- profile 热量误差文案弱化为『可能存在一定误差』
+- 仅改用户可见文案，AI 能力/云函数/API/数据库/技术架构未动
+DEPLOY: none
+VERIFIED: 仅本地 jest 测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `miniprogram/pages/index/index.wxml`
+- `miniprogram/pages/log-food/log-food.wxml`
+- `miniprogram/pages/my-favorites/my-favorites.wxml`
+- `miniprogram/pages/onboarding/onboarding.wxml`
+- `miniprogram/pages/profile/profile.wxml`
+- `miniprogram/pages/recipe-detail/recipe-detail.wxml`
+- `miniprogram/pages/recipe-list/recipe-list.wxml`
+- `miniprogram/pages/weight-track/weight-track.wxml`
+
 ## [2026-08-12] 090d56f
 
 **fix: 首页写操作后强制刷新，修复 TTL 时机与请求竞态**
