@@ -1,5 +1,34 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-20] c71c415
+
+**feat: log-food 拍照识菜——GLM 视觉识菜 + DeepSeek 营养计算双模型接力**
+
+- parseFoodLog 新增图片模式：大小防御→imgSecCheck→GLM-4.6V-Flash(12s)识菜→DeepSeek-v4-flash(15s)营养计算，错误码 90/91/92，文本模式零回归
+- log-food 前端：textarea 右下角相机触点，离屏 Canvas Max 800px 等比压缩转 base64
+- 抽取 handleParseResult 复用文本/图片链路结果处理，降低重复
+- 新增相机图标 SVG、README 补充 ZHIPU_API_KEY 与超时 35s 说明
+- 新增/更新测试：parseFoodLog 图片模式 7 例 + 前端拍照/压缩/解析 7 例，共 609 用例全通过
+- 新增设计规格书《拍照识菜功能设计规格书.md》
+DEPLOY: cloudfunctions/parseFoodLog
+VERIFIED: 仅本地jest测试通过（609/609），未做真机/云端验证
+DATA IMPACT: 无
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `README.md`
+- `__mocks__/wx-server-sdk.js`
+- `cloudfunctions/parseFoodLog/index.js`
+- `miniprogram/assets/icons/camera.svg`
+- `miniprogram/pages/log-food/log-food.js`
+- `miniprogram/pages/log-food/log-food.wxml`
+- `miniprogram/pages/log-food/log-food.wxss`
+- `tests/frontend/log-food.test.js`
+- `tests/frontend/setup.js`
+- `tests/parseFoodLog.test.js`
+- `拍照识菜功能设计规格书.md`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/parseFoodLog
+
 ## [2026-08-19] 2ad9682
 
 **docs: 更新 README 与技术方案文档以匹配 Phase 1 动态食谱系统**
