@@ -4,7 +4,7 @@
 
 ## 功能
 
-- **AI 食物识别** — 输入文字描述（如"一碗米饭加一个鸡腿"），DeepSeek API 自动解析食物名称、份量、热量和蛋白质（含内容安全检测）
+- **AI 食物识别** — 两种方式：文字描述（DeepSeek 解析）或拍照识菜（智谱 GLM 视觉识菜 → DeepSeek 营养计算），输出食物名称、份量、热量和蛋白质（含内容安全检测）
 - **饮食记录** — 按餐次（早餐/午餐/晚餐/加餐）记录每日摄入，识别结果可编辑修正后保存
 - **每日概览** — 首页展示当日热量/蛋白质达成环、分餐次摄入明细、目标进度卡
 - **目标进度追踪** — 目标详情页展示当前体重、进度%、预计达成日期、计划周期与节奏对比（on-track/ahead/behind）
@@ -22,7 +22,7 @@
 |--|------|
 | 前端 | 微信小程序原生 (WXML + WXSS + JS) |
 | 后端 | 微信云开发 (Node.js 16) |
-| AI | 微信内容安全检测 msgSecCheck + DeepSeek API（食物营养解析） |
+| AI | 微信内容安全检测（msgSecCheck/imgSecCheck）+ 智谱 GLM 视觉识菜 + DeepSeek 营养解析 |
 | 测试 | Jest |
 
 ## 项目结构
@@ -119,8 +119,12 @@ befat/
 
 | 云函数 | Key | 说明 |
 |--------|-----|------|
-| `parseFoodLog` | `DEEPSEEK_API_KEY` | DeepSeek API Key（ChatCompletions，模型 deepseek-v4-flash） |
-| `parseFoodLog` | `ZHIPU_API_KEY` | 智谱 API Key（GLM-4.6V-Flash 视觉识菜） |
+| `parseFoodLog` | `VISION_API_KEY` | 第一棒视觉识菜 Key（缺省回退 `ZHIPU_API_KEY`） |
+| `parseFoodLog` | `VISION_MODEL` | 第一棒视觉模型名（默认 `glm-4v-flash`） |
+| `parseFoodLog` | `VISION_API_URL` | 第一棒视觉 Base URL（默认智谱 `open.bigmodel.cn`） |
+| `parseFoodLog` | `NUTRITION_API_KEY` | 第二棒营养计算 Key（缺省回退 `DEEPSEEK_API_KEY`） |
+| `parseFoodLog` | `NUTRITION_MODEL` | 第二棒营养模型名（默认 `deepseek-v4-flash`） |
+| `parseFoodLog` | `NUTRITION_API_URL` | 第二棒营养 Base URL（默认 DeepSeek `api.deepseek.com`） |
 | `manageRecipe` | `ADMIN_OPENID` | 管理员微信 OPENID（食谱增删改审核权限） |
 | `recipeDataCleanup` | `ADMIN_OPENID` | 管理员微信 OPENID（清理数据权限） |
 
