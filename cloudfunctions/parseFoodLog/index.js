@@ -5,8 +5,8 @@ const axios = require('axios')
 const logger = require('./common/logger')
 const FN = 'parseFoodLog'
 
-const ZHIPU_API = 'https://open.bigmodel.cn/api/paas/v4/chat/completions'
-const DEEPSEEK_API = 'https://api.deepseek.com/chat/completions'
+const VISION_API_URL_DEFAULT = 'https://open.bigmodel.cn/api/paas/v4/chat/completions'
+const NUTRITION_API_URL_DEFAULT = 'https://api.deepseek.com/chat/completions'
 const GLM_TIMEOUT = 12000
 const DEEPSEEK_TIMEOUT = 15000
 // base64 字符串长度上限：约 3MB 字符（对应约 2.36MB 原始字节）
@@ -41,11 +41,13 @@ function buildNutritionPrompt(desc) {
 }
 
 async function runGlmVision(imageBase64) {
-  const apiKey = process.env.ZHIPU_API_KEY
-  if (!apiKey) throw new Error('ZHIPU_API_KEY not configured')
+  const apiKey = process.env.VISION_API_KEY || process.env.ZHIPU_API_KEY
+  if (!apiKey) throw new Error('VISION_API_KEY not configured')
+  const visionModel = process.env.VISION_MODEL || process.env.ZHIPU_VISION_MODEL || 'glm-4v-flash'
+  const apiUrl = process.env.VISION_API_URL || VISION_API_URL_DEFAULT
 
-  const resp = await axios.post(ZHIPU_API, {
-    model: 'glm-4.6v-flash',
+  const resp = await axios.post(apiUrl, {
+    model: visionModel,
     messages: [{
       role: 'user',
       content: [
@@ -69,11 +71,13 @@ async function runGlmVision(imageBase64) {
 }
 
 async function runDeepSeekNutrition(desc) {
-  const apiKey = process.env.DEEPSEEK_API_KEY
-  if (!apiKey) throw new Error('DeepSeek API key not configured')
+  const apiKey = process.env.NUTRITION_API_KEY || process.env.DEEPSEEK_API_KEY
+  if (!apiKey) throw new Error('NUTRITION_API_KEY not configured')
+  const model = process.env.NUTRITION_MODEL || 'deepseek-v4-flash'
+  const apiUrl = process.env.NUTRITION_API_URL || NUTRITION_API_URL_DEFAULT
 
-  const resp = await axios.post(DEEPSEEK_API, {
-    model: 'deepseek-v4-flash',
+  const resp = await axios.post(apiUrl, {
+    model,
     messages: [
       { role: 'system', content: '你是一个中国食物营养分析专家。只返回JSON，不要任何解释文字。' },
       { role: 'user', content: buildNutritionPrompt(desc) }
@@ -171,7 +175,7 @@ exports.main = async (event, context) => {
         return result
       }
 
-      // 第一棒：GLM-4.6V-Flash 看图识菜
+      // 第一棒：视觉模型看图识菜（默认 glm-4v-flash）
       try {
         detectionText = await runGlmVision(image_base64)
       } catch (glmErr) {
