@@ -229,3 +229,77 @@ describe('resetForm', () => {
     expect(page.data.totalProtein).toBe(0)
   })
 })
+
+describe('compressImage', () => {
+  test('超大图等比缩放到 800px 内并返回 base64', async () => {
+    const base64 = await page.compressImage('/tmp/meal.jpg')
+    expect(base64).toBe('Zm9vYmFy')
+    expect(wx.getImageInfo).toHaveBeenCalled()
+    expect(wx.createOffscreenCanvas).toHaveBeenCalledWith(expect.objectContaining({ width: 600, height: 800 }))
+  })
+
+  test('getImageInfo 失败时 reject', async () => {
+    wx.getImageInfo.mockImplementationOnce(({ fail }) => fail(new Error('no image')))
+    await expect(page.compressImage('/tmp/bad.jpg')).rejects.toThrow('no image')
+  })
+})
+
+describe('parseFoodByImage', () => {
+  beforeEach(() => {
+    page.data.rawText = ''
+  })
+
+  test('调用云函数并展示识别结果', async () => {
+    callFnMock.mockResolvedValue({
+      result: {
+        code: 0,
+        message: 'ok',
+        data: {
+          raw_text: '红烧肉 约200g',
+          items: [{ name: '红烧肉', portion: '约200g', calorie: 480, protein_g: 18.5 }],
+          total_calorie: 480,
+          total_protein_g: 18.5
+        }
+      }
+    })
+
+    await page.parseFoodByImage('Zm9vYmFy')
+
+    expect(callFnMock).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'parseFoodLog',
+      data: expect.objectContaining({ image_base64: 'Zm9vYmFy', meal_type: 'lunch' })
+    }))
+    expect(page.data.showResult).toBe(true)
+    expect(page.data.parsedItems[0].name).toBe('红烧肉')
+    expect(page.data.rawTextSaved).toBe('红烧肉 约200g')
+  })
+
+  test('识别失败（code 92）toast 提示且不展示结果', async () => {
+    callFnMock.mockResolvedValue({ result: { code: 92, message: '图片识别失败，请改用文字描述' } })
+    await page.parseFoodByImage('Zm9vYmFy')
+    expect(page.data.parsing).toBe(false)
+    expect(page.data.showResult).toBe(false)
+    expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('图片识别失败') }))
+  })
+
+  test('网络异常时 toast', async () => {
+    callFnMock.mockRejectedValue(new Error('network error'))
+    await page.parseFoodByImage('Zm9vYmFy')
+    expect(page.data.parsing).toBe(false)
+    expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('网络异常') }))
+  })
+})
+
+describe('chooseMealImage', () => {
+  test('识别中不重复触发选图', () => {
+    page.data.parsing = true
+    page.chooseMealImage()
+    expect(wx.chooseMedia).not.toHaveBeenCalled()
+  })
+
+  test('正常触发选图', () => {
+    wx.chooseMedia.mockImplementationOnce(() => {})
+    page.chooseMealImage()
+    expect(wx.chooseMedia).toHaveBeenCalledWith(expect.objectContaining({ mediaType: ['image'] }))
+  })
+})

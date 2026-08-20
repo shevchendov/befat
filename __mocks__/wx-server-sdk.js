@@ -136,7 +136,8 @@ const cloud = {
   })),
   openapi: {
     security: {
-      msgSecCheck: jest.fn().mockResolvedValue({ errCode: 0, errMsg: 'ok' })
+      msgSecCheck: jest.fn().mockResolvedValue({ errCode: 0, errMsg: 'ok' }),
+      imgSecCheck: jest.fn().mockResolvedValue({ errCode: 0, errMsg: 'ok' })
     }
   },
   __resetDB() {

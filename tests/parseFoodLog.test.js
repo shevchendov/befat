@@ -200,3 +200,103 @@ describe('parseFoodLog.main - JSON parsing', () => {
     expect(result.code).toBe(3)
   })
 })
+
+describe('parseFoodLog.main - image mode', () => {
+  const cloud = require('wx-server-sdk')
+  const axios = require('axios')
+  const origEnv = process.env
+
+  beforeEach(() => {
+    process.env = { ...origEnv }
+    process.env.ZHIPU_API_KEY = 'test-zhipu-key'
+    process.env.DEEPSEEK_API_KEY = 'test-key'
+    cloud.openapi.security.imgSecCheck.mockResolvedValue({ errCode: 0, errMsg: 'ok' })
+    cloud.openapi.security.msgSecCheck.mockResolvedValue({ errCode: 0, errMsg: 'ok' })
+    axios.post.mockReset()
+  })
+
+  afterEach(() => {
+    process.env = origEnv
+  })
+
+  function mockGlm(content) {
+    axios.post.mockResolvedValueOnce({ data: { choices: [{ message: { content } }] } })
+  }
+
+  function mockDeepSeekJson(obj) {
+    axios.post.mockResolvedValueOnce({ data: { choices: [{ message: { content: JSON.stringify(obj) } }] } })
+  }
+
+  test('图片模式缺少 raw_text 仍可正常识别', async () => {
+    mockGlm('红烧肉 约200g；米饭 约1碗')
+    mockDeepSeekJson({
+      items: [
+        { name: '红烧肉', portion: '约200g', calorie: 480, protein_g: 18.5 },
+        { name: '米饭', portion: '约1碗', calorie: 232, protein_g: 5.2 }
+      ],
+      total_calorie: 712,
+      total_protein_g: 23.7
+    })
+
+    const result = await parseFoodLog.main({
+      image_base64: 'Zm9vYmFy', meal_type: 'lunch', date: '2026-07-29'
+    }, {})
+
+    expect(result.code).toBe(0)
+    expect(result.data.items[0].name).toBe('红烧肉')
+    expect(result.data.total_calorie).toBe(712)
+    expect(result.data.raw_text).toContain('红烧肉')
+    expect(axios.post).toHaveBeenCalledTimes(2)
+  })
+
+  test('图片过大返回 code 90 且不调模型', async () => {
+    const result = await parseFoodLog.main({
+      image_base64: 'a'.repeat(3145729), meal_type: 'lunch', date: '2026-07-29'
+    }, {})
+    expect(result.code).toBe(90)
+    expect(axios.post).not.toHaveBeenCalled()
+  })
+
+  test('图片违规返回 code 91', async () => {
+    cloud.openapi.security.imgSecCheck.mockResolvedValue({ errCode: 87014, errMsg: '违规' })
+    const result = await parseFoodLog.main({
+      image_base64: 'Zm9vYmFy', meal_type: 'lunch', date: '2026-07-29'
+    }, {})
+    expect(result.code).toBe(91)
+    expect(axios.post).not.toHaveBeenCalled()
+  })
+
+  test('imgSecCheck 异常返回 code 89', async () => {
+    cloud.openapi.security.imgSecCheck.mockRejectedValue(new Error('no permission'))
+    const result = await parseFoodLog.main({
+      image_base64: 'Zm9vYmFy', meal_type: 'lunch', date: '2026-07-29'
+    }, {})
+    expect(result.code).toBe(89)
+  })
+
+  test('GLM 失败返回 code 92', async () => {
+    axios.post.mockRejectedValueOnce(new Error('GLM timeout'))
+    const result = await parseFoodLog.main({
+      image_base64: 'Zm9vYmFy', meal_type: 'lunch', date: '2026-07-29'
+    }, {})
+    expect(result.code).toBe(92)
+  })
+
+  test('GLM 空响应返回 code 92', async () => {
+    mockGlm('')
+    const result = await parseFoodLog.main({
+      image_base64: 'Zm9vYmFy', meal_type: 'lunch', date: '2026-07-29'
+    }, {})
+    expect(result.code).toBe(92)
+  })
+
+  test('第二棒 DeepSeek 失败返回 code 3', async () => {
+    mockGlm('红烧肉 约200g')
+    axios.post.mockRejectedValueOnce(new Error('deepseek fail'))
+    const result = await parseFoodLog.main({
+      image_base64: 'Zm9vYmFy', meal_type: 'lunch', date: '2026-07-29'
+    }, {})
+    expect(result.code).toBe(3)
+    expect(result.data.raw_text).toContain('红烧肉')
+  })
+})

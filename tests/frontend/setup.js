@@ -67,6 +67,21 @@ global.wx = {
   env: { USER_DATA_PATH: '/tmp' },
   requestSubscribeMessage: jest.fn(({ success }) => { if (success) success({}) }),
   openDocument: jest.fn(({ success }) => { if (success) success() }),
+  chooseMedia: jest.fn(({ success }) => { if (success) success({ tempFiles: [{ tempFilePath: '/tmp/meal.jpg' }] }) }),
+  getImageInfo: jest.fn(({ src, success }) => { if (success) success({ width: 3000, height: 4000 }) }),
+  createOffscreenCanvas: jest.fn(() => ({
+    getContext: jest.fn(() => ({ drawImage: jest.fn() })),
+    createImage: jest.fn(() => {
+      const img = { onload: null, onerror: null }
+      let _src = ''
+      Object.defineProperty(img, 'src', {
+        set(v) { _src = v; if (img.onload) setTimeout(() => img.onload(), 0) },
+        get() { return _src }
+      })
+      return img
+    }),
+    toDataURL: jest.fn(() => 'data:image/jpeg;base64,Zm9vYmFy')
+  })),
   getStorageSync: jest.fn(key => mockStorage[key]),
   setStorageSync: jest.fn((key, val) => { mockStorage[key] = val }),
   clearStorageSync: jest.fn(() => { Object.keys(mockStorage).forEach(k => delete mockStorage[k]) })

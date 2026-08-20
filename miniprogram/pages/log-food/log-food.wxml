@@ -11,8 +11,13 @@
 
   <view class="card">
     <text class="label">说说你今天吃了啥 🍽️</text>
-    <textarea class="food-input" placeholder="例：两个大鸡腿➕一碗米饭➕一杯全脂牛奶" value="{{rawText}}" bindinput="onTextInput" maxlength="500" auto-height />
-    <view class="input-hint">💡 描述得越详细，估算结果越准确</view>
+    <view class="input-wrap">
+      <textarea class="food-input" placeholder="例：两个大鸡腿➕一碗米饭➕一杯全脂牛奶" value="{{rawText}}" bindinput="onTextInput" maxlength="500" auto-height />
+      <view class="camera-trigger {{imageLoading || parsing ? 'loading' : ''}}" bindtap="chooseMealImage">
+        <image class="camera-icon" src="/assets/icons/camera.svg" mode="aspectFit" />
+      </view>
+    </view>
+    <view class="input-hint">💡 描述得越详细，估算结果越准确 · 也可拍照识菜</view>
   </view>
 
   <view class="card" wx:if="{{!showResult}}">

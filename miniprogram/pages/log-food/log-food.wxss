@@ -35,6 +35,43 @@
   border: 2rpx solid var(--border);
 }
 
+.input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.input-wrap .food-input {
+  padding-right: 90rpx;
+}
+
+.camera-trigger {
+  position: absolute;
+  right: 16rpx;
+  bottom: 14rpx;
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFF5EB;
+  border: 2rpx solid var(--border);
+  border-radius: 50%;
+}
+
+.camera-trigger:active {
+  background: #FFE6CC;
+}
+
+.camera-trigger.loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.camera-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
 .input-hint {
   font-size: 24rpx;
   color: var(--text-light);

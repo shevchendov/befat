@@ -1,5 +1,24 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-19] 2ad9682
+
+**docs: 更新 README 与技术方案文档以匹配 Phase 1 动态食谱系统**
+
+- README 云函数清单 19→23 个，标记 generateRecipeInit/migrateRecipesNutrition 已退役
+- README 新增 recipes 新 schema 字段表（nutrition 嵌套/status/version/versions 状态机）
+- README 新增 recipeDataCleanup 环境变量说明与双重确认安全机制
+- 技术方案文档更新食谱系统为动态审核发布流程、数据模型、页面清单、路线图
+- __mocks__/wx-server-sdk.js 补充 orderBy().limit() 链（上次提交遗漏）
+- CHANGELOG.md 为 hook 自动追加的 82cecf9 记录
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `README.md`
+- `__mocks__/wx-server-sdk.js`
+- `增肥小程序技术方案_DeepSeek输入版.md`
+
 ## [2026-08-12] 82cecf9
 
 **feat: Phase 1 动态食谱系统——废弃历史食谱，重建新 schema 与安全读取/审核链路**

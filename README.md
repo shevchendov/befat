@@ -120,12 +120,13 @@ befat/
 | 云函数 | Key | 说明 |
 |--------|-----|------|
 | `parseFoodLog` | `DEEPSEEK_API_KEY` | DeepSeek API Key（ChatCompletions，模型 deepseek-v4-flash） |
+| `parseFoodLog` | `ZHIPU_API_KEY` | 智谱 API Key（GLM-4.6V-Flash 视觉识菜） |
 | `manageRecipe` | `ADMIN_OPENID` | 管理员微信 OPENID（食谱增删改审核权限） |
 | `recipeDataCleanup` | `ADMIN_OPENID` | 管理员微信 OPENID（清理数据权限） |
 
 ### 2. 云函数超时配置
 
-`parseFoodLog` 需要调用外部 AI API，请在云开发控制台 → 云函数 → `parseFoodLog` → 版本与配置中，将**执行超时时间**调整到 30 秒左右（与代码内 axios 30s 超时对齐），否则 DeepSeek 响应稍慢就会被平台强制掐断。
+`parseFoodLog` 需调用外部 AI API（拍照识菜为 GLM + DeepSeek 双模型串行接力，理论峰值约 12s + 15s = 27s），请在云开发控制台 → 云函数 → `parseFoodLog` → 版本与配置中，将**执行超时时间**调整到 **35 秒**左右（与代码内 axios 12s/15s 超时阶梯对齐），否则模型响应稍慢就会被平台强制掐断。
 
 ### 3. 数据库集合
 

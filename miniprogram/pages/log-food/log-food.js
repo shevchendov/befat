@@ -9,6 +9,7 @@ Page({
     rawText: '',
     canParse: false,
     parsing: false,
+    imageLoading: false,
     saving: false,
     showResult: false,
     parsedItems: [],
@@ -29,6 +30,30 @@ Page({
     this.setData({ rawText: val, canParse: !!val.trim() })
   },
 
+  handleParseResult(result) {
+    if (result.code === 88) {
+      wx.showToast({ title: '输入包含违规内容', icon: 'none' })
+      this.setData({ parsing: false })
+      return
+    }
+
+    if (result.code !== 0) {
+      wx.showToast({ title: result.message || '识别失败', icon: 'none' })
+      this.setData({ parsing: false })
+      return
+    }
+
+    const text = this.data.rawText.trim() || result.data.raw_text || ''
+    this.setData({
+      showResult: true,
+      parsedItems: result.data.items.length > 0 ? result.data.items : [{ name: text || '未知食物', portion: '1份', calorie: 0, protein_g: 0 }],
+      totalCalorie: result.data.total_calorie,
+      totalProtein: result.data.total_protein_g,
+      rawTextSaved: text,
+      parsing: false
+    })
+  },
+
   async parseFood() {
     const text = this.data.rawText.trim()
     if (!text) return
@@ -45,31 +70,82 @@ Page({
           date: today
         }
       })
-
-      const result = res.result
-
-      if (result.code === 88) {
-        wx.showToast({ title: '输入包含违规内容', icon: 'none' })
-        this.setData({ parsing: false })
-        return
-      }
-
-      if (result.code !== 0) {
-        wx.showToast({ title: result.message || '识别失败', icon: 'none' })
-        this.setData({ parsing: false })
-        return
-      }
-
-      this.setData({
-        showResult: true,
-        parsedItems: result.data.items.length > 0 ? result.data.items : [{ name: text, portion: '1份', calorie: 0, protein_g: 0 }],
-        totalCalorie: result.data.total_calorie,
-        totalProtein: result.data.total_protein_g,
-        rawTextSaved: text,
-        parsing: false
-      })
+      this.handleParseResult(res.result)
     } catch (err) {
       logger.error('parseFood', err)
+      wx.showToast({ title: '网络异常，请重试', icon: 'none' })
+      this.setData({ parsing: false })
+    }
+  },
+
+  chooseMealImage() {
+    if (this.data.parsing || this.data.imageLoading) return
+
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      sizeType: ['compressed'],
+      success: async (res) => {
+        const tempPath = res.tempFiles && res.tempFiles[0] && res.tempFiles[0].tempFilePath
+        if (!tempPath) return
+        try {
+          this.setData({ imageLoading: true })
+          const base64 = await this.compressImage(tempPath)
+          await this.parseFoodByImage(base64)
+        } catch (err) {
+          logger.error('chooseMealImage', err)
+          wx.showToast({ title: '图片处理失败', icon: 'none' })
+        } finally {
+          this.setData({ imageLoading: false })
+        }
+      }
+    })
+  },
+
+  compressImage(src) {
+    return new Promise((resolve, reject) => {
+      wx.getImageInfo({
+        src,
+        success: (info) => {
+          const MAX = 800
+          const ratio = Math.min(1, MAX / Math.max(info.width, info.height))
+          const w = Math.round(info.width * ratio)
+          const h = Math.round(info.height * ratio)
+
+          const canvas = wx.createOffscreenCanvas({ type: '2d', width: w, height: h })
+          const ctx = canvas.getContext('2d')
+          const img = canvas.createImage()
+          img.onload = () => {
+            ctx.drawImage(img, 0, 0, w, h)
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+            const base64 = dataUrl.split(',')[1] || ''
+            if (!base64) return reject(new Error('canvas toDataURL empty'))
+            resolve(base64)
+          }
+          img.onerror = () => reject(new Error('image load failed'))
+          img.src = src
+        },
+        fail: reject
+      })
+    })
+  },
+
+  async parseFoodByImage(base64) {
+    this.setData({ parsing: true })
+    try {
+      const today = util.formatDate(new Date())
+      const res = await wx.cloud.callFunction({
+        name: 'parseFoodLog',
+        data: {
+          image_base64: base64,
+          meal_type: this.data.mealType,
+          date: today
+        }
+      })
+      this.handleParseResult(res.result)
+    } catch (err) {
+      logger.error('parseFoodByImage', err)
       wx.showToast({ title: '网络异常，请重试', icon: 'none' })
       this.setData({ parsing: false })
     }
