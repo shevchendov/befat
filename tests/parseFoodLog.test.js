@@ -219,24 +219,19 @@ describe('parseFoodLog.main - image mode', () => {
     process.env = origEnv
   })
 
-  function mockGlm(content) {
+  function mockVision(content) {
     axios.post.mockResolvedValueOnce({ data: { choices: [{ message: { content } }] } })
   }
 
-  function mockDeepSeekJson(obj) {
-    axios.post.mockResolvedValueOnce({ data: { choices: [{ message: { content: JSON.stringify(obj) } }] } })
-  }
-
-  test('图片模式缺少 raw_text 仍可正常识别', async () => {
-    mockGlm('红烧肉 约200g；米饭 约1碗')
-    mockDeepSeekJson({
+  test('图片模式单次多模态调用直接返回营养 JSON', async () => {
+    mockVision(JSON.stringify({
       items: [
         { name: '红烧肉', portion: '约200g', calorie: 480, protein_g: 18.5 },
         { name: '米饭', portion: '约1碗', calorie: 232, protein_g: 5.2 }
       ],
       total_calorie: 712,
       total_protein_g: 23.7
-    })
+    }))
 
     const result = await parseFoodLog.main({
       image_base64: 'Zm9vYmFy', meal_type: 'lunch', date: '2026-07-29'
@@ -246,7 +241,23 @@ describe('parseFoodLog.main - image mode', () => {
     expect(result.data.items[0].name).toBe('红烧肉')
     expect(result.data.total_calorie).toBe(712)
     expect(result.data.raw_text).toContain('红烧肉')
-    expect(axios.post).toHaveBeenCalledTimes(2)
+    expect(axios.post).toHaveBeenCalledTimes(1)
+  })
+
+  test('视觉返回 Markdown 包裹的 JSON 能正确剥离', async () => {
+    mockVision('```json\n' + JSON.stringify({
+      items: [{ name: '米饭', portion: '1碗(约200g)', calorie: 230, protein_g: 4.3 }],
+      total_calorie: 230,
+      total_protein_g: 4.3
+    }) + '\n```')
+
+    const result = await parseFoodLog.main({
+      image_base64: 'Zm9vYmFy', meal_type: 'lunch', date: '2026-07-29'
+    }, {})
+
+    expect(result.code).toBe(0)
+    expect(result.data.items[0].name).toBe('米饭')
+    expect(result.data.total_calorie).toBe(230)
   })
 
   test('图片过大返回 code 90 且不调模型', async () => {
@@ -283,20 +294,18 @@ describe('parseFoodLog.main - image mode', () => {
   })
 
   test('GLM 空响应返回 code 92', async () => {
-    mockGlm('')
+    mockVision('')
     const result = await parseFoodLog.main({
       image_base64: 'Zm9vYmFy', meal_type: 'lunch', date: '2026-07-29'
     }, {})
     expect(result.code).toBe(92)
   })
 
-  test('第二棒 DeepSeek 失败返回 code 3', async () => {
-    mockGlm('红烧肉 约200g')
-    axios.post.mockRejectedValueOnce(new Error('deepseek fail'))
+  test('视觉 JSON 解析失败返回 code 92（触发手写输入）', async () => {
+    mockVision('这不是合法的JSON')
     const result = await parseFoodLog.main({
       image_base64: 'Zm9vYmFy', meal_type: 'lunch', date: '2026-07-29'
     }, {})
-    expect(result.code).toBe(3)
-    expect(result.data.raw_text).toContain('红烧肉')
+    expect(result.code).toBe(92)
   })
 })
