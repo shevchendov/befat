@@ -1,0 +1,12 @@
+{
+  "name": "toggleFavoriteRecipe",
+  "version": "1.0.0",
+  "description": "每日增肥食谱单菜品快照收藏/取消（原子切换）",
+  "main": "index.js",
+  "engines": {
+    "node": "16"
+  },
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

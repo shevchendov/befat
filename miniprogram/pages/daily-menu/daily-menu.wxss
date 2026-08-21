@@ -1,0 +1,147 @@
+.page-container {
+  padding-bottom: 60rpx;
+}
+
+.summary-card {
+  margin: 20rpx 30rpx 0;
+  text-align: center;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  background: var(--primary-bg);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: 999rpx;
+  padding: 12rpx 32rpx;
+  font-size: 28rpx;
+}
+
+.pill-num {
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 32rpx;
+}
+
+.pill-unit {
+  color: var(--text-secondary);
+  font-size: 24rpx;
+}
+
+.pill-sep {
+  margin: 0 12rpx;
+  color: var(--text-light);
+}
+
+.summary-date {
+  font-size: 24rpx;
+  color: var(--text-light);
+  margin-top: 8rpx;
+}
+
+.meal-card {
+  margin-top: 24rpx;
+}
+
+.meal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.meal-tag {
+  font-size: 24rpx;
+  color: var(--primary);
+  background: var(--primary-bg);
+  border: 2rpx solid var(--primary);
+  border-radius: 999rpx;
+  padding: 4rpx 20rpx;
+}
+
+.fav-btn {
+  font-size: 44rpx;
+  color: var(--text-light);
+  line-height: 1;
+  padding: 0 8rpx;
+}
+
+.fav-btn.fav-on {
+  color: var(--primary);
+}
+
+.meal-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  margin-bottom: 8rpx;
+}
+
+.meal-nutrition {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  margin-bottom: 16rpx;
+}
+
+.list-label {
+  font-size: 24rpx;
+  color: var(--text-light);
+  margin: 12rpx 0 6rpx;
+}
+
+.meal-ingredient {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.meal-step {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.from-fallback {
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--text-light);
+  margin-top: 20rpx;
+}
+
+.disclaimer {
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--text-light);
+  margin-top: 12rpx;
+}
+
+.skeleton {
+  opacity: 0.6;
+}
+
+.sk-line {
+  height: 32rpx;
+  border-radius: 8rpx;
+  background: linear-gradient(90deg, #F0E7DC 25%, #FAF3E9 50%, #F0E7DC 75%);
+  background-size: 400% 100%;
+  animation: slide 1.2s linear infinite;
+  margin-bottom: 16rpx;
+}
+
+.sk-pill {
+  height: 56rpx;
+  border-radius: 999rpx;
+  width: 60%;
+  margin: 8rpx auto 20rpx;
+}
+
+.sk-tip {
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--text-light);
+  margin-top: 24rpx;
+}
+
+@keyframes slide {
+  from { background-position: 100% 0; }
+  to { background-position: 0 0; }
+}

@@ -277,8 +277,8 @@ Page({
     wx.navigateTo({ url: '/pages/weight-track/weight-track' })
   },
 
-  goToRecipeList() {
-    wx.navigateTo({ url: '/pages/recipe-list/recipe-list' })
+  goToDailyMenu() {
+    wx.navigateTo({ url: '/pages/daily-menu/daily-menu' })
   },
 
   goToStats() {

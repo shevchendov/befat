@@ -1,0 +1,13 @@
+{
+  "name": "getDailyMenu",
+  "version": "1.0.0",
+  "description": "每日增肥食谱推荐——懒加载生成 + 占位锁防刷",
+  "main": "index.js",
+  "engines": {
+    "node": "16"
+  },
+  "dependencies": {
+    "axios": "^1.18.1",
+    "wx-server-sdk": "latest"
+  }
+}

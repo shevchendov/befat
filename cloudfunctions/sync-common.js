@@ -6,7 +6,8 @@ const TARGETS = [
   'deleteUserData', 'exportUserData', 'checkMealReminder', 'generateRecipeInit',
   'manageRecipe', 'toggleFavorite', 'getFavorites', 'getPublishedRecipes',
   'getRecipeDetail', 'validateRecipe', 'recipeDataCleanup',
-  'recalcTarget', 'updateTargetManual', 'resetUserData', 'getStats'
+  'recalcTarget', 'updateTargetManual', 'resetUserData', 'getStats',
+  'getDailyMenu', 'toggleFavoriteRecipe'
 ]
 
 const ROOT = path.resolve(__dirname)

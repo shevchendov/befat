@@ -1,4 +1,4 @@
-const DB = { users: [], food_logs: [], weight_logs: [], recipes: [], user_favorites: [], error_logs: [] }
+const DB = { users: [], food_logs: [], weight_logs: [], recipes: [], user_favorites: [], error_logs: [], daily_menus: [] }
 let idSeq = 1
 const _serverDate = () => new Date().toISOString()
 
@@ -26,6 +26,7 @@ function filterItems(items, query) {
     }
     if (query.recipe_id) items = items.filter(r => r.recipe_id === query.recipe_id)
     if (query.meal_type) items = items.filter(r => r.meal_type === query.meal_type)
+    if (query.recipe_title) items = items.filter(r => r.recipe_title === query.recipe_title)
   }
   return items
 }

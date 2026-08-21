@@ -38,11 +38,11 @@
       </view>
       <text class="action-label">称体重</text>
     </view>
-    <view class="action-btn" bindtap="goToRecipeList">
+    <view class="action-btn" bindtap="goToDailyMenu">
       <view class="action-icon action-icon-coral">
         <text>📖</text>
       </view>
-      <text class="action-label">增肥食谱</text>
+      <text class="action-label">今日增肥食谱</text>
     </view>
     <view class="action-btn" bindtap="goToStats">
       <view class="action-icon action-icon-orange">
