@@ -52,11 +52,17 @@
         <text class="nutrition-unit">g</text>
       </view>
 
-      <view class="list-label">食材</view>
-      <view class="meal-ingredient" wx:for="{{meal.ingredients}}" wx:for-item="ing" wx:key="*this">{{ing}}</view>
+      <view class="detail-toggle {{meal.detailLoading ? 'detail-loading' : ''}}" bindtap="toggleDetail" data-index="{{idx}}">
+        <text>{{meal.detailLoading ? '生成中…' : (meal.expanded ? '收起 ▲' : '查看食材与步骤 ▼')}}</text>
+      </view>
 
-      <view class="list-label">步骤</view>
-      <view class="meal-step" wx:for="{{meal.steps}}" wx:for-item="step" wx:key="*this">{{index + 1}}. {{step}}</view>
+      <block wx:if="{{meal.expanded}}">
+        <view class="list-label">食材</view>
+        <view class="meal-ingredient" wx:for="{{meal.ingredients}}" wx:for-item="ing" wx:key="*this">{{ing}}</view>
+
+        <view class="list-label">步骤</view>
+        <view class="meal-step" wx:for="{{meal.steps}}" wx:for-item="step" wx:key="*this">{{index + 1}}. {{step}}</view>
+      </block>
     </view>
 
     <view class="from-fallback" wx:if="{{fromFallback}}">今日食谱暂不可用，已为你准备备用食谱</view>

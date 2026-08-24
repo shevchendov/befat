@@ -62,7 +62,9 @@ Page({
         protein_g: m.protein_g,
         ingredients: m.ingredients || [],
         steps: m.steps || [],
-        favorited: !!favMap[(m.title || '') + '|' + m.meal_type]
+        favorited: !!favMap[(m.title || '') + '|' + m.meal_type],
+        expanded: false,
+        detailLoading: false
       }))
 
       this.setData({
@@ -85,6 +87,52 @@ Page({
   refreshMenu() {
     if (this.data.refreshing || this.data.isGenerating) return
     this.loadMenu(true)
+  },
+
+  async toggleDetail(e) {
+    const idx = e.currentTarget.dataset.index
+    const meal = this.data.meals[idx]
+    if (!meal) return
+
+    if (meal.expanded) {
+      this.setData({ ['meals[' + idx + '].expanded']: false })
+      return
+    }
+
+    if (meal.ingredients && meal.ingredients.length > 0 && meal.steps && meal.steps.length > 0) {
+      this.setData({ ['meals[' + idx + '].expanded']: true })
+      return
+    }
+
+    this.setData({ ['meals[' + idx + '].detailLoading']: true })
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'getMealDetail',
+        data: {
+          date: this.data.date,
+          meal_type: meal.meal_type,
+          title: meal.title,
+          calorie: meal.calorie,
+          protein_g: meal.protein_g
+        }
+      })
+      const result = res.result
+
+      if (result.code === 0) {
+        this.setData({
+          ['meals[' + idx + '].ingredients']: result.data.ingredients || [],
+          ['meals[' + idx + '].steps']: result.data.steps || [],
+          ['meals[' + idx + '].expanded']: true
+        })
+      } else {
+        wx.showToast({ title: result.message || '详情加载失败', icon: 'none' })
+      }
+    } catch (err) {
+      logger.error('toggleDetail', err)
+      wx.showToast({ title: '网络异常，请重试', icon: 'none' })
+    } finally {
+      this.setData({ ['meals[' + idx + '].detailLoading']: false })
+    }
   },
 
   async toggleFav(e) {

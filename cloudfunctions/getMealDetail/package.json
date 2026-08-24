@@ -1,0 +1,13 @@
+{
+  "name": "getMealDetail",
+  "version": "1.0.0",
+  "description": "每日食谱单菜品详情按需生成（阶段二）",
+  "main": "index.js",
+  "engines": {
+    "node": "16"
+  },
+  "dependencies": {
+    "axios": "^1.18.1",
+    "wx-server-sdk": "latest"
+  }
+}

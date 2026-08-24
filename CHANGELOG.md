@@ -1,5 +1,19 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-24] a6e8b42
+
+**feat: getDailyMenu 增强换一换菜品多样性**
+
+- callGlmMenu temperature 0.25 调高至 0.7，提升发散度
+- buildPrompt 强约束新增第 5 条：要求 4 餐菜品名称与核心食材极高多样性，避免连续雷同菜品
+DEPLOY: cloudfunctions/getDailyMenu
+VERIFIED: 仅本地jest测试通过（636/636），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `cloudfunctions/getDailyMenu/index.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getDailyMenu
+
 ## [2026-08-24] 43dd4c0
 
 **fix: getDailyMenu 三处健壮性修复**

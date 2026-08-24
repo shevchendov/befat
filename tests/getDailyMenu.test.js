@@ -209,10 +209,9 @@ describe('getDailyMenu - 正则安全网', () => {
     expect(() => blockingChecks(meals)).not.toThrow()
   })
 
-  test('AI 返回高危食材时落库前拦截，走 code 93 兜底', async () => {
+  test('AI 返回高危菜名时落库前拦截，走 code 93 兜底', async () => {
     const unsafe = validMeals()
-    unsafe[0].ingredients = ['生牛肉片']
-    unsafe[0].steps = ['直接生吃']
+    unsafe[0].title = '生肉沙拉'
     mockMenusResponse(unsafe)
     const res = await getDailyMenu.main({ date: '2026-08-21' }, {})
     expect(res.code).toBe(93)

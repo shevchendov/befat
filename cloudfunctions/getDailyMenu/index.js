@@ -44,7 +44,7 @@ function sanitizeJson(content) {
 
 function buildPrompt(date) {
   const system = '你是一位专业的中国增重营养师。你的任务是为「吃不胖、想增重」的用户设计安全、可落地的一日三餐。你只输出严格 JSON，不输出任何解释、标题、Markdown 代码块或多余文字。你推荐的每一道菜都必须使用常规熟食烹饪方法，杜绝任何食品安全风险。'
-  const user = `今天是 ${date}。请为增重人群设计一日增肥食谱，包含 4 餐：早餐(breakfast)、午餐(lunch)、加餐(snack)、晚餐(dinner)。
+  const user = `今天是 ${date}。请为增重人群设计一日增肥食谱的「概览」，包含 4 餐：早餐(breakfast)、午餐(lunch)、加餐(snack)、晚餐(dinner)。
 
 【安全食材池】你只能从以下食材中组合菜品，严禁使用池外任何食材：
 - 主食：米饭、糙米、全麦面包、燕麦、面条、馒头、红薯、土豆、玉米、小米
@@ -60,16 +60,15 @@ function buildPrompt(date) {
 4. 绝不出现"相克""解毒""治疗"等无科学依据的说法
 5. 每次生成的 4 餐菜品名称与核心食材必须具有极高的多样性，严禁重复推荐前几轮已经出现过的雷同菜品（例如：避免连续出现燕麦奶昔或牛肉面，鼓励交替使用全麦面包、红薯、鸡胸肉、鲈鱼、虾等其他安全食材池内的组合）
 
-每一餐必须包含以下字段：
+每餐概览必须包含以下字段（不要 ingredients、不要 steps）：
+- meal_type: breakfast/lunch/snack/dinner
 - title: 菜品名称（中文，有辨识度的修饰，避免裸词如"水煮蛋"）
 - calorie: 该餐热量估算值(kcal，整数)
 - protein_g: 该餐蛋白质估算值(g，可含 1 位小数)
-- ingredients: 食材数组，每项格式"食材名 + 份量"，如"全麦吐司 2片"
-- steps: 烹饪步骤字符串数组，2~4 步，简洁
 
 严格输出以下 JSON 结构，不要计算 total_calorie 或 total_protein_g：
 
-{"meals":[{"meal_type":"breakfast","title":"...","calorie":0,"protein_g":0,"ingredients":["..."],"steps":["..."]},{"meal_type":"lunch","title":"...","calorie":0,"protein_g":0,"ingredients":["..."],"steps":["..."]},{"meal_type":"snack","title":"...","calorie":0,"protein_g":0,"ingredients":["..."],"steps":["..."]},{"meal_type":"dinner","title":"...","calorie":0,"protein_g":0,"ingredients":["..."],"steps":["..."]}]}
+{"meals":[{"meal_type":"breakfast","title":"...","calorie":0,"protein_g":0},{"meal_type":"lunch","title":"...","calorie":0,"protein_g":0},{"meal_type":"snack","title":"...","calorie":0,"protein_g":0},{"meal_type":"dinner","title":"...","calorie":0,"protein_g":0}]}
 
 约束：
 1. 4 餐必须齐全，meal_type 依次为 breakfast/lunch/snack/dinner
@@ -94,7 +93,7 @@ async function callGlmMenu(date) {
       { role: 'user', content: user }
     ],
     temperature: 0.7,
-    max_tokens: 1500
+    max_tokens: 350
   }, {
     headers: {
       'Content-Type': 'application/json',
@@ -127,8 +126,8 @@ function parseAndValidate(raw) {
       title: m.title || '推荐餐',
       calorie,
       protein_g: protein,
-      ingredients: Array.isArray(m.ingredients) ? m.ingredients : [],
-      steps: Array.isArray(m.steps) ? m.steps : []
+      ingredients: [],
+      steps: []
     }
   })
 }
