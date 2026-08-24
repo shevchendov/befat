@@ -29,9 +29,14 @@
       <view class="summary-date">{{date}}</view>
     </view>
 
-    <view class="refresh-wrap">
-      <view class="refresh-btn {{refreshing ? 'refresh-loading' : ''}}" bindtap="refreshMenu">
-        <text>{{refreshing ? '🍳 生成中…' : '🔁 换一换'}}</text>
+    <view class="action-group">
+      <view class="action-btn primary {{refreshing ? 'refreshing' : ''}}" bindtap="refreshMenu">
+        <text class="action-btn-icon">🔁</text>
+        <text>{{refreshing ? '生成中…' : '换一换'}}</text>
+      </view>
+      <view class="action-btn secondary" bindtap="openFavoriteDrawer">
+        <text class="action-btn-icon">🥘</text>
+        <text>我的菜库</text>
       </view>
     </view>
 
@@ -68,4 +73,51 @@
     <view class="from-fallback" wx:if="{{fromFallback}}">今日食谱暂不可用，已为你准备备用食谱</view>
     <view class="disclaimer">💡 营养数据基于通用食材均值估算，仅供备餐灵感参考，不构成医疗建议。</view>
   </block>
+
+  <view class="fav-drawer-mask {{drawerVisible ? 'mask-show' : ''}}" wx:if="{{drawerVisible}}" bindtap="closeFavoriteDrawer"></view>
+
+  <view class="fav-drawer {{drawerVisible ? 'drawer-show' : ''}}">
+    <view class="drawer-header">
+      <text class="drawer-title">🥘 我的菜库</text>
+      <view class="drawer-close" catchtap="closeFavoriteDrawer">✕</view>
+    </view>
+
+    <view class="drawer-tabs">
+      <view class="drawer-tab {{favTab === 'all' ? 'tab-active' : ''}}" catchtap="switchFavTab" data-tab="all">全部</view>
+      <view class="drawer-tab {{favTab === 'breakfast' ? 'tab-active' : ''}}" catchtap="switchFavTab" data-tab="breakfast">早餐</view>
+      <view class="drawer-tab {{favTab === 'lunchdinner' ? 'tab-active' : ''}}" catchtap="switchFavTab" data-tab="lunchdinner">正餐</view>
+      <view class="drawer-tab {{favTab === 'snack' ? 'tab-active' : ''}}" catchtap="switchFavTab" data-tab="snack">加餐</view>
+    </view>
+
+    <scroll-view class="drawer-body" scroll-y>
+      <view wx:if="{{favLoading && favList.length === 0}}" class="drawer-loading">加载中…</view>
+
+      <view wx:if="{{favList.length === 0 && !favLoading}}" class="drawer-empty">
+        <text class="empty-emoji">🥗</text>
+        <text class="empty-main">还没有收藏的菜</text>
+        <text class="empty-sub">去今日食谱里点 ❤️ 收藏一道喜欢的菜吧</text>
+      </view>
+
+      <view class="fav-card" wx:for="{{favList}}" wx:for-item="fav" wx:for-index="fi" wx:key="title">
+        <view class="fav-card-header">
+          <view class="meal-tag">{{fav.mealLabel}}</view>
+          <view class="fav-btn fav-on" catchtap="removeFavFromDrawer" data-index="{{fi}}">
+            <view class="fav-icon"></view>
+          </view>
+        </view>
+        <view class="fav-card-title">{{fav.title}}</view>
+        <view class="fav-card-nutrition">约 {{fav.calorie}} kcal · 蛋白质约 {{fav.protein_g}}g</view>
+        <view class="detail-toggle {{fav.loading ? 'detail-loading' : ''}}" bindtap="toggleDrawerDetail" data-index="{{fi}}">
+          <text>{{fav.loading ? '生成中…' : (fav.expanded ? '收起 ▲' : '查看食材与步骤 ▼')}}</text>
+        </view>
+        <view wx:if="{{fav.loading}}" class="drawer-detail-loading">详情生成中…</view>
+        <block wx:if="{{fav.expanded && !fav.loading}}">
+          <view class="list-label">食材</view>
+          <view class="meal-ingredient" wx:for="{{fav.ingredients}}" wx:for-item="ing" wx:key="*this">{{ing}}</view>
+          <view class="list-label">步骤</view>
+          <view class="meal-step" wx:for="{{fav.steps}}" wx:for-item="step" wx:key="*this">{{index + 1}}. {{step}}</view>
+        </block>
+      </view>
+    </scroll-view>
+  </view>
 </view>

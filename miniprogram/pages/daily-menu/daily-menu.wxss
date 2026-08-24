@@ -39,32 +39,49 @@
   margin-top: 8rpx;
 }
 
-.refresh-wrap {
+.action-group {
   display: flex;
   justify-content: center;
-  margin-top: 20rpx;
+  align-items: center;
+  gap: 24rpx;
+  margin: 20rpx 0;
 }
 
-.refresh-btn {
-  display: inline-flex;
+.action-btn {
+  display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--primary-gradient);
-  color: #FFFFFF;
+  gap: 10rpx;
+  height: 72rpx;
+  padding: 0 36rpx;
+  border-radius: 36rpx;
   font-size: 28rpx;
-  font-weight: 600;
-  border-radius: 999rpx;
-  padding: 16rpx 52rpx;
-  box-shadow: var(--shadow-card);
-  transition: transform 0.15s, opacity 0.15s;
+  font-weight: 500;
 }
 
-.refresh-btn:active {
-  transform: scale(0.95);
+.action-btn:active {
+  transform: scale(0.96);
   opacity: 0.9;
 }
 
-.refresh-btn.refresh-loading {
+.action-btn-icon {
+  font-size: 28rpx;
+}
+
+.action-btn.primary {
+  background-color: #FF5722;
+  color: #FFFFFF;
+  box-shadow: 0 4rpx 12rpx rgba(255, 87, 34, 0.25);
+}
+
+.action-btn.secondary {
+  background-color: #FFFFFF;
+  border: 2rpx solid rgba(255, 87, 34, 0.3);
+  color: #E8471F;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.action-btn.primary.refreshing {
   opacity: 0.7;
 }
 
@@ -80,13 +97,16 @@
 }
 
 .meal-tag {
-  font-size: 22rpx;
-  font-weight: 600;
-  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #FF5722;
   background: var(--primary-bg);
-  border: 2rpx solid var(--primary);
-  border-radius: 999rpx;
-  padding: 4rpx 20rpx;
+  border: 2rpx solid rgba(255, 87, 34, 0.4);
+  border-radius: 22rpx;
+  padding: 6rpx 20rpx;
 }
 
 .fav-btn {
@@ -272,4 +292,158 @@
   50% {
     transform: translateY(-16rpx);
   }
+}
+
+.fav-drawer-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+
+.fav-drawer-mask.mask-show {
+  opacity: 1;
+}
+
+.fav-drawer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 75vh;
+  z-index: 1000;
+  background: var(--bg);
+  border-radius: 40rpx 40rpx 0 0;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.28s ease;
+}
+
+.fav-drawer.drawer-show {
+  transform: translateY(0);
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 30rpx 12rpx;
+}
+
+.drawer-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.drawer-close {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  color: var(--text-secondary);
+}
+
+.drawer-tabs {
+  display: flex;
+  gap: 16rpx;
+  padding: 8rpx 30rpx 20rpx;
+}
+
+.drawer-tab {
+  flex: 1;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--primary);
+  background: var(--primary-bg);
+  border: 2rpx solid var(--primary);
+  border-radius: 999rpx;
+  padding: 10rpx 0;
+}
+
+.drawer-tab.tab-active {
+  background: var(--primary);
+  color: #FFFFFF;
+}
+
+.drawer-body {
+  flex: 1;
+  height: 0;
+  padding: 0 30rpx;
+  box-sizing: border-box;
+}
+
+.fav-card {
+  background: var(--card-bg);
+  border-radius: 24rpx;
+  border: 4rpx solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.fav-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.fav-card-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6rpx;
+}
+
+.fav-card-nutrition {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  margin-bottom: 12rpx;
+}
+
+.drawer-detail-loading {
+  margin: 12rpx 0 4rpx;
+  padding: 20rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--text-light);
+  border: 2rpx dashed var(--border);
+  border-radius: 16rpx;
+}
+
+.drawer-empty {
+  text-align: center;
+  padding-top: 100rpx;
+}
+
+.drawer-loading {
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--text-light);
+  padding-top: 100rpx;
+}
+
+.empty-emoji {
+  font-size: 72rpx;
+  display: block;
+}
+
+.empty-main {
+  display: block;
+  font-size: 28rpx;
+  color: var(--text-primary);
+  margin-top: 20rpx;
+}
+
+.empty-sub {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-light);
+  margin-top: 8rpx;
 }

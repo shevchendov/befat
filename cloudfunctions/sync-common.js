@@ -5,7 +5,7 @@ const TARGETS = [
   'calcTarget', 'parseFoodLog', 'getDailySummary', 'saveWeightLog',
   'deleteUserData', 'exportUserData', 'checkMealReminder',
   'recalcTarget', 'updateTargetManual', 'resetUserData', 'getStats',
-  'getDailyMenu', 'toggleFavoriteRecipe', 'getMealDetail'
+  'getDailyMenu', 'toggleFavoriteRecipe', 'getMealDetail', 'getFavorites', 'updateFavoriteDetail'
 ]
 
 const ROOT = path.resolve(__dirname)

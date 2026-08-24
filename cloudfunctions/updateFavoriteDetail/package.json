@@ -1,0 +1,12 @@
+{
+  "name": "updateFavoriteDetail",
+  "version": "1.0.0",
+  "description": "补全收藏快照的食材/步骤详情",
+  "main": "index.js",
+  "engines": {
+    "node": "16"
+  },
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

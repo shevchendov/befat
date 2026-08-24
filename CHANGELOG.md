@@ -1,5 +1,116 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-24] 430ea25
+
+**refactor: 废弃旧食谱库与旧收藏体系，统一到每日菜单快照收藏**
+
+- 删除旧云函数 manageRecipe/getPublishedRecipes/getRecipeDetail/validateRecipe/recipeDataCleanup/generateRecipeInit/migrateRecipesNutrition/toggleFavorite/getFavorites
+- 删除旧前端页面 recipe-list/recipe-detail/my-favorites，清理 app.json/profile 入口
+- 删除旧测试 10 个与 common/recipeValidation.js，sync-common 精简到 14 函数
+- 收藏统一为 toggleFavoriteRecipe 快照收藏，全量 535 测试通过
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过（535/535），未做真机/云端验证
+DATA IMPACT: 云端 recipes 集合已删除；user_favorites 保留，旧 recipe_id 模式数据可清理
+
+**涉及文件:**
+- `AGENTS.md`
+- `CHANGELOG.md`
+- `cloudfunctions/calcTarget/common/recipeValidation.js`
+- `cloudfunctions/checkMealReminder/common/recipeValidation.js`
+- `cloudfunctions/common/recipeValidation.js`
+- `cloudfunctions/deleteUserData/common/recipeValidation.js`
+- `cloudfunctions/exportUserData/common/recipeValidation.js`
+- `cloudfunctions/generateRecipeInit/common/deleteHelper.js`
+- `cloudfunctions/generateRecipeInit/common/logger.js`
+- `cloudfunctions/generateRecipeInit/common/recipeValidation.js`
+- `cloudfunctions/generateRecipeInit/common/targetCalc.js`
+- `cloudfunctions/generateRecipeInit/index.js`
+- `cloudfunctions/generateRecipeInit/package-lock.json`
+- `cloudfunctions/generateRecipeInit/package.json`
+- `cloudfunctions/getDailyMenu/common/recipeValidation.js`
+- `cloudfunctions/getDailySummary/common/recipeValidation.js`
+- `cloudfunctions/getFavorites/common/deleteHelper.js`
+- `cloudfunctions/getFavorites/common/logger.js`
+- `cloudfunctions/getFavorites/common/recipeValidation.js`
+- `cloudfunctions/getFavorites/common/targetCalc.js`
+- `cloudfunctions/getFavorites/index.js`
+- `cloudfunctions/getFavorites/package.json`
+- `cloudfunctions/getMealDetail/common/recipeValidation.js`
+- `cloudfunctions/getPublishedRecipes/common/deleteHelper.js`
+- `cloudfunctions/getPublishedRecipes/common/logger.js`
+- `cloudfunctions/getPublishedRecipes/common/recipeValidation.js`
+- `cloudfunctions/getPublishedRecipes/common/targetCalc.js`
+- `cloudfunctions/getPublishedRecipes/index.js`
+- `cloudfunctions/getPublishedRecipes/package.json`
+- `cloudfunctions/getRecipeDetail/common/deleteHelper.js`
+- `cloudfunctions/getRecipeDetail/common/logger.js`
+- `cloudfunctions/getRecipeDetail/common/recipeValidation.js`
+- `cloudfunctions/getRecipeDetail/common/targetCalc.js`
+- `cloudfunctions/getRecipeDetail/index.js`
+- `cloudfunctions/getRecipeDetail/package.json`
+- `cloudfunctions/getStats/common/recipeValidation.js`
+- `cloudfunctions/manageRecipe/common/deleteHelper.js`
+- `cloudfunctions/manageRecipe/common/logger.js`
+- `cloudfunctions/manageRecipe/common/recipeValidation.js`
+- `cloudfunctions/manageRecipe/common/targetCalc.js`
+- `cloudfunctions/manageRecipe/index.js`
+- `cloudfunctions/manageRecipe/package.json`
+- `cloudfunctions/migrateRecipesNutrition/common/logger.js`
+- `cloudfunctions/migrateRecipesNutrition/index.js`
+- `cloudfunctions/migrateRecipesNutrition/package-lock.json`
+- `cloudfunctions/migrateRecipesNutrition/package.json`
+- `cloudfunctions/parseFoodLog/common/recipeValidation.js`
+- `cloudfunctions/recalcTarget/common/recipeValidation.js`
+- `cloudfunctions/recipeDataCleanup/common/deleteHelper.js`
+- `cloudfunctions/recipeDataCleanup/common/logger.js`
+- `cloudfunctions/recipeDataCleanup/common/recipeValidation.js`
+- `cloudfunctions/recipeDataCleanup/common/targetCalc.js`
+- `cloudfunctions/recipeDataCleanup/index.js`
+- `cloudfunctions/recipeDataCleanup/package.json`
+- `cloudfunctions/resetUserData/common/recipeValidation.js`
+- `cloudfunctions/saveWeightLog/common/recipeValidation.js`
+- `cloudfunctions/sync-common.js`
+- `cloudfunctions/toggleFavorite/common/deleteHelper.js`
+- `cloudfunctions/toggleFavorite/common/logger.js`
+- `cloudfunctions/toggleFavorite/common/recipeValidation.js`
+- `cloudfunctions/toggleFavorite/common/targetCalc.js`
+- `cloudfunctions/toggleFavorite/index.js`
+- `cloudfunctions/toggleFavorite/package.json`
+- `cloudfunctions/toggleFavoriteRecipe/common/recipeValidation.js`
+- `cloudfunctions/updateTargetManual/common/recipeValidation.js`
+- `cloudfunctions/validateRecipe/common/deleteHelper.js`
+- `cloudfunctions/validateRecipe/common/logger.js`
+- `cloudfunctions/validateRecipe/common/recipeValidation.js`
+- `cloudfunctions/validateRecipe/common/targetCalc.js`
+- `cloudfunctions/validateRecipe/index.js`
+- `cloudfunctions/validateRecipe/package.json`
+- `miniprogram/app.json`
+- `miniprogram/pages/my-favorites/my-favorites.js`
+- `miniprogram/pages/my-favorites/my-favorites.json`
+- `miniprogram/pages/my-favorites/my-favorites.wxml`
+- `miniprogram/pages/my-favorites/my-favorites.wxss`
+- `miniprogram/pages/profile/profile.js`
+- `miniprogram/pages/profile/profile.wxml`
+- `miniprogram/pages/recipe-detail/recipe-detail.js`
+- `miniprogram/pages/recipe-detail/recipe-detail.json`
+- `miniprogram/pages/recipe-detail/recipe-detail.wxml`
+- `miniprogram/pages/recipe-detail/recipe-detail.wxss`
+- `miniprogram/pages/recipe-list/recipe-list.js`
+- `miniprogram/pages/recipe-list/recipe-list.json`
+- `miniprogram/pages/recipe-list/recipe-list.wxml`
+- `miniprogram/pages/recipe-list/recipe-list.wxss`
+- `tests/frontend/recipe-detail.test.js`
+- `tests/frontend/recipe-list.test.js`
+- `tests/generateRecipeInit.test.js`
+- `tests/getFavorites.test.js`
+- `tests/getPublishedRecipes.test.js`
+- `tests/getRecipeDetail.test.js`
+- `tests/interface/response-schema.test.js`
+- `tests/manageRecipe.test.js`
+- `tests/recipeDataCleanup.test.js`
+- `tests/toggleFavorite.test.js`
+- `tests/validateRecipe.test.js`
+
 ## [2026-08-24] 841dac8
 
 **style: 每日食谱卡片收藏爱心按钮重构**

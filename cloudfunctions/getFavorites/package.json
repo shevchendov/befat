@@ -1,0 +1,12 @@
+{
+  "name": "getFavorites",
+  "version": "1.0.0",
+  "description": "快照收藏列表（我的菜库）",
+  "main": "index.js",
+  "engines": {
+    "node": "16"
+  },
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}
