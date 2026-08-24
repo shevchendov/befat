@@ -1,9 +1,0 @@
-{
-  "name": "getFavorites",
-  "version": "1.0.0",
-  "description": "获取用户收藏的食谱列表",
-  "main": "index.js",
-  "dependencies": {
-    "wx-server-sdk": "latest"
-  }
-}

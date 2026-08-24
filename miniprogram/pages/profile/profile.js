@@ -110,10 +110,6 @@ Page({
     }
   },
 
-  goToFavorites() {
-    wx.navigateTo({ url: '/pages/my-favorites/my-favorites' })
-  },
-
   goToOnboarding() {
     wx.navigateTo({ url: '/pages/onboarding/onboarding' })
   },

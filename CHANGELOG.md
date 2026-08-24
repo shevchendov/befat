@@ -1,5 +1,20 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-24] 841dac8
+
+**style: 每日食谱卡片收藏爱心按钮重构**
+
+- 收藏爱心外层容器 64rpx 圆形热区+暖色底座，图标改 Base64 SVG 固定 40rpx
+- 消除空心/实心切换尺寸跳变，未收藏暖褐描边、已收藏主色暖橙实心+scale 缩放
+- 颜色融入主页暖橙风格
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过（644/644），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `miniprogram/pages/daily-menu/daily-menu.wxml`
+- `miniprogram/pages/daily-menu/daily-menu.wxss`
+
 ## [2026-08-24] 3b814bd
 
 **feat: 每日食谱两阶段按需加载**

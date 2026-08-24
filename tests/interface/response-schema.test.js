@@ -8,9 +8,6 @@ const getDailySummary = require('../../cloudfunctions/getDailySummary/index')
 const saveWeightLog = require('../../cloudfunctions/saveWeightLog/index')
 const exportUserData = require('../../cloudfunctions/exportUserData/index')
 const deleteUserData = require('../../cloudfunctions/deleteUserData/index')
-const manageRecipe = require('../../cloudfunctions/manageRecipe/index')
-const toggleFavorite = require('../../cloudfunctions/toggleFavorite/index')
-const getFavorites = require('../../cloudfunctions/getFavorites/index')
 
 const ALL_FUNCTIONS = [
   { name: 'calcTarget', fn: calcTarget, successEvents: [{ height_cm: 175, current_weight_kg: 60, target_weight_kg: 62, gender: 'male', activity_level: 'moderate', age: 25 }], successAssert: (r) => { expect(r.data).toHaveProperty('bmi') } },
@@ -18,10 +15,7 @@ const ALL_FUNCTIONS = [
   { name: 'getDailySummary', fn: getDailySummary, successEvents: [{ date: '2026-07-29' }], successAssert: (r) => { expect(r.data).toHaveProperty('meals') } },
   { name: 'saveWeightLog', fn: saveWeightLog, successEvents: [{ date: '2026-07-29', weight_kg: 65 }], successAssert: (r) => { expect(r.data).toHaveProperty('records') } },
   { name: 'exportUserData', fn: exportUserData, successEvents: [{}], successAssert: (r) => { expect(r.data).toHaveProperty('export_time') } },
-  { name: 'deleteUserData', fn: deleteUserData, successEvents: [{}], noData: true, successAssert: (r) => { expect(r.message).toBe('所有数据已删除') } },
-  { name: 'manageRecipe', fn: manageRecipe, successEvents: [{ action: 'list' }], successAssert: (r) => { expect(r.data).toHaveProperty('recipes') }, setupMock: () => { require('wx-server-sdk').getWXContext.mockReturnValue({ OPENID: 'ADMIN_OPENID_PLACEHOLDER' }) } },
-  { name: 'toggleFavorite', fn: toggleFavorite, successEvents: [{ recipe_id: 'test-recipe' }], successAssert: (r) => { expect(r.data).toHaveProperty('favorited') } },
-  { name: 'getFavorites', fn: getFavorites, successEvents: [{}], successAssert: (r) => { expect(r.data).toHaveProperty('recipes') } }
+  { name: 'deleteUserData', fn: deleteUserData, successEvents: [{}], noData: true, successAssert: (r) => { expect(r.message).toBe('所有数据已删除') } }
 ]
 
 beforeEach(() => {

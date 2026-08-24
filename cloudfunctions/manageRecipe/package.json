@@ -1,9 +1,0 @@
-{
-  "name": "manageRecipe",
-  "version": "1.0.0",
-  "description": "菜单管理（仅管理员）",
-  "main": "index.js",
-  "dependencies": {
-    "wx-server-sdk": "latest"
-  }
-}

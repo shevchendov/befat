@@ -1,9 +1,0 @@
-{
-  "name": "migrateRecipesNutrition",
-  "version": "1.0.0",
-  "description": "迁移脚本：更新食谱营养数据（基于中国食物成分表权威数据）",
-  "main": "index.js",
-  "dependencies": {
-    "wx-server-sdk": "latest"
-  }
-}
