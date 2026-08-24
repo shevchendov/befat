@@ -168,3 +168,65 @@ describe('getDailyMenu - 校验单元测试', () => {
     expect(fmtBeijingDate(d)).toBe('2026-08-21')
   })
 })
+
+describe('getDailyMenu - 正则安全网', () => {
+  const { blockingChecks } = getDailyMenu
+
+  test('命中"生肉"抛错', () => {
+    const meals = [{ title: '生肉沙拉', ingredients: ['生牛肉'], steps: [] }]
+    expect(() => blockingChecks(meals)).toThrow()
+  })
+
+  test('命中"刺身"抛错', () => {
+    const meals = [{ title: 'a', ingredients: ['三文鱼刺身'], steps: [] }]
+    expect(() => blockingChecks(meals)).toThrow()
+  })
+
+  test('命中"野生"抛错', () => {
+    const meals = [{ title: '野生菌汤', ingredients: [], steps: [] }]
+    expect(() => blockingChecks(meals)).toThrow()
+  })
+
+  test('安全食材不抛错', () => {
+    const meals = [{ title: '番茄炒鸡蛋', ingredients: ['番茄', '鸡蛋'], steps: ['炒熟'] }]
+    expect(() => blockingChecks(meals)).not.toThrow()
+  })
+
+  test('AI 返回高危食材时落库前拦截，走 code 93 兜底', async () => {
+    const unsafe = validMeals()
+    unsafe[0].ingredients = ['生牛肉片']
+    unsafe[0].steps = ['直接生吃']
+    mockMenusResponse(unsafe)
+    const res = await getDailyMenu.main({ date: '2026-08-21' }, {})
+    expect(res.code).toBe(93)
+    expect(res.data.from_fallback).toBe(true)
+    expect(mockMenus.find(m => m._id === '2026-08-21')).toBeUndefined()
+  })
+})
+
+describe('getDailyMenu - forceRefresh', () => {
+  test('forceRefresh 覆盖当天记录并 refresh_count+1', async () => {
+    mockMenus.push({
+      _id: '2026-08-21', date: '2026-08-21', status: 'READY',
+      meals: validMeals(), total_calorie: 1620, total_protein_g: 98,
+      generated_by: 'glm-4-flash', refresh_count: 0
+    })
+    mockMenusResponse(validMeals())
+    const res = await getDailyMenu.main({ date: '2026-08-21', forceRefresh: true }, {})
+    expect(res.code).toBe(0)
+    expect(res.data.refresh_count).toBe(1)
+    expect(axios.post).toHaveBeenCalledTimes(1)
+    expect(mockMenus.find(m => m._id === '2026-08-21').refresh_count).toBe(1)
+  })
+
+  test('refresh_count 达上限返回 code 94', async () => {
+    mockMenus.push({
+      _id: '2026-08-21', date: '2026-08-21', status: 'READY',
+      meals: validMeals(), total_calorie: 1620, total_protein_g: 98,
+      generated_by: 'glm-4-flash', refresh_count: 10
+    })
+    const res = await getDailyMenu.main({ date: '2026-08-21', forceRefresh: true }, {})
+    expect(res.code).toBe(94)
+    expect(axios.post).not.toHaveBeenCalled()
+  })
+})

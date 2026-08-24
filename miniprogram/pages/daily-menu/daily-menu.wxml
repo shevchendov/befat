@@ -1,22 +1,38 @@
 <view class="page-container">
-  <view class="card skeleton" wx:if="{{loading}}">
-    <view class="sk-line sk-pill"></view>
-    <view class="sk-line" style="width:70%"></view>
-    <view class="sk-line" style="width:40%"></view>
-    <view class="sk-tip">食谱生成中，请稍候…</view>
+  <view class="skeleton" wx:if="{{isGenerating}}">
+    <view class="sk-pill"></view>
+    <view class="sk-card">
+      <view class="sk-line w70"></view>
+      <view class="sk-line w40"></view>
+    </view>
+    <view class="sk-card">
+      <view class="sk-line w70"></view>
+      <view class="sk-line w40"></view>
+    </view>
+    <view class="sk-cook">
+      <view class="sk-emoji">🍳</view>
+      <view class="sk-tip">营养师正在配餐，稍等片刻… 🥗</view>
+    </view>
   </view>
 
-  <block wx:if="{{!loading}}">
+  <block wx:if="{{!isGenerating}}">
     <view class="summary-card">
       <view class="pill">
+        <text>约 </text>
         <text class="pill-num">{{total_calorie}}</text>
         <text class="pill-unit"> kcal</text>
         <text class="pill-sep">·</text>
-        <text>蛋白质 </text>
+        <text>蛋白质约 </text>
         <text class="pill-num">{{total_protein_g}}</text>
         <text class="pill-unit">g</text>
       </view>
       <view class="summary-date">{{date}}</view>
+    </view>
+
+    <view class="refresh-wrap">
+      <view class="refresh-btn {{refreshing ? 'refresh-loading' : ''}}" bindtap="refreshMenu">
+        <text>{{refreshing ? '🍳 生成中…' : '🔁 换一换'}}</text>
+      </view>
     </view>
 
     <view class="card meal-card" wx:for="{{meals}}" wx:for-item="meal" wx:for-index="idx" wx:key="meal_type">
@@ -27,7 +43,14 @@
         </view>
       </view>
       <view class="meal-title">{{meal.title}}</view>
-      <view class="meal-nutrition">{{meal.calorie}} kcal · 蛋白质 {{meal.protein_g}}g</view>
+      <view class="meal-nutrition">
+        <text>约 </text>
+        <text class="nutrition-num">{{meal.calorie}}</text>
+        <text class="nutrition-unit"> kcal</text>
+        <text> · 蛋白质约 </text>
+        <text class="nutrition-num">{{meal.protein_g}}</text>
+        <text class="nutrition-unit">g</text>
+      </view>
 
       <view class="list-label">食材</view>
       <view class="meal-ingredient" wx:for="{{meal.ingredients}}" wx:for-item="ing" wx:key="*this">{{ing}}</view>
@@ -37,6 +60,6 @@
     </view>
 
     <view class="from-fallback" wx:if="{{fromFallback}}">今日食谱暂不可用，已为你准备备用食谱</view>
-    <view class="disclaimer">以上食谱为自动生成，仅供参考，不构成医疗建议</view>
+    <view class="disclaimer">💡 营养数据基于通用食材均值估算，仅供备餐灵感参考，不构成医疗建议。</view>
   </block>
 </view>

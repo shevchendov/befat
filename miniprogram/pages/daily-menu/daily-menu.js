@@ -4,7 +4,8 @@ const MEAL_LABELS = { breakfast: '早餐', lunch: '午餐', snack: '加餐', din
 
 Page({
   data: {
-    loading: true,
+    isGenerating: true,
+    refreshing: false,
     date: '',
     meals: [],
     total_calorie: 0,
@@ -14,7 +15,7 @@ Page({
   },
 
   onLoad() {
-    this.loadMenu()
+    this.loadMenu(false)
   },
 
   readFavMap() {
@@ -25,24 +26,43 @@ Page({
     }
   },
 
-  async loadMenu() {
-    this.setData({ loading: true })
+  async loadMenu(forceRefresh) {
+    if (forceRefresh) {
+      this.setData({ refreshing: true })
+    } else {
+      this.setData({ isGenerating: true })
+    }
+
     try {
-      const res = await wx.cloud.callFunction({ name: 'getDailyMenu' })
+      const res = await wx.cloud.callFunction({
+        name: 'getDailyMenu',
+        data: forceRefresh ? { forceRefresh: true } : {}
+      })
       const result = res.result
 
-      if (result.code !== 0 && result.code !== 93) {
-        wx.showToast({ title: result.message || '加载失败', icon: 'none' })
-        this.setData({ loading: false })
+      if (result.code === 94) {
+        wx.showToast({ title: '今日换一换次数已用完', icon: 'none' })
+        this.setData({ refreshing: false, isGenerating: false })
         return
       }
 
-      const d = result.data
+      if (result.code !== 0 && result.code !== 93) {
+        wx.showToast({ title: result.message || '加载失败', icon: 'none' })
+        this.setData({ refreshing: false, isGenerating: false })
+        return
+      }
+
+      const d = result.data || {}
       const favMap = this.readFavMap()
       const meals = (d.meals || []).map(m => ({
-        ...m,
+        meal_type: m.meal_type,
         mealLabel: MEAL_LABELS[m.meal_type] || m.meal_type,
-        favorited: !!favMap[m.title + '|' + m.meal_type]
+        title: m.title || '',
+        calorie: m.calorie,
+        protein_g: m.protein_g,
+        ingredients: m.ingredients || [],
+        steps: m.steps || [],
+        favorited: !!favMap[(m.title || '') + '|' + m.meal_type]
       }))
 
       this.setData({
@@ -52,13 +72,19 @@ Page({
         total_protein_g: d.total_protein_g,
         generated_by: d.generated_by,
         fromFallback: !!d.from_fallback,
-        loading: false
+        isGenerating: false,
+        refreshing: false
       })
     } catch (err) {
       logger.error('loadMenu', err)
       wx.showToast({ title: '网络异常，请重试', icon: 'none' })
-      this.setData({ loading: false })
+      this.setData({ isGenerating: false, refreshing: false })
     }
+  },
+
+  refreshMenu() {
+    if (this.data.refreshing || this.data.isGenerating) return
+    this.loadMenu(true)
   },
 
   async toggleFav(e) {

@@ -1,5 +1,29 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-24] fdeca85
+
+**fix: 清理用户可见文案中的 AI/智能等敏感字眼**
+
+- log-food：拍照识菜→拍照记录、智能估算热量→估算热量、识别失败→分析失败
+- daily-menu：智能食谱→食谱、AI 生成→自动生成
+- getDailyMenu/parseFoodLog message：智能食谱→今日食谱、图片识别失败→图片分析失败、AI 解析失败→解析失败
+- 同步更新测试断言文案，全量 626 通过
+DEPLOY: cloudfunctions/getDailyMenu,cloudfunctions/parseFoodLog
+VERIFIED: 仅本地jest测试通过（626/626），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `cloudfunctions/getDailyMenu/index.js`
+- `cloudfunctions/parseFoodLog/index.js`
+- `miniprogram/pages/daily-menu/daily-menu.wxml`
+- `miniprogram/pages/log-food/log-food.js`
+- `miniprogram/pages/log-food/log-food.wxml`
+- `tests/frontend/log-food.test.js`
+- `tests/interface/cloud-function-contracts.test.js`
+- `tests/parseFoodLog.test.js`
+- `tests/security/api-key.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getDailyMenu,cloudfunctions/parseFoodLog
+
 ## [2026-08-21] 76c7781
 
 **feat: 每日增肥食谱推荐——懒加载生成 + 快照收藏**

@@ -39,6 +39,35 @@
   margin-top: 8rpx;
 }
 
+.refresh-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 20rpx;
+}
+
+.refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-gradient);
+  color: #FFFFFF;
+  font-size: 28rpx;
+  font-weight: 600;
+  border-radius: 999rpx;
+  padding: 16rpx 52rpx;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.15s, opacity 0.15s;
+}
+
+.refresh-btn:active {
+  transform: scale(0.95);
+  opacity: 0.9;
+}
+
+.refresh-btn.refresh-loading {
+  opacity: 0.7;
+}
+
 .meal-card {
   margin-top: 24rpx;
 }
@@ -51,7 +80,8 @@
 }
 
 .meal-tag {
-  font-size: 24rpx;
+  font-size: 22rpx;
+  font-weight: 600;
   color: var(--primary);
   background: var(--primary-bg);
   border: 2rpx solid var(--primary);
@@ -71,33 +101,49 @@
 }
 
 .meal-title {
-  font-size: 32rpx;
+  font-size: 36rpx;
   font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-primary);
   margin-bottom: 8rpx;
 }
 
 .meal-nutrition {
   font-size: 26rpx;
-  color: var(--text-secondary);
+  color: var(--text-light);
   margin-bottom: 16rpx;
+}
+
+.nutrition-num {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.nutrition-unit {
+  font-size: 26rpx;
+  color: var(--text-light);
 }
 
 .list-label {
   font-size: 24rpx;
+  font-weight: 600;
   color: var(--text-light);
-  margin: 12rpx 0 6rpx;
+  margin: 14rpx 0 6rpx;
 }
 
 .meal-ingredient {
-  font-size: 26rpx;
+  font-size: 28rpx;
+  font-weight: 400;
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .meal-step {
-  font-size: 26rpx;
+  font-size: 28rpx;
+  font-weight: 400;
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .from-fallback {
@@ -115,33 +161,75 @@
 }
 
 .skeleton {
-  opacity: 0.6;
+  margin: 40rpx 30rpx 0;
+}
+
+.sk-pill {
+  height: 56rpx;
+  width: 60%;
+  margin: 8rpx auto 28rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(90deg, #F0E7DC 25%, #FBF4EA 50%, #F0E7DC 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+.sk-card {
+  background: #FFF;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: var(--shadow-card);
 }
 
 .sk-line {
   height: 32rpx;
   border-radius: 8rpx;
-  background: linear-gradient(90deg, #F0E7DC 25%, #FAF3E9 50%, #F0E7DC 75%);
-  background-size: 400% 100%;
-  animation: slide 1.2s linear infinite;
+  background: linear-gradient(90deg, #F0E7DC 25%, #FBF4EA 50%, #F0E7DC 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease infinite;
   margin-bottom: 16rpx;
 }
 
-.sk-pill {
-  height: 56rpx;
-  border-radius: 999rpx;
-  width: 60%;
-  margin: 8rpx auto 20rpx;
+.sk-line.w70 {
+  width: 70%;
+}
+
+.sk-line.w40 {
+  width: 40%;
+}
+
+.sk-cook {
+  text-align: center;
+  margin-top: 40rpx;
+}
+
+.sk-emoji {
+  font-size: 72rpx;
+  display: inline-block;
+  animation: bounce 1.2s ease-in-out infinite;
 }
 
 .sk-tip {
-  text-align: center;
-  font-size: 24rpx;
-  color: var(--text-light);
-  margin-top: 24rpx;
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  margin-top: 20rpx;
 }
 
-@keyframes slide {
-  from { background-position: 100% 0; }
-  to { background-position: 0 0; }
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-16rpx);
+  }
 }
