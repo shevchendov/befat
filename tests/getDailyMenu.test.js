@@ -1,4 +1,5 @@
 let mockMenus = []
+let mockNotExist = false
 
 jest.mock('wx-server-sdk', () => {
   const mockServerDate = jest.fn(() => '2026-08-21T00:00:00.000Z')
@@ -10,6 +11,9 @@ jest.mock('wx-server-sdk', () => {
         doc: jest.fn((id) => ({
           get: jest.fn().mockImplementation(() => {
             const doc = mockMenus.find(m => m._id === id)
+            if (!doc && mockNotExist) {
+              return Promise.reject(new Error('document.get:fail document with _id ' + id + ' does not exist'))
+            }
             return Promise.resolve({ data: doc || null })
           }),
           update: jest.fn().mockImplementation(({ data }) => {
@@ -58,6 +62,7 @@ function validMeals() {
 
 beforeEach(() => {
   mockMenus = []
+  mockNotExist = false
   process.env = { ...origEnv }
   process.env.MENU_API_KEY = 'test-key'
   axios.post.mockReset()
@@ -167,6 +172,18 @@ describe('getDailyMenu - 校验单元测试', () => {
     const d = new Date('2026-08-20T16:30:00Z')
     expect(fmtBeijingDate(d)).toBe('2026-08-21')
   })
+
+  test('字符串值内含 raw 换行/控制字符时仍能解析', () => {
+    const raw = '{"meals":[' +
+      '{"meal_type":"breakfast","title":"花生\n酱香蕉吐司","calorie":400,"protein_g":20,"ingredients":["吐司"],"steps":["烤"]},' +
+      '{"meal_type":"lunch","title":"鸡腿饭","calorie":500,"protein_g":30,"ingredients":["鸡腿"],"steps":["炒"]},' +
+      '{"meal_type":"snack","title":"燕麦杯","calorie":120,"protein_g":8,"ingredients":["燕麦"],"steps":["泡"]},' +
+      '{"meal_type":"dinner","title":"牛肉面","calorie":600,"protein_g":40,"ingredients":["牛肉"],"steps":["炖"]}' +
+      ']}'
+    const meals = parseAndValidate(raw)
+    expect(meals).toHaveLength(4)
+    expect(meals[0].title).toBe('花生 酱香蕉吐司')
+  })
 })
 
 describe('getDailyMenu - 正则安全网', () => {
@@ -228,5 +245,24 @@ describe('getDailyMenu - forceRefresh', () => {
     const res = await getDailyMenu.main({ date: '2026-08-21', forceRefresh: true }, {})
     expect(res.code).toBe(94)
     expect(axios.post).not.toHaveBeenCalled()
+  })
+
+  test('当天无记录（not exist）时 forceRefresh 视同首次生成，返回 code 0 而非 93', async () => {
+    mockNotExist = true
+    mockMenusResponse(validMeals())
+    const res = await getDailyMenu.main({ date: '2026-08-21', forceRefresh: true }, {})
+    expect(res.code).toBe(0)
+    expect(res.data.refresh_count).toBe(1)
+    expect(axios.post).toHaveBeenCalledTimes(1)
+    expect(mockMenus.find(m => m._id === '2026-08-21').status).toBe('READY')
+  })
+
+  test('首次生成（not exist）正常返回 code 0', async () => {
+    mockNotExist = true
+    mockMenusResponse(validMeals())
+    const res = await getDailyMenu.main({ date: '2026-08-21' }, {})
+    expect(res.code).toBe(0)
+    expect(res.data.refresh_count).toBe(0)
+    expect(axios.post).toHaveBeenCalledTimes(1)
   })
 })

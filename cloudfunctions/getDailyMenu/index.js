@@ -6,7 +6,7 @@ const logger = require('./common/logger')
 const FN = 'getDailyMenu'
 
 const MENU_API_URL_DEFAULT = 'https://open.bigmodel.cn/api/paas/v4/chat/completions'
-const MENU_TIMEOUT = 15000
+const MENU_TIMEOUT = 30000
 const POLL_INTERVAL = 800
 const POLL_MAX = 5
 const ZOMBIE_MS = 120000
@@ -34,6 +34,12 @@ function stripCodeFence(content) {
     clean = clean.replace(/^```\s*/, '').replace(/\s*```$/, '')
   }
   return clean
+}
+
+function sanitizeJson(content) {
+  return content
+    .replace(/^\uFEFF/, '')
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ')
 }
 
 function buildPrompt(date) {
@@ -102,7 +108,7 @@ async function callGlmMenu(date) {
 }
 
 function parseAndValidate(raw) {
-  const clean = stripCodeFence(raw)
+  const clean = sanitizeJson(stripCodeFence(raw))
   const obj = JSON.parse(clean)
   const meals = obj.meals
   if (!Array.isArray(meals) || meals.length !== 4) throw new Error('meals 须为 4 餐')
@@ -154,8 +160,16 @@ function blockingChecks(meals) {
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 
 async function readDoc(date) {
-  const res = await db.collection('daily_menus').doc(date).get()
-  return res.data
+  try {
+    const res = await db.collection('daily_menus').doc(date).get()
+    return res.data || null
+  } catch (e) {
+    // 文档不存在时 doc().get() 会抛 not exist，视同「当日无记录」，不向上抛
+    if (e && e.message && e.message.indexOf('does not exist') !== -1) {
+      return null
+    }
+    throw e
+  }
 }
 
 async function waitAndRead(date) {

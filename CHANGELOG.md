@@ -1,5 +1,27 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-24] bc025c9
+
+**feat: 每日食谱 AI 安全防护 + 前端换一换体验优化**
+
+- getDailyMenu：Prompt 沙盒化（白名单食材池+强约束）、正则黑名单 blockingChecks 拦截生肉/刺身/野生等、forceRefresh 覆盖更新 + refresh_count 限流(code 94)
+- daily-menu 前端：换一换 CTA 升级主色渐变饱满按钮、Typography Scale（菜名36/营养数字30/正文28）、骨架屏微光+弹跳动画
+- 修复换一换不刷新 Bug：isGenerating/refreshing 分离、完整替换数组引用、code 94 明确 toast
+- 营养数值加约字前缀、免责声明更新
+- 新增测试 7 例（正则拦截/forceRefresh/限流），全量 633 通过
+DEPLOY: cloudfunctions/getDailyMenu
+VERIFIED: 仅本地jest测试通过（633/633），未做真机/云端验证
+DATA IMPACT: daily_menus 新增 refresh_count/refreshed_at 字段（可选、向后兼容），首次生成会自动补齐
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `cloudfunctions/getDailyMenu/index.js`
+- `miniprogram/pages/daily-menu/daily-menu.js`
+- `miniprogram/pages/daily-menu/daily-menu.wxml`
+- `miniprogram/pages/daily-menu/daily-menu.wxss`
+- `tests/getDailyMenu.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getDailyMenu
+
 ## [2026-08-24] fdeca85
 
 **fix: 清理用户可见文案中的 AI/智能等敏感字眼**
