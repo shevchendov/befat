@@ -14,7 +14,7 @@ describe('DEEPSEEK_API_KEY 边界', () => {
     process.env.DEEPSEEK_API_KEY = ''
     const res = await parseFoodLog.main({ raw_text: '米饭', meal_type: 'lunch', date: '2026-07-29' }, {})
     expect(res.code).toBe(3)
-    expect(res.message).toContain('AI 解析失败')
+    expect(res.message).toContain('解析失败')
   })
 
   test('key 为 undefined 返回 code 3', async () => {

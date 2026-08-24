@@ -77,9 +77,9 @@ describe('parseFood', () => {
 
   test('code 非 0 非 88 时 toast 错误信息', async () => {
     page.data.rawText = '解析失败'
-    callFnMock.mockResolvedValue({ result: { code: 3, message: 'AI 解析失败' } })
+    callFnMock.mockResolvedValue({ result: { code: 3, message: '解析失败' } })
     await page.parseFood()
-    expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('AI 解析失败') }))
+    expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('解析失败') }))
   })
 
   test('网络异常时 toast', async () => {
@@ -167,7 +167,7 @@ describe('saveFoodLog', () => {
   })
 
   test('云函数返回非 0 code 时 toast 保存失败', async () => {
-    callFnMock.mockResolvedValue({ result: { code: 3, message: 'AI 解析失败' } })
+    callFnMock.mockResolvedValue({ result: { code: 3, message: '解析失败' } })
     page.data.parsedItems = [{ name: '米饭', portion: '1碗', calorie: 200, protein_g: 4 }]
     page.data.rawTextSaved = '米饭'
     page.data.mealType = 'lunch'
@@ -199,7 +199,7 @@ describe('saveFoodLog - forceIndexRefresh 写后强制刷新', () => {
   })
 
   test('保存失败（code 非 0）不设置 forceIndexRefresh', async () => {
-    callFnMock.mockResolvedValue({ result: { code: 3, message: 'AI 解析失败' } })
+    callFnMock.mockResolvedValue({ result: { code: 3, message: '解析失败' } })
     page.data.parsedItems = [{ name: '米饭', portion: '1碗', calorie: 200, protein_g: 4 }]
     page.data.rawTextSaved = '米饭'
     page.data.mealType = 'lunch'
@@ -274,12 +274,12 @@ describe('parseFoodByImage', () => {
     expect(page.data.rawTextSaved).toBe('红烧肉 约200g')
   })
 
-  test('识别失败（code 92）toast 提示且不展示结果', async () => {
-    callFnMock.mockResolvedValue({ result: { code: 92, message: '图片识别失败，请改用文字描述' } })
+  test('分析失败（code 92）toast 提示且不展示结果', async () => {
+    callFnMock.mockResolvedValue({ result: { code: 92, message: '图片分析失败，请改用文字描述' } })
     await page.parseFoodByImage('Zm9vYmFy')
     expect(page.data.parsing).toBe(false)
     expect(page.data.showResult).toBe(false)
-    expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('图片识别失败') }))
+    expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('图片分析失败') }))
   })
 
   test('网络异常时 toast', async () => {

@@ -96,7 +96,7 @@ describe('parseFoodLog 接口合约', () => {
     delete process.env.DEEPSEEK_API_KEY
     const res = await parseFoodLog.main(VALID_INPUT, {})
     expect(res.code).toBe(3)
-    expect(res.message).toContain('AI 解析失败')
+    expect(res.message).toContain('解析失败')
   })
 
   test('成功响应包含完整数据结构', async () => {

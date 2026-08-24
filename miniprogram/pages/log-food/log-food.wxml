@@ -17,12 +17,12 @@
         <image class="camera-icon" src="/assets/icons/camera.svg" mode="aspectFit" />
       </view>
     </view>
-    <view class="input-hint">💡 描述得越详细，估算结果越准确 · 也可拍照识菜</view>
+    <view class="input-hint">💡 描述得越详细，估算结果越准确 · 也可拍照记录</view>
   </view>
 
   <view class="card" wx:if="{{!showResult}}">
     <button class="btn-primary" bindtap="parseFood" disabled="{{!canParse || parsing}}">
-      <text wx:if="{{!parsing}}">智能估算热量</text>
+      <text wx:if="{{!parsing}}">估算热量</text>
       <text wx:if="{{parsing}}">正在分析，请稍候...</text>
     </button>
     <view class="disclaimer">热量为估算值，仅供参考</view>

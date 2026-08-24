@@ -1,5 +1,47 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-21] 76c7781
+
+**feat: 每日增肥食谱推荐——懒加载生成 + 快照收藏**
+
+- 新增 getDailyMenu 云函数：占位锁防并发 + GLM-4-Flash 生成 + 后端重算总和 + code 93 兜底 + 时区修正
+- 新增 toggleFavoriteRecipe 云函数：快照收藏/取消原子切换（_openid + recipe_title + meal_type 去重）
+- 新增 daily-menu 前端页面（骨架屏/Pill汇总/四餐卡片/爱心乐观更新）
+- 首页增肥食谱入口替换为今日增肥食谱
+- sync-common 加入两个新函数；__mocks__ 补 daily_menus 集合与 recipe_title 过滤
+- 新增测试 16 例，全量 626 通过
+DEPLOY: cloudfunctions/getDailyMenu,cloudfunctions/toggleFavoriteRecipe
+VERIFIED: 仅本地jest测试通过（626/626），未做真机/云端验证
+DATA IMPACT: 新增 daily_menus 集合；user_favorites 新增 recipe_title/meal_type/recipe_snapshot 字段（向后兼容，旧 recipe_id 收藏不受影响），需控制台补建 idx_openid_meal_title 唯一索引
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `__mocks__/wx-server-sdk.js`
+- `cloudfunctions/getDailyMenu/common/deleteHelper.js`
+- `cloudfunctions/getDailyMenu/common/logger.js`
+- `cloudfunctions/getDailyMenu/common/recipeValidation.js`
+- `cloudfunctions/getDailyMenu/common/targetCalc.js`
+- `cloudfunctions/getDailyMenu/index.js`
+- `cloudfunctions/getDailyMenu/package.json`
+- `cloudfunctions/sync-common.js`
+- `cloudfunctions/toggleFavoriteRecipe/common/deleteHelper.js`
+- `cloudfunctions/toggleFavoriteRecipe/common/logger.js`
+- `cloudfunctions/toggleFavoriteRecipe/common/recipeValidation.js`
+- `cloudfunctions/toggleFavoriteRecipe/common/targetCalc.js`
+- `cloudfunctions/toggleFavoriteRecipe/index.js`
+- `cloudfunctions/toggleFavoriteRecipe/package.json`
+- `miniprogram/app.json`
+- `miniprogram/pages/daily-menu/daily-menu.js`
+- `miniprogram/pages/daily-menu/daily-menu.json`
+- `miniprogram/pages/daily-menu/daily-menu.wxml`
+- `miniprogram/pages/daily-menu/daily-menu.wxss`
+- `miniprogram/pages/index/index.js`
+- `miniprogram/pages/index/index.wxml`
+- `tests/getDailyMenu.test.js`
+- `tests/toggleFavoriteRecipe.test.js`
+- `每日增肥食谱推荐设计说明书.md`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getDailyMenu,cloudfunctions/toggleFavoriteRecipe
+
 ## [2026-08-21] 9139859
 
 **docs: 同步文档到单次多模态调用架构**

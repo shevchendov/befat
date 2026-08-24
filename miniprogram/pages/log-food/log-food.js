@@ -38,7 +38,7 @@ Page({
     }
 
     if (result.code !== 0) {
-      wx.showToast({ title: result.message || '识别失败', icon: 'none' })
+      wx.showToast({ title: result.message || '分析失败', icon: 'none' })
       this.setData({ parsing: false })
       return
     }

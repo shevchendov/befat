@@ -48,7 +48,7 @@ describe('parseFoodLog.main - API key validation', () => {
       raw_text: '一碗米饭', meal_type: 'lunch', date: '2026-07-29'
     }, {})
     expect(result.code).toBe(3)
-    expect(result.message).toContain('AI 解析失败')
+    expect(result.message).toContain('解析失败')
   })
 })
 
@@ -159,7 +159,7 @@ describe('parseFoodLog.main - JSON parsing', () => {
     }, {})
 
     expect(result.code).toBe(3)
-    expect(result.message).toContain('AI 解析失败')
+    expect(result.message).toContain('解析失败')
   })
 
   test('returns code 3 when items is not an array', async () => {

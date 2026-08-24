@@ -29,7 +29,7 @@ function buildNutritionPrompt(desc) {
   return `你是一个中国食物营养分析专家。分析用户描述的食物，返回JSON数组。
 用户描述："${desc}"
 要求：
-1. 识别每种食物的名称、估算份量
+1. 列出每种食物的名称、估算份量
 2. 使用中国常见食物的营养成分数据估算热量(kcal)和蛋白质(g)
 3. 份量用中文描述，如"1碗(约200g)"、"1个(约50g)"
 4. 如果描述模糊，按常见份量估算
@@ -177,7 +177,7 @@ exports.main = async (event, context) => {
         parsed = await runVisionNutrition(image_base64)
       } catch (visionErr) {
         logger.warn(FN, 'vision nutrition failed', { error: visionErr.message, duration: Date.now() - start })
-        const result = { code: 92, message: '图片识别失败，请改用文字描述' }
+        const result = { code: 92, message: '图片分析失败，请改用文字描述' }
         logger.info(FN, 'return', { code: 92, duration: Date.now() - start })
         return result
       }
@@ -218,10 +218,10 @@ exports.main = async (event, context) => {
     try {
       parsed = await runDeepSeekNutrition(raw_text)
     } catch (err) {
-      logger.warn(FN, 'AI parse failed', { error: err.message, duration: Date.now() - start })
+      logger.warn(FN, 'parse failed', { error: err.message, duration: Date.now() - start })
       return {
         code: 3,
-        message: 'AI 解析失败，请手动输入',
+        message: '解析失败，请手动输入',
         data: {
           raw_text: raw_text.slice(0, 50),
           items: [],

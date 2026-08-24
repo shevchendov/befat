@@ -216,7 +216,7 @@ exports.main = async (event, context) => {
       total_protein_g: Math.round(FALLBACK_MENUS.reduce((s, m) => s + m.protein_g, 0) * 10) / 10,
       generated_by: 'fallback'
     }, true)
-    return { code: 93, message: '智能食谱暂不可用，已返回备用食谱', data }
+    return { code: 93, message: '今日食谱暂不可用，已返回备用食谱', data }
   }
 }
 
