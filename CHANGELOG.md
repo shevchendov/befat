@@ -1,5 +1,34 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-24] 3b814bd
+
+**feat: 每日食谱两阶段按需加载**
+
+- getDailyMenu 改造为阶段一：仅生成 4 餐概要（title/calorie/protein_g），max_tokens 350，ingredients/steps 空占位
+- 新增 getMealDetail 云函数：阶段二按需生成单餐 ingredients/steps，反推食材比例，写回 daily_menus 缓存防重复调用
+- getMealDetail 超时 30s + 错误信息暴露便于诊断
+- daily-menu 前端：卡片折叠式，点击调 getMealDetail 按需加载食材/步骤
+- sync-common 加入 getMealDetail；测试新增 8 例，全量 644 通过
+DEPLOY: cloudfunctions/getDailyMenu,cloudfunctions/getMealDetail
+VERIFIED: 仅本地jest测试通过（644/644），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `cloudfunctions/getDailyMenu/index.js`
+- `cloudfunctions/getMealDetail/common/deleteHelper.js`
+- `cloudfunctions/getMealDetail/common/logger.js`
+- `cloudfunctions/getMealDetail/common/recipeValidation.js`
+- `cloudfunctions/getMealDetail/common/targetCalc.js`
+- `cloudfunctions/getMealDetail/index.js`
+- `cloudfunctions/getMealDetail/package.json`
+- `cloudfunctions/sync-common.js`
+- `miniprogram/pages/daily-menu/daily-menu.js`
+- `miniprogram/pages/daily-menu/daily-menu.wxml`
+- `miniprogram/pages/daily-menu/daily-menu.wxss`
+- `tests/getDailyMenu.test.js`
+- `tests/getMealDetail.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getDailyMenu,cloudfunctions/getMealDetail
+
 ## [2026-08-24] a6e8b42
 
 **feat: getDailyMenu 增强换一换菜品多样性**

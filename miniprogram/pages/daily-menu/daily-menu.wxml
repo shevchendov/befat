@@ -39,7 +39,7 @@
       <view class="meal-header">
         <view class="meal-tag">{{meal.mealLabel}}</view>
         <view class="fav-btn {{meal.favorited ? 'fav-on' : ''}}" catchtap="toggleFav" data-index="{{idx}}">
-          <text>{{meal.favorited ? '♥' : '♡'}}</text>
+          <view class="fav-icon"></view>
         </view>
       </view>
       <view class="meal-title">{{meal.title}}</view>
