@@ -1,5 +1,22 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-24] 43dd4c0
+
+**fix: getDailyMenu 三处健壮性修复**
+
+- readDoc 捕获 doc().get() 的 does not exist 异常返回 null，forceRefresh 当天无记录时视同首次生成，不再误触发 code 93
+- 大模型 API 超时 15s 放大至 30s，避免生成慢被平台掐断
+- 新增 sanitizeJson 清洗 JSON 中未转义换行/控制字符，修复 JSON.parse 报错
+- 新增测试 3 例，全量 636 通过
+DEPLOY: cloudfunctions/getDailyMenu
+VERIFIED: 仅本地jest测试通过（636/636），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `cloudfunctions/getDailyMenu/index.js`
+- `tests/getDailyMenu.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getDailyMenu
+
 ## [2026-08-24] bc025c9
 
 **feat: 每日食谱 AI 安全防护 + 前端换一换体验优化**

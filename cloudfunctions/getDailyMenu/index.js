@@ -58,6 +58,7 @@ function buildPrompt(date) {
 2. 严禁任何生食肉类/生食水产（如生肉、刺身、生鱼片），所有肉类鱼类必须完全煮熟
 3. 只能采用常规熟食烹饪（炒/煮/蒸/炖/烤/煎）
 4. 绝不出现"相克""解毒""治疗"等无科学依据的说法
+5. 每次生成的 4 餐菜品名称与核心食材必须具有极高的多样性，严禁重复推荐前几轮已经出现过的雷同菜品（例如：避免连续出现燕麦奶昔或牛肉面，鼓励交替使用全麦面包、红薯、鸡胸肉、鲈鱼、虾等其他安全食材池内的组合）
 
 每一餐必须包含以下字段：
 - title: 菜品名称（中文，有辨识度的修饰，避免裸词如"水煮蛋"）
@@ -92,7 +93,7 @@ async function callGlmMenu(date) {
       { role: 'system', content: system },
       { role: 'user', content: user }
     ],
-    temperature: 0.25,
+    temperature: 0.7,
     max_tokens: 1500
   }, {
     headers: {
