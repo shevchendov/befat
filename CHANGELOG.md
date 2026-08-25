@@ -1,5 +1,26 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-25] 439661a
+
+**feat: 优化周边美食搜索：抽象词转译与异地结果过滤**
+
+- 云函数 getNearbyPoi 重构：新增抽象词离线映射表兜底、强制餐饮分类、硬距离拦截 5km、坐标合法性校验、空输入默认兜底、多关键字二次检索
+- 修正腾讯地图 category 过滤为「美食」，boundary 关闭自动扩容，杜绝异地行政区/道路等非餐饮结果
+- 前端 daily-menu 新增搜索栏与快捷标签，输入防抖转译、点击标签即搜、展示转译说明
+- map.js 透传 searchQuery 与 resolvedTags，缓存按 query 区分
+- 更新 getNearbyPoi 单测断言
+DEPLOY: cloudfunctions/getNearbyPoi
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `cloudfunctions/getNearbyPoi/index.js`
+- `miniprogram/pages/daily-menu/daily-menu.js`
+- `miniprogram/pages/daily-menu/daily-menu.wxml`
+- `miniprogram/pages/daily-menu/daily-menu.wxss`
+- `miniprogram/utils/map.js`
+- `tests/getNearbyPoi.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getNearbyPoi
+
 ## [2026-08-25] 91a93a1
 
 **fix: 定位 API 适配为 getFuzzyLocation 合规模糊定位**
