@@ -1,9 +1,9 @@
 // utils/location.js
-// 定位 + 授权引导 + 手动选点兜底
+// 模糊定位 + 授权引导 + 手动选点兜底
 
 function getLocation() {
   return new Promise((resolve, reject) => {
-    wx.getLocation({ type: 'gcj02', success: resolve, fail: reject })
+    wx.getFuzzyLocation({ type: 'gcj02', success: resolve, fail: reject })
   })
 }
 
@@ -22,7 +22,7 @@ function showAuthGuide() {
 function openSetting() {
   return new Promise(resolve => {
     wx.openSetting({
-      success: res => resolve(!!(res && res.authSetting && res.authSetting['scope.userLocation']))
+      success: res => resolve(!!(res && res.authSetting && res.authSetting['scope.userFuzzyLocation']))
     })
   })
 }

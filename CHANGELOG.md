@@ -1,5 +1,20 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-25] 91a93a1
+
+**fix: 定位 API 适配为 getFuzzyLocation 合规模糊定位**
+
+- wx.getLocation 替换为 wx.getFuzzyLocation（保留 type gcj02 + 授权引导 + 手动选点兜底）
+- app.json permission 改 scope.userFuzzyLocation，requiredPrivateInfos 改 getFuzzyLocation
+- 更新 location 单元测试 mock
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过，未做真机/云端验证
+
+**涉及文件:**
+- `miniprogram/app.json`
+- `miniprogram/utils/location.js`
+- `tests/unit/location.test.js`
+
 ## [2026-08-25] 249ee5a
 
 **style: daily-menu 头部操作区降维重构**
