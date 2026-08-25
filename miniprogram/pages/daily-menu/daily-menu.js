@@ -27,10 +27,15 @@ Page({
     poiError: false,
     poiMsg: '',
     poiList: [],
-    poiTotal: 0
+    poiTotal: 0,
+    poiSearch: '',
+    poiResolved: '',
+    searchTags: ['清淡粤菜', '地道茶楼', '海鲜大排档']
   },
 
   onLoad() {
+    this._poiReqId = 0
+    this._searchTimer = null
     this.loadMenu(false)
   },
 
@@ -426,17 +431,24 @@ Page({
     }
   },
 
-  async loadPoi() {
-    if (this.data.poiLoading) return
-    this.setData({ poiLoading: true, poiError: false, poiMsg: '' })
+  async loadPoi(searchQuery) {
+    const reqId = ++this._poiReqId
+    this.setData({ poiLoading: true, poiError: false, poiMsg: '', poiResolved: '' })
     try {
       const loc = await getUserLocation()
-      const res = await searchNearbyPoi({ lat: loc.latitude, lng: loc.longitude, page: 1 })
-      this.setData({ poiList: res.list || [], poiTotal: res.total || 0, poiLoading: false })
+      const res = await searchNearbyPoi({ lat: loc.latitude, lng: loc.longitude, page: 1, searchQuery })
+      if (reqId !== this._poiReqId) return
+      this.setData({
+        poiList: res.list || [],
+        poiTotal: res.total || 0,
+        poiLoading: false,
+        poiResolved: res.resolvedTags && res.resolvedTags.reason ? res.resolvedTags.reason : ''
+      })
       if (!res.list || res.list.length === 0) {
-        this.setData({ poiError: true, poiMsg: '附近暂时没搜到推荐餐厅，换个位置试试' })
+        this.setData({ poiError: true, poiMsg: '附近没找到，换个词或位置试试' })
       }
     } catch (err) {
+      if (reqId !== this._poiReqId) return
       this.setData({ poiLoading: false, poiError: true })
       if (err && err.message === 'NO_LOCATION') {
         this.setData({ poiMsg: '定位失败，可手动选择位置' })
@@ -448,8 +460,32 @@ Page({
     }
   },
 
+  onPoiSearchInput(e) {
+    const val = e.detail.value
+    this.setData({ poiSearch: val })
+    if (this._searchTimer) clearTimeout(this._searchTimer)
+    if (!val || !val.trim()) return
+    this._searchTimer = setTimeout(() => {
+      this.loadPoi(val.trim())
+    }, 400)
+  },
+
+  doPoiSearch() {
+    const q = this.data.poiSearch.trim()
+    if (!q) return
+    if (this._searchTimer) clearTimeout(this._searchTimer)
+    this.loadPoi(q)
+  },
+
+  clickPoiTag(e) {
+    const tag = e.currentTarget.dataset.tag
+    this.setData({ poiSearch: tag })
+    if (this._searchTimer) clearTimeout(this._searchTimer)
+    this.loadPoi(tag)
+  },
+
   retryPoi() {
-    this.loadPoi()
+    this.loadPoi(this.data.poiSearch.trim() || undefined)
   },
 
   async loadMorePoi() {

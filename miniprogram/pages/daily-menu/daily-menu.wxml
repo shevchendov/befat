@@ -78,7 +78,20 @@
   </block>
 
   <block wx:if="{{currentView === 'poi'}}">
-    <view wx:if="{{poiLoading}}" class="poi-loading">📍 定位中，正在查找周边美食…</view>
+    <view class="poi-search-bar">
+      <view class="poi-search-input-wrap">
+        <input class="poi-search-input" placeholder="想吃点什么？如：清淡粤菜、早茶..." value="{{poiSearch}}" bindinput="onPoiSearchInput" confirm-type="search" bindconfirm="doPoiSearch" />
+      </view>
+      <view class="poi-search-btn" bindtap="doPoiSearch">帮我找</view>
+    </view>
+
+    <view class="poi-search-tags">
+      <view class="poi-tag" wx:for="{{searchTags}}" wx:for-item="tag" wx:key="*this" bindtap="clickPoiTag" data-tag="{{tag}}">{{tag}}</view>
+    </view>
+
+    <view wx:if="{{poiResolved}}" class="poi-resolved">为你匹配：{{poiResolved}}</view>
+
+    <view wx:if="{{poiLoading}}" class="poi-loading">正在帮你找…</view>
 
     <view wx:if="{{poiError && !poiLoading}}" class="poi-error">
       <text class="poi-error-emoji">🍜</text>

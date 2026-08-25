@@ -24,15 +24,15 @@ function setCache(data) {
   } catch (e) {}
 }
 
-function searchPoi({ lat, lng, radius, page }) {
+function searchPoi({ lat, lng, radius, page, searchQuery }) {
   return new Promise((resolve, reject) => {
     wx.cloud.callFunction({
       name: 'getNearbyPoi',
-      data: { lat, lng, radius, page },
+      data: { lat, lng, radius, page, searchQuery },
       success: res => {
         const r = res && res.result
         if (r && r.code === 0) {
-          resolve(r.data)
+          resolve({ data: r.data, resolvedTags: r.resolvedTags })
         } else {
           reject(new Error('MAP_API_' + (r && r.code)))
         }
@@ -71,31 +71,32 @@ function parseData(data) {
   }
 }
 
-async function searchNearbyPoi({ lat, lng, page }) {
+async function searchNearbyPoi({ lat, lng, page, searchQuery }) {
   page = page || 1
+  const q = searchQuery ? String(searchQuery).trim() : ''
   const rLat = roundCoord(lat)
   const rLng = roundCoord(lng)
 
-  // 首页命中缓存（同百米级坐标 + 5 分钟 TTL）
+  // 首页命中缓存（同百米级坐标 + 同 query + 5 分钟 TTL）
   if (page === 1) {
     const cached = getCache()
-    if (cached && cached.lat === rLat && cached.lng === rLng && Date.now() - cached.ts < CACHE_TTL) {
-      return { list: cached.list, total: cached.total, from_cache: true }
+    if (cached && cached.lat === rLat && cached.lng === rLng && (cached.query || '') === q && Date.now() - cached.ts < CACHE_TTL) {
+      return { list: cached.list, total: cached.total, from_cache: true, resolvedTags: cached.resolvedTags }
     }
   }
 
   // 1km 检索，空则自动扩 3km 重试一次
   let raw
-  raw = await withTimeout(searchPoi({ lat, lng, radius: 1000, page }), TIMEOUT)
-  if (!raw.data || raw.data.length === 0) {
-    raw = await withTimeout(searchPoi({ lat, lng, radius: 3000, page }), TIMEOUT)
+  raw = await withTimeout(searchPoi({ lat, lng, radius: 1000, page, searchQuery: q }), TIMEOUT)
+  if (!raw.data || !raw.data.data || raw.data.data.length === 0) {
+    raw = await withTimeout(searchPoi({ lat, lng, radius: 3000, page, searchQuery: q }), TIMEOUT)
   }
 
-  const parsed = parseData(raw)
+  const parsed = parseData(raw.data)
   if (page === 1) {
-    setCache({ ts: Date.now(), lat: rLat, lng: rLng, list: parsed.list, total: parsed.total })
+    setCache({ ts: Date.now(), lat: rLat, lng: rLng, query: q, list: parsed.list, total: parsed.total, resolvedTags: raw.resolvedTags })
   }
-  return { list: parsed.list, total: parsed.total, from_cache: false }
+  return { list: parsed.list, total: parsed.total, from_cache: false, resolvedTags: raw.resolvedTags }
 }
 
 module.exports = { searchNearbyPoi, searchPoi, parseData, roundCoord, withTimeout }
