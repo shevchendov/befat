@@ -1,13 +1,10 @@
 // utils/map.js
-// 腾讯位置服务 POI 检索：缓存 + 超时 + 扩距降级
-// 说明：直接用 wx.request 调腾讯位置服务 WebService API（等价于官方 qqmap-wx-jssdk 的 search），
-// 更轻量且易于单测；如需引入官方 SDK，可放置 miniprogram/libs/qqmap-wx-jssdk.js 后改写 searchPoi 内部实现。
+// 周边 POI 检索：调 getNearbyPoi 云函数代理腾讯位置服务 + 本地缓存 + 超时 + 扩距降级
+// 说明：Key 存放于云函数环境变量 TENCENT_MAP_KEY，前端不硬编码，安全性更高且无需配置第三方合法域名。
 
-const TENCENT_MAP_KEY = 'YOUR_TENCENT_LBS_KEY' // TODO: 替换为你的腾讯位置服务 Key
 const CACHE_KEY = 'poi_nearby_cache'
 const CACHE_TTL = 5 * 60 * 1000 // 5 分钟
 const TIMEOUT = 8000 // 8 秒超时
-const KEYWORD = '粤菜 家常菜 特色小吃 粉面 快餐 烧烤'
 
 function roundCoord(v) {
   return Math.round(Number(v) * 1000) / 1000
@@ -29,24 +26,18 @@ function setCache(data) {
 
 function searchPoi({ lat, lng, radius, page }) {
   return new Promise((resolve, reject) => {
-    wx.request({
-      url: 'https://apis.map.qq.com/ws/place/v1/search',
-      data: {
-        keyword: KEYWORD,
-        boundary: `nearby(${lat},${lng},${radius})`,
-        page_size: 10,
-        page_index: page || 1,
-        orderby: '_distance',
-        key: TENCENT_MAP_KEY
-      },
+    wx.cloud.callFunction({
+      name: 'getNearbyPoi',
+      data: { lat, lng, radius, page },
       success: res => {
-        if (res.data && res.data.status === 0) {
-          resolve(res.data)
+        const r = res && res.result
+        if (r && r.code === 0) {
+          resolve(r.data)
         } else {
-          reject(new Error('MAP_API_' + (res.data && res.data.status)))
+          reject(new Error('MAP_API_' + (r && r.code)))
         }
       },
-      fail: reject
+      fail: err => reject(err)
     })
   })
 }

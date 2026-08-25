@@ -1,5 +1,21 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-25] 249ee5a
+
+**style: daily-menu 头部操作区降维重构**
+
+- 移除顶部 Segmented Tab，周边美食降级为统计胶囊下方轻量文字链「📍 附近美食 ➔」
+- 操作栏 3 按钮精简为 2 按钮（换一换 + 我的菜库），各占 50%
+- 按钮瘦身：高度 68rpx、字号 26rpx、gap 20rpx，左右 margin 30rpx 与卡片严格对齐
+- POI 视图顶部加返回食谱入口
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过（576/576），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `miniprogram/pages/daily-menu/daily-menu.wxml`
+- `miniprogram/pages/daily-menu/daily-menu.wxss`
+
 ## [2026-08-25] a40e731
 
 **feat: 周边美食功能（腾讯地图 POI）**

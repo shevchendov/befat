@@ -20,6 +20,11 @@
   "componentFramework": "glass-easel",
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于为你推荐附近的特色美食"
+    }
+  },
   "requiredPrivateInfos": [
     "getLocation",
     "chooseLocation"

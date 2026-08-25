@@ -467,12 +467,6 @@
   margin-top: 8rpx;
 }
 
-.poi-back {
-  font-size: 26rpx;
-  color: var(--primary);
-  padding: 12rpx 0;
-}
-
 .poi-loading {
   text-align: center;
   padding: 120rpx 0;
@@ -501,34 +495,39 @@
   display: inline-flex;
 }
 
+.poi-list {
+  padding: 36rpx 24rpx 60rpx;
+  padding-bottom: calc(60rpx + env(safe-area-inset-bottom));
+}
+
 .poi-card {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   background: var(--card-bg);
   border-radius: 24rpx;
   border: 4rpx solid var(--color-border);
   box-shadow: var(--shadow-card);
-  padding: 24rpx;
-  margin-bottom: 20rpx;
+  padding: 32rpx;
+  margin-bottom: 32rpx;
 }
 
 .poi-info {
   flex: 1;
-  margin-right: 16rpx;
+  margin-right: 24rpx;
 }
 
 .poi-title {
-  font-size: 32rpx;
-  font-weight: 700;
+  font-size: 34rpx;
+  font-weight: bold;
   color: var(--text-primary);
-  margin-bottom: 6rpx;
+  margin-bottom: 12rpx;
 }
 
 .poi-meta {
-  font-size: 24rpx;
+  font-size: 26rpx;
   color: var(--text-secondary);
-  margin-bottom: 6rpx;
+  margin-bottom: 10rpx;
 }
 
 .poi-category {
@@ -542,21 +541,25 @@
 .poi-address {
   font-size: 24rpx;
   color: var(--text-light);
+  line-height: 1.6;
 }
 
 .poi-actions {
   display: flex;
   flex-direction: column;
-  gap: 12rpx;
+  align-items: flex-end;
+  gap: 16rpx;
 }
 
 .poi-action {
-  font-size: 24rpx;
+  height: 68rpx;
+  line-height: 68rpx;
+  padding: 0 28rpx;
+  font-size: 28rpx;
   color: var(--primary);
   background: var(--primary-bg);
   border: 2rpx solid var(--primary);
   border-radius: 999rpx;
-  padding: 8rpx 20rpx;
   text-align: center;
 }
 

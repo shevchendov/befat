@@ -455,7 +455,7 @@ Page({
   async loadMorePoi() {
     if (this.data.poiLoadMore) return
     if (this.data.poiList.length >= this.data.poiTotal) return
-    const page = Math.floor(this.data.poiList.length / 10) + 1
+    const page = Math.floor(this.data.poiList.length / 6) + 1
     this.setData({ poiLoadMore: true })
     try {
       const loc = await getUserLocation()

@@ -1,0 +1,13 @@
+{
+  "name": "getNearbyPoi",
+  "version": "1.0.0",
+  "description": "周边美食 POI 检索（代理腾讯位置服务）",
+  "main": "index.js",
+  "engines": {
+    "node": "16"
+  },
+  "dependencies": {
+    "axios": "^1.18.1",
+    "wx-server-sdk": "latest"
+  }
+}

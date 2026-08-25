@@ -78,8 +78,6 @@
   </block>
 
   <block wx:if="{{currentView === 'poi'}}">
-    <view class="poi-back" bindtap="switchView" data-view="recipe">← 返回食谱</view>
-
     <view wx:if="{{poiLoading}}" class="poi-loading">📍 定位中，正在查找周边美食…</view>
 
     <view wx:if="{{poiError && !poiLoading}}" class="poi-error">
@@ -89,22 +87,24 @@
     </view>
 
     <block wx:if="{{!poiError && !poiLoading}}">
-      <view class="poi-card" wx:for="{{poiList}}" wx:for-item="poi" wx:for-index="pi" wx:key="id">
-        <view class="poi-info">
-          <view class="poi-title">{{poi.title}}</view>
-          <view class="poi-meta">
-            <text class="poi-category">{{poi.category}}</text>
-            <text class="poi-distance">· {{poi.distance_text}}</text>
+      <view class="poi-list">
+        <view class="poi-card" wx:for="{{poiList}}" wx:for-item="poi" wx:for-index="pi" wx:key="id">
+          <view class="poi-info">
+            <view class="poi-title">{{poi.title}}</view>
+            <view class="poi-meta">
+              <text class="poi-category">{{poi.category}}</text>
+              <text class="poi-distance">· {{poi.distance_text}}</text>
+            </view>
+            <view class="poi-address">{{poi.address}}</view>
           </view>
-          <view class="poi-address">{{poi.address}}</view>
+          <view class="poi-actions">
+            <view class="poi-action" catchtap="openPoi" data-index="{{pi}}">🧭 导航</view>
+            <view class="poi-action" wx:if="{{poi.tel}}" catchtap="callPoi" data-index="{{pi}}">📞 电话</view>
+          </view>
         </view>
-        <view class="poi-actions">
-          <view class="poi-action" catchtap="openPoi" data-index="{{pi}}">🧭 导航</view>
-          <view class="poi-action" wx:if="{{poi.tel}}" catchtap="callPoi" data-index="{{pi}}">📞 电话</view>
-        </view>
-      </view>
 
-      <view wx:if="{{poiList.length > 0 && poiList.length < poiTotal}}" class="poi-more" bindtap="loadMorePoi">{{poiLoadMore ? '加载中…' : '加载更多'}}</view>
+        <view wx:if="{{poiList.length > 0 && poiList.length < poiTotal}}" class="poi-more" bindtap="loadMorePoi">{{poiLoadMore ? '加载中…' : '加载更多'}}</view>
+      </view>
     </block>
   </block>
 
