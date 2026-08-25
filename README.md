@@ -1,19 +1,18 @@
 # BeFat — 增肥记录小程序
 
-一个微信小程序，帮助偏瘦人群记录饮食和体重，通过 AI 估算食物营养，追踪增重进度。
+一个微信小程序，帮助偏瘦人群记录饮食和体重，通过 AI 估算食物营养、生成每日增肥食谱，追踪增重进度。
 
 ## 功能
 
 - **AI 食物识别** — 两种方式：文字描述（DeepSeek 解析）或拍照识菜（智谱 GLM 视觉单次直接出营养 JSON），输出食物名称、份量、热量和蛋白质（含内容安全检测）
 - **饮食记录** — 按餐次（早餐/午餐/晚餐/加餐）记录每日摄入，识别结果可编辑修正后保存
+- **每日增肥食谱** — AI 按天生成 4 餐（懒加载约 3 秒、换一换、点击卡片按需生成食材步骤），支持快照收藏到「我的菜库」抽屉
 - **每日概览** — 首页展示当日热量/蛋白质达成环、分餐次摄入明细、目标进度卡
-- **目标进度追踪** — 目标详情页展示当前体重、进度%、预计达成日期、计划周期与节奏对比（on-track/ahead/behind）
+- **目标进度追踪** — 目标详情页展示当前体重、进度%、预计达成日期、计划周期与节奏对比
 - **体重追踪** — 记录每日体重，生成趋势折线图
-- **达标统计** — 7/30 天热量与蛋白达标率概览、体重曲线叠加达标/未达标色点、每周达标率与体重变化对照
-- **增肥食谱** — 动态食谱系统，管理员审核发布流程（草稿→审核→发布），按标签筛选、收藏，收藏优先排序，专属收藏页
-- **目标设定** — 引导式 onboarding，根据身高/体重/活动水平/计划周期计算每日热量和蛋白质目标
-- **修改目标** — 精简重算或手动微调每日目标，目标变更时更新预计节奏
-- **健康提示** — BMI 计算 + 健康警告 + 范围条可视化展示
+- **达标统计** — 7/30 天热量与蛋白达标率概览、体重曲线叠加达标/未达标色点
+- **目标设定 / 修改** — 引导式 onboarding 计算每日目标，支持重算或手动微调
+- **健康提示** — BMI 计算 + 健康警告 + 范围条可视化
 - **数据自主权** — 导出全部数据（JSON）、重置为新用户、彻底删除所有数据
 
 ## 技术栈
@@ -22,47 +21,41 @@
 |--|------|
 | 前端 | 微信小程序原生 (WXML + WXSS + JS) |
 | 后端 | 微信云开发 (Node.js 16) |
-| AI | 微信内容安全检测（msgSecCheck/imgSecCheck）+ 智谱 GLM 视觉识菜（含营养计算）+ DeepSeek 文本营养解析 |
+| AI | 微信内容安全检测（msgSecCheck/imgSecCheck）+ 智谱 GLM（视觉识菜 + 每日食谱生成）+ DeepSeek 文本营养解析 |
 | 测试 | Jest |
 
 ## 项目结构
 
 ```
 befat/
-├── cloudfunctions/          # 云函数（23 个 + common 共享代码）
+├── cloudfunctions/          # 云函数（19 个 + common 共享代码）
 │   ├── calcTarget/          # 计算每日目标（TDEE/BMI，onboarding 用）
 │   ├── checkMealReminder/   # 吃饭提醒检查
 │   ├── deleteUserData/      # 彻底删除用户数据
 │   ├── exportUserData/      # 导出用户全部数据
-│   ├── generateRecipeInit/  # [已退役] 初始食谱生成（返回弃用提示）
+│   ├── getDailyMenu/        # 每日食谱概要生成（阶段一，懒加载 + 换一换）
 │   ├── getDailySummary/     # 获取每日摄入汇总
-│   ├── getFavorites/        # 获取用户收藏食谱（仅返回已发布食谱）
+│   ├── getFavorites/        # 获取快照收藏列表（我的菜库）
 │   ├── getGoalProgress/     # 目标进度（当前体重/进度%/预计达成/计划节奏）
-│   ├── getPublishedRecipes/ # 获取已发布食谱列表（分页 + 标签筛选）
-│   ├── getRecipeDetail/     # 获取食谱详情（仅已发布状态）
+│   ├── getMealDetail/       # 每日食谱单餐详情按需生成（阶段二）
 │   ├── getStats/            # 达标率统计聚合
-│   ├── manageRecipe/        # 管理员食谱管理（新增/编辑/审核/发布/归档/回滚）
-│   ├── migrateRecipesNutrition/ # [已退役] 历史营养数据迁移（返回弃用提示）
-│   ├── parseFoodLog/        # AI 解析食物文字（msgSecCheck + DeepSeek）
+│   ├── parseFoodLog/        # AI 解析食物（文字 DeepSeek / 拍照 GLM 双模式）
 │   ├── recalcTarget/        # 修改目标时精简重算
-│   ├── recipeDataCleanup/   # 管理员清理食谱数据（dry-run + confirm 双重确认）
 │   ├── reportError/         # 前端错误上报
 │   ├── resetUserData/       # 重置为新用户
 │   ├── saveFoodLog/         # 保存饮食记录
 │   ├── saveWeightLog/       # 保存体重记录
-│   ├── toggleFavorite/      # 收藏/取消收藏
+│   ├── toggleFavoriteRecipe/ # 快照收藏/取消（每日菜单单菜品）
+│   ├── updateFavoriteDetail/ # 补全收藏快照的食材/步骤详情
 │   ├── updateTargetManual/  # 手动微调每日目标
-│   ├── validateRecipe/      # 食谱数据校验（标题/食材/步骤/营养/重复检测）
-│   └── common/              # 共享代码源（logger/targetCalc/deleteHelper/recipeValidation，npm run sync-common 分发）
+│   └── common/              # 共享代码源（logger/targetCalc/deleteHelper/config，npm run sync-common 分发）
 ├── miniprogram/
-│   ├── pages/               # 11 个页面
+│   ├── pages/               # 9 个页面
 │   │   ├── onboarding/      # 首次引导设置（3 步问卷）
 │   │   ├── index/           # 首页（每日概览 + 目标进度卡 + 入口导航）
-│   │   ├── log-food/        # 记录饮食（文字识别 → 编辑 → 保存）
+│   │   ├── log-food/        # 记录饮食（文字/拍照识别 → 编辑 → 保存）
 │   │   ├── weight-track/    # 体重打卡 + 趋势图
-│   │   ├── recipe-list/     # 食谱列表（标签筛选 + 收藏优先排序）
-│   │   ├── recipe-detail/   # 食谱详情
-│   │   ├── my-favorites/    # 我的收藏
+│   │   ├── daily-menu/      # 每日增肥食谱（换一换 + 收藏 + 我的菜库抽屉）
 │   │   ├── stats/           # 达标统计页
 │   │   ├── goal-detail/     # 目标详情（进度/预计达成/节奏）
 │   │   ├── target-edit/     # 修改目标
@@ -74,9 +67,9 @@ befat/
 │       ├── validators.js    # 数字输入清洗
 │       ├── targetGuard.js   # 目标输入合规校验（BMI/速率拦截）
 │       └── canvasChart.js   # 画布图表组件（趋势图）
-├── tests/                   # Jest 测试（45 套件 / 595 断言）
+├── tests/                   # Jest 测试
 ├── __mocks__/               # Jest 手动 mock
-├── scripts/                 # 工具脚本
+├── db_init_menu_ai_config.json  # system_config 集合初始种子（食谱 AI 配置）
 └── package.json
 ```
 
@@ -87,29 +80,28 @@ befat/
 | `users` | 用户基础信息与目标（含计划周期/期望速率） | 仅创建者可读写 |
 | `food_logs` | 每日饮食记录（餐次/解析结果/热量蛋白） | 仅创建者可读写 |
 | `weight_logs` | 体重打卡记录 | 仅创建者可读写 |
-| `recipes` | 增肥食谱库（动态 schema：nutrition 嵌套 + status/version/versions 状态机） | 所有用户可读，仅管理员可写 |
-| `user_favorites` | 用户收藏（recipe_id 列表） | 仅创建者可读写 |
+| `daily_menus` | 每日增肥食谱（两阶段概要+详情，`_id` = 日期） | 所有用户可读 |
+| `user_favorites` | 每日菜单快照收藏（`recipe_title + meal_type + recipe_snapshot`） | 仅创建者可读写 |
 | `error_logs` | 前端/重置操作错误上报 | 仅创建者可读写 |
+| `system_config` | AI 运营配置（`menu_ai_config`：Prompt/白名单/黑名单/兜底菜库） | 仅管理员可写 |
 
-### recipes 核心字段
+### user_favorites 单条收藏结构
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `title` | string | 食谱标题 |
-| `status` | string | 状态：DRAFT → VALIDATING → PENDING_REVIEW → APPROVED → PUBLISHED → ARCHIVED |
-| `version` | number | 当前版本号（单调递增，回滚不降） |
-| `nutrition` | object | 营养数据：`{ calorie, protein_g, fat_g, carb_g, fiber_g }` |
-| `ingredients` | array | 食材列表：`[{ name, amount, unit, food_id, note }]` |
-| `steps` | array | 烹饪步骤（字符串数组） |
-| `tags` | array | 标签（如早餐/高蛋白） |
-| `image_url` | string | 食谱图片 URL |
-| `source_id` | string | 食谱来源（如 `admin-manual`） |
-| `source_version` | string | 来源版本号 |
-| `nutrition_snapshot` | object | 营养快照（来源/计算方式/审核人） |
-| `review_record` | object | 审核记录（审核人/类型/动作/备注/时间） |
-| `versions` | array | 历史版本快照数组 |
-| `base_nutrition_checked` | object | 基础营养校验标记 |
-| `created_at` / `updated_at` / `published_at` / `archived_at` | date | 各阶段时间戳 |
+```jsonc
+{
+  "_openid": "...",
+  "recipe_id": null,
+  "recipe_title": "溏心水煮蛋配黑胡椒",
+  "meal_type": "breakfast",
+  "recipe_snapshot": {
+    "title": "...", "calorie": 180, "protein_g": 12.5,
+    "meal_type": "breakfast", "ingredients": ["..."], "steps": ["..."], "date": "2026-08-24"
+  },
+  "created_at": "..."
+}
+```
+
+索引：`idx_openid_meal_title`（唯一，`_openid+recipe_title+meal_type` 去重）、`idx_openid_created`（`_openid+created_at` 排序分页）。
 
 ## 配置与部署
 
@@ -119,22 +111,26 @@ befat/
 
 | 云函数 | Key | 说明 |
 |--------|-----|------|
-| `parseFoodLog` | `VISION_API_KEY` | 图片模式视觉识别 Key（缺省回退 `ZHIPU_API_KEY`） |
-| `parseFoodLog` | `VISION_MODEL` | 图片模式视觉模型名（默认 `glm-4v-flash`） |
-| `parseFoodLog` | `VISION_API_URL` | 图片模式视觉 Base URL（默认智谱 `open.bigmodel.cn`） |
-| `parseFoodLog` | `NUTRITION_API_KEY` | 文本模式营养计算 Key（缺省回退 `DEEPSEEK_API_KEY`） |
-| `parseFoodLog` | `NUTRITION_MODEL` | 文本模式营养模型名（默认 `deepseek-v4-flash`） |
-| `parseFoodLog` | `NUTRITION_API_URL` | 文本模式营养 Base URL（默认 DeepSeek `api.deepseek.com`） |
-| `manageRecipe` | `ADMIN_OPENID` | 管理员微信 OPENID（食谱增删改审核权限） |
-| `recipeDataCleanup` | `ADMIN_OPENID` | 管理员微信 OPENID（清理数据权限） |
+| `parseFoodLog` | `VISION_API_KEY` | 拍照识菜视觉 Key（缺省回退 `ZHIPU_API_KEY`） |
+| `parseFoodLog` | `VISION_MODEL` | 视觉模型名（默认 `glm-4v-flash`） |
+| `parseFoodLog` | `VISION_API_URL` | 视觉 Base URL（默认智谱） |
+| `parseFoodLog` | `NUTRITION_API_KEY` | 文字营养 Key（缺省回退 `DEEPSEEK_API_KEY`） |
+| `parseFoodLog` | `NUTRITION_MODEL` | 营养模型名（默认 `deepseek-v4-flash`） |
+| `parseFoodLog` | `NUTRITION_API_URL` | 营养 Base URL（默认 DeepSeek） |
+| `getDailyMenu` | `MENU_API_KEY` | 食谱生成 Key（缺省回退 `ZHIPU_API_KEY`） |
+| `getDailyMenu` | `MENU_MODEL` | 食谱生成模型（默认 `glm-4-flash`） |
+| `getDailyMenu` | `MENU_API_URL` | 食谱生成 Base URL（默认智谱） |
+| `getMealDetail` | 同上 | 与 getDailyMenu 共用 `MENU_*` 三个变量 |
 
 ### 2. 云函数超时配置
 
-`parseFoodLog` 需调用外部 AI API（图片模式调 GLM 视觉单次多模态 12s，文本模式调 DeepSeek 15s，单次调用峰值 ≤ 15s），请在云开发控制台 → 云函数 → `parseFoodLog` → 版本与配置中，将**执行超时时间**调整到 **20 秒**左右，否则模型响应稍慢就会被平台强制掐断。
+- `parseFoodLog`：调外部 AI，执行超时设 **20 秒**。
+- `getDailyMenu` / `getMealDetail`：AI 生成峰值可达 30 秒，执行超时设 **≥35 秒**。
 
-### 3. 数据库集合
+### 3. 数据库集合与种子
 
-在云开发控制台 → 数据库按上表新建 6 个集合并设置权限。
+1. 云开发控制台 → 数据库，新建上述 7 个集合。
+2. 新建 `system_config` 集合后，导入 `db_init_menu_ai_config.json` 作为初始 `menu_ai_config` 文档（含 Prompt 模板、51 食材白名单、敏感词黑名单、兜底菜库）；未导入时云函数会静默降级到代码内置兜底配置，不影响可用。
 
 ### 4. 同步公共模块
 
@@ -142,12 +138,12 @@ befat/
 npm run sync-common
 ```
 
-将 `cloudfunctions/common/` 下共享代码（logger/targetCalc/deleteHelper/recipeValidation）同步到各云函数目录。修改共享代码后需重跑并逐一重新部署引用它的函数。
+将 `cloudfunctions/common/` 下共享代码（logger/targetCalc/deleteHelper/config）同步到各云函数目录。修改共享代码后需重跑并重新部署引用它的函数。
 
 ### 5. 替换 AppID 与云环境 ID
 
 - `project.config.json` 中的 `appid` 替换为你的微信小程序 AppID
-- `miniprogram/app.js` 中 `wx.cloud.init({ env })` 替换为云开发控制台的真实环境 ID（格式 `cloud1-xxxx`，不是 AppID）
+- `miniprogram/app.js` 中 `wx.cloud.init({ env })` 替换为云开发控制台的真实环境 ID
 
 ### 6. 本地测试
 
@@ -159,9 +155,9 @@ npm test
 
 - 微信云函数运行在 Node.js 16，不支持 `fetch`；HTTP 请求使用 `axios`
 - WXML 模板不支持 JS 方法调用（如 `.trim()`），需在 JS 中预处理为 data 字段
-- 云函数为按目录独立打包，跨函数共享代码必须物理复制（见 `sync-common`），不能用 `../common` 相对路径
-- 本地 jest 通过 ≠ 云端能跑，每次改动需真机/云端验证；`cloudfunctions` 下代码改动需重新部署，控制台改环境变量/超时即时生效
+- 云函数按目录独立打包，跨函数共享代码必须物理复制（见 `sync-common`），不能用 `../common` 相对路径
+- 本地 jest 通过 ≠ 云端能跑，每次改动需真机/云端验证；`cloudfunctions` 下代码改动需重新部署
 - 首页数据默认 30 秒 TTL 缓存以减少云函数调用（写操作来源页返回时强制刷新）
-- AI 解析结果仅供参考，不构成医疗建议
-- 食谱系统：旧 32 条硬编码食谱已废弃，新食谱走 `manageRecipe` 审核发布流程（DRAFT→VALIDATING→APPROVED→PUBLISHED），前端通过 `getPublishedRecipes`/`getRecipeDetail` 获取，客户端不可直设 PUBLISHED 状态
-- `recipeDataCleanup` 用于清空历史数据：dry_run 默认 true（仅统计），切换 false 时需附 `confirm: "DELETE_ALL_LEGACY_RECIPES"` 硬确认令牌，仅清理 recipes 与孤儿 user_favorites，不动其他集合
+- AI 解析结果与每日食谱营养均**基于 AI 估算，仅供参考，不构成医疗建议**
+- **每日增肥食谱**：AI 按天懒加载生成（懒加载触发 + 占位锁防并发 + 换一换限流 + code 93 兜底），Prompt/白名单/黑名单/兜底菜库已参数化到 `system_config` 集合，可免部署调优；数值边界校验与总和重算仍保留在代码内（防 AI 幻觉）
+- **收藏**：统一为「每日菜单快照收藏」，收藏列表由 `getFavorites` 读取、`我的菜库`抽屉展示

@@ -1,4 +1,6 @@
 const logger = require('../../utils/logger')
+const { getUserLocation } = require('../../utils/location')
+const { searchNearbyPoi } = require('../../utils/map')
 const FAV_KEY = 'dailyMenuFavorites'
 const FAV_CACHE_KEY = 'favoriteMenuCache'
 const MEAL_LABELS = { breakfast: '早餐', lunch: '午餐', snack: '加餐', dinner: '晚餐' }
@@ -18,7 +20,14 @@ Page({
     favTab: 'all',
     favList: [],
     favTotal: 0,
-    favHasMore: false
+    favHasMore: false,
+    currentView: 'recipe',
+    poiLoading: false,
+    poiLoadMore: false,
+    poiError: false,
+    poiMsg: '',
+    poiList: [],
+    poiTotal: 0
   },
 
   onLoad() {
@@ -406,5 +415,68 @@ Page({
       logger.error('removeFavFromDrawer', err)
       wx.showToast({ title: '操作失败', icon: 'none' })
     }
+  },
+
+  switchView(e) {
+    const view = e.currentTarget.dataset.view
+    if (view === this.data.currentView) return
+    this.setData({ currentView: view })
+    if (view === 'poi' && this.data.poiList.length === 0 && !this.data.poiLoading) {
+      this.loadPoi()
+    }
+  },
+
+  async loadPoi() {
+    if (this.data.poiLoading) return
+    this.setData({ poiLoading: true, poiError: false, poiMsg: '' })
+    try {
+      const loc = await getUserLocation()
+      const res = await searchNearbyPoi({ lat: loc.latitude, lng: loc.longitude, page: 1 })
+      this.setData({ poiList: res.list || [], poiTotal: res.total || 0, poiLoading: false })
+      if (!res.list || res.list.length === 0) {
+        this.setData({ poiError: true, poiMsg: '附近暂时没搜到推荐餐厅，换个位置试试' })
+      }
+    } catch (err) {
+      this.setData({ poiLoading: false, poiError: true })
+      if (err && err.message === 'NO_LOCATION') {
+        this.setData({ poiMsg: '定位失败，可手动选择位置' })
+      } else if (err && err.message === 'MAP_TIMEOUT') {
+        this.setData({ poiMsg: '网络繁忙，稍后再试' })
+      } else {
+        this.setData({ poiMsg: '加载失败，请稍后重试' })
+      }
+    }
+  },
+
+  retryPoi() {
+    this.loadPoi()
+  },
+
+  async loadMorePoi() {
+    if (this.data.poiLoadMore) return
+    if (this.data.poiList.length >= this.data.poiTotal) return
+    const page = Math.floor(this.data.poiList.length / 10) + 1
+    this.setData({ poiLoadMore: true })
+    try {
+      const loc = await getUserLocation()
+      const res = await searchNearbyPoi({ lat: loc.latitude, lng: loc.longitude, page })
+      this.setData({ poiList: this.data.poiList.concat(res.list || []), poiTotal: res.total || 0 })
+    } catch (err) {
+      wx.showToast({ title: '加载更多失败', icon: 'none' })
+    } finally {
+      this.setData({ poiLoadMore: false })
+    }
+  },
+
+  openPoi(e) {
+    const poi = this.data.poiList[e.currentTarget.dataset.index]
+    if (!poi) return
+    wx.openLocation({ latitude: poi.latitude, longitude: poi.longitude, name: poi.title, address: poi.address })
+  },
+
+  callPoi(e) {
+    const poi = this.data.poiList[e.currentTarget.dataset.index]
+    if (!poi || !poi.tel) return
+    wx.makePhoneCall({ phoneNumber: poi.tel })
   }
 })
