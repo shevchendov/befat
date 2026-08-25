@@ -1,5 +1,39 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-24] c484a9a
+
+**feat: 我的菜库半屏抽屉 + 收藏一致性修复**
+
+- 新增 getFavorites 云函数（快照收藏列表+分页/筛选）+ updateFavoriteDetail（补全快照详情）
+- daily-menu：悬浮胶囊改顶部按钮并排（换一换+我的菜库）、半屏抽屉（Tab/空态/展开/取消收藏）
+- 抽屉展开兜底动态生成（空详情调 getMealDetail 补全 + updateFavoriteDetail 写回）
+- 修复收藏态不一致：toggleFav 失败严格回滚、抽屉强制 DB 刷新、syncHomeFavorited 反向校验
+- 餐别标签字号 22→26rpx
+- 新增测试 3 套（getFavorites/updateFavoriteDetail/daily-menu 抽屉），全量 557 通过
+DEPLOY: cloudfunctions/getFavorites,cloudfunctions/updateFavoriteDetail
+VERIFIED: 仅本地jest测试通过（557/557），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `cloudfunctions/getFavorites/common/deleteHelper.js`
+- `cloudfunctions/getFavorites/common/logger.js`
+- `cloudfunctions/getFavorites/common/targetCalc.js`
+- `cloudfunctions/getFavorites/index.js`
+- `cloudfunctions/getFavorites/package.json`
+- `cloudfunctions/sync-common.js`
+- `cloudfunctions/updateFavoriteDetail/common/deleteHelper.js`
+- `cloudfunctions/updateFavoriteDetail/common/logger.js`
+- `cloudfunctions/updateFavoriteDetail/common/targetCalc.js`
+- `cloudfunctions/updateFavoriteDetail/index.js`
+- `cloudfunctions/updateFavoriteDetail/package.json`
+- `miniprogram/pages/daily-menu/daily-menu.js`
+- `miniprogram/pages/daily-menu/daily-menu.wxml`
+- `miniprogram/pages/daily-menu/daily-menu.wxss`
+- `tests/frontend/daily-menu.test.js`
+- `tests/getFavorites.test.js`
+- `tests/updateFavoriteDetail.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getFavorites,cloudfunctions/updateFavoriteDetail
+
 ## [2026-08-24] 430ea25
 
 **refactor: 废弃旧食谱库与旧收藏体系，统一到每日菜单快照收藏**

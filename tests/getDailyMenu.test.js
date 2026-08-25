@@ -188,25 +188,26 @@ describe('getDailyMenu - 校验单元测试', () => {
 
 describe('getDailyMenu - 正则安全网', () => {
   const { blockingChecks } = getDailyMenu
+  const patterns = ['生肉', '刺身', '生吃', '生食', '生鱼', '毒', '相克', '解药', '治疗', '野生', '河豚', '野菌', '霉变', '变质', '发芽土豆']
 
   test('命中"生肉"抛错', () => {
     const meals = [{ title: '生肉沙拉', ingredients: ['生牛肉'], steps: [] }]
-    expect(() => blockingChecks(meals)).toThrow()
+    expect(() => blockingChecks(meals, patterns)).toThrow()
   })
 
   test('命中"刺身"抛错', () => {
     const meals = [{ title: 'a', ingredients: ['三文鱼刺身'], steps: [] }]
-    expect(() => blockingChecks(meals)).toThrow()
+    expect(() => blockingChecks(meals, patterns)).toThrow()
   })
 
   test('命中"野生"抛错', () => {
     const meals = [{ title: '野生菌汤', ingredients: [], steps: [] }]
-    expect(() => blockingChecks(meals)).toThrow()
+    expect(() => blockingChecks(meals, patterns)).toThrow()
   })
 
   test('安全食材不抛错', () => {
     const meals = [{ title: '番茄炒鸡蛋', ingredients: ['番茄', '鸡蛋'], steps: ['炒熟'] }]
-    expect(() => blockingChecks(meals)).not.toThrow()
+    expect(() => blockingChecks(meals, patterns)).not.toThrow()
   })
 
   test('AI 返回高危菜名时落库前拦截，走 code 93 兜底', async () => {
