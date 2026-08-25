@@ -1,5 +1,28 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-25] a40e731
+
+**feat: 周边美食功能（腾讯地图 POI）**
+
+- daily-menu 新增双态 Tab「跟着菜谱做｜看看周边吃啥」视图切换
+- 新增 utils/location.js（定位授权引导+手动选点降级）、utils/map.js（POI 检索+缓存+超时+扩距）
+- app.json 声明 getLocation/chooseLocation 私密信息权限
+- POI 列表卡片（店名/分类/距离/地址/导航/电话）、加载/空态/拒权提示
+- 同步更新 README；新增 location/map 单元测试 12 例，全量 576 通过
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过（576/576），未做真机/云端验证
+
+**涉及文件:**
+- `README.md`
+- `miniprogram/app.json`
+- `miniprogram/pages/daily-menu/daily-menu.js`
+- `miniprogram/pages/daily-menu/daily-menu.wxml`
+- `miniprogram/pages/daily-menu/daily-menu.wxss`
+- `miniprogram/utils/location.js`
+- `miniprogram/utils/map.js`
+- `tests/unit/location.test.js`
+- `tests/unit/map.test.js`
+
 ## [2026-08-24] c484a9a
 
 **feat: 我的菜库半屏抽屉 + 收藏一致性修复**
