@@ -82,6 +82,11 @@
   animation: pop 0.5s ease;
 }
 
+.hero-badge-sprint {
+  background: rgba(255,255,255,0.18);
+  opacity: 0.9;
+}
+
 /* ========== 进度环 ========== */
 .progress-rings {
   display: flex;
@@ -108,17 +113,27 @@
   height: 236rpx;
 }
 
-.ring-label {
+.ring-center {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  width: 200rpx;
+  top: 12rpx;
+  left: 12rpx;
+  right: 12rpx;
+  bottom: 12rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4rpx;
+}
+
+.ring-value-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
 }
 
 .ring-value {
-  font-size: 44rpx;
+  font-size: 36rpx;
   font-weight: 800;
   color: var(--color-text-primary);
 }
@@ -132,7 +147,17 @@
   display: block;
   font-size: 24rpx;
   color: var(--color-text-secondary);
-  margin-top: 4rpx;
+  font-weight: 600;
+}
+
+.ring-sub {
+  display: block;
+  font-size: 20rpx;
+  color: #888;
+}
+
+.ring-sub-warn {
+  color: #FF4D4F;
   font-weight: 600;
 }
 
@@ -405,8 +430,9 @@
 }
 
 .goal-remaining-label {
-  font-size: 26rpx;
-  color: var(--color-text-secondary);
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--color-accent-orange);
 }
 
 .goal-remaining-value {

@@ -3,8 +3,13 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const axios = require('axios')
 const logger = require('./common/logger')
-const { getConfig, renderPrompt, SYSTEM_PROMPT } = require('./common/config')
+const { getConfig, renderPrompt, SYSTEM_PROMPT, SYSTEM_PROMPT_LOSE, DAILY_MENU_PROMPT_LOSE } = require('./common/config')
 const FN = 'getDailyMenu'
+
+// 目标方向归一化：仅 'lose' 视为减重，其余（含 undefined/null/''/老用户缺失）一律兜底为 'gain'
+function normalizeGoalType(v) {
+  return v === 'lose' ? 'lose' : 'gain'
+}
 
 const MENU_API_URL_DEFAULT = 'https://open.bigmodel.cn/api/paas/v4/chat/completions'
 const MENU_TIMEOUT = 30000
@@ -55,12 +60,16 @@ function pickFallback(menus) {
   })
 }
 
-async function callGlmMenu(date, config) {
+async function callGlmMenu(date, config, goalType) {
   const apiKey = process.env.MENU_API_KEY || process.env.ZHIPU_API_KEY
   if (!apiKey) throw new Error('MENU_API_KEY not configured')
   const model = process.env.MENU_MODEL || 'glm-4-flash'
   const apiUrl = process.env.MENU_API_URL || MENU_API_URL_DEFAULT
-  const user = renderPrompt(config.prompts.daily_menu, {
+  const isLose = goalType === 'lose'
+  // 减重走本地 lose 常量；增重保留 config.prompts.daily_menu（system_config 动态配置）原逻辑
+  const promptTemplate = isLose ? DAILY_MENU_PROMPT_LOSE : config.prompts.daily_menu
+  const systemPrompt = isLose ? SYSTEM_PROMPT_LOSE : SYSTEM_PROMPT
+  const user = renderPrompt(promptTemplate, {
     date,
     ingredients: config.ingredient_whitelist.join('、')
   })
@@ -68,7 +77,7 @@ async function callGlmMenu(date, config) {
   const resp = await axios.post(apiUrl, {
     model,
     messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: systemPrompt },
       { role: 'user', content: user }
     ],
     temperature: 0.7,
@@ -86,19 +95,22 @@ async function callGlmMenu(date, config) {
   return content
 }
 
-function parseAndValidate(raw) {
+function parseAndValidate(raw, goalType) {
   const clean = sanitizeJson(stripCodeFence(raw))
   const obj = JSON.parse(clean)
   const meals = obj.meals
   if (!Array.isArray(meals) || meals.length !== 4) throw new Error('meals 须为 4 餐')
+  const isLose = goalType === 'lose'
 
   return MEAL_ORDER.map((type, i) => {
     const m = meals.find(x => x.meal_type === type) || meals[i]
     if (!m) throw new Error('缺少 ' + type)
     const calorie = Math.round(Number(m.calorie) || 0)
     const protein = Math.round((Number(m.protein_g) || 0) * 10) / 10
-    const calMin = type === 'snack' ? 80 : 150
-    if (!(calorie >= calMin && calorie <= 900)) throw new Error('calorie 越界')
+    // 减重：热量下限更宽（低卡导向），上限 600；增重：原口径（正餐 150~900，加餐 80~900）
+    const calMin = isLose ? (type === 'snack' ? 60 : 120) : (type === 'snack' ? 80 : 150)
+    const calMax = isLose ? 600 : 900
+    if (!(calorie >= calMin && calorie <= calMax)) throw new Error('calorie 越界')
     if (!(protein >= 0 && protein <= 80)) throw new Error('protein 越界')
     return {
       meal_type: type,
@@ -146,7 +158,7 @@ async function waitAndRead(date) {
   throw new Error('poll timeout')
 }
 
-async function fetchOrGenerate(date, forceRefresh) {
+async function fetchOrGenerate(date, forceRefresh, goalType) {
   let doc = await readDoc(date)
 
   if (!forceRefresh && doc && doc.status === 'READY') return toDto(doc, false)
@@ -171,15 +183,15 @@ async function fetchOrGenerate(date, forceRefresh) {
   } else if (doc.status === 'GENERATING') {
     if (Date.now() - new Date(doc.created_at).getTime() > ZOMBIE_MS) {
       await db.collection('daily_menus').doc(date).remove()
-      return await fetchOrGenerate(date, forceRefresh)
+      return await fetchOrGenerate(date, forceRefresh, goalType)
     }
     return await waitAndRead(date)
   }
 
   try {
     const config = await getConfig(db)
-    const raw = await callGlmMenu(date, config)
-    const meals = parseAndValidate(raw)
+    const raw = await callGlmMenu(date, config, goalType)
+    const meals = parseAndValidate(raw, goalType)
     blockingChecks(meals, config.blocking_checks)
     const total_calorie = meals.reduce((s, m) => s + m.calorie, 0)
     const total_protein_g = Math.round(meals.reduce((s, m) => s + m.protein_g, 0) * 10) / 10
@@ -192,6 +204,7 @@ async function fetchOrGenerate(date, forceRefresh) {
         meals,
         total_calorie,
         total_protein_g,
+        goal_type: goalType,
         generated_by: generatedBy,
         generated_at: db.serverDate(),
         updated_at: db.serverDate(),
@@ -200,7 +213,7 @@ async function fetchOrGenerate(date, forceRefresh) {
       }
     })
 
-    return { date, meals, total_calorie, total_protein_g, generated_by: generatedBy, refresh_count: refreshCount, from_fallback: false }
+    return { date, meals, total_calorie, total_protein_g, goal_type: goalType, generated_by: generatedBy, refresh_count: refreshCount, from_fallback: false }
   } catch (e) {
     if (e.code === 94) throw e
     await db.collection('daily_menus').doc(date).remove().catch(() => {})
@@ -220,10 +233,20 @@ exports.main = async (event, context) => {
     return result
   }
 
+  // 读取用户目标方向：缺失/老用户兜底 gain
+  let goalType = 'gain'
   try {
-    const data = await fetchOrGenerate(date, forceRefresh)
+    const wxContext = cloud.getWXContext()
+    const userRes = await db.collection('users').where({ _openid: wxContext.OPENID }).get()
+    goalType = normalizeGoalType(userRes.data[0] ? userRes.data[0].goal_type : undefined)
+  } catch (err) {
+    logger.warn(FN, 'read user goal_type failed, fallback gain', { error: err.message })
+  }
+
+  try {
+    const data = await fetchOrGenerate(date, forceRefresh, goalType)
     const result = { code: 0, message: 'ok', data }
-    logger.info(FN, 'success', { date, forceRefresh, from_fallback: data.from_fallback, duration: Date.now() - start })
+    logger.info(FN, 'success', { date, forceRefresh, goalType, from_fallback: data.from_fallback, duration: Date.now() - start })
     return result
   } catch (err) {
     if (err.code === 94) {
@@ -233,7 +256,8 @@ exports.main = async (event, context) => {
     }
     logger.warn(FN, 'generate failed, use fallback', { error: err.message, duration: Date.now() - start })
     const config = await getConfig(db)
-    const meals = pickFallback(config.fallback_menus)
+    const fallbackMenus = goalType === 'lose' ? (config.fallback_menus_lose || config.fallback_menus) : config.fallback_menus
+    const meals = pickFallback(fallbackMenus)
     const data = toDto({
       date,
       meals,

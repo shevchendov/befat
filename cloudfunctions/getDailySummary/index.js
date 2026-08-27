@@ -4,6 +4,11 @@ const db = cloud.database()
 const logger = require('./common/logger')
 const FN = 'getDailySummary'
 
+// 目标方向归一化：仅 'lose' 视为减重，其余（含 undefined/null/''/老用户缺失）一律兜底为 'gain'
+function normalizeGoalType(v) {
+  return v === 'lose' ? 'lose' : 'gain'
+}
+
 exports.main = async (event, context) => {
   const start = Date.now()
   const wxContext = cloud.getWXContext()
@@ -42,6 +47,7 @@ exports.main = async (event, context) => {
       message: 'ok',
       data: {
         date,
+        goal_type: normalizeGoalType(user ? user.goal_type : undefined),
         meals,
         total_calorie: totalCalorie,
         total_protein_g: Math.round(totalProteinG * 10) / 10,

@@ -4,6 +4,11 @@ const db = cloud.database()
 const logger = require('./common/logger')
 const FN = 'getGoalProgress'
 
+// 目标方向归一化：仅 'lose' 视为减重，其余（含 undefined/null/''/老用户缺失）一律兜底为 'gain'
+function normalizeGoalType(v) {
+  return v === 'lose' ? 'lose' : 'gain'
+}
+
 function fmt(d) {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -75,8 +80,10 @@ exports.main = async (event, context) => {
     const logs = (wLogsRes.data || []).slice().reverse()
     const currentWeight = logs.length > 0 ? logs[logs.length - 1].weight_kg : initialWeight
 
-    // 增重目标判定：目标体重 >= 初始体重视为增重方向
-    const isGain = targetWeight >= initialWeight
+    // 目标方向判定：优先依据 normalizeGoalType(user.goal_type)；
+// lose 明确为减重（isGain=false）；gain 或老用户无字段时回退「目标体重 >= 初始体重」推断（保持旧口径）
+    const goalType = normalizeGoalType(user.goal_type)
+    const isGain = goalType === 'lose' ? false : (targetWeight >= initialWeight)
 
     // 已达成判断：增重目标下当前体重 >= 目标体重视为达成；减重目标相反
     const achieved = isGain ? currentWeight >= targetWeight : currentWeight <= targetWeight
@@ -167,6 +174,7 @@ exports.main = async (event, context) => {
       code: 0,
       message: 'ok',
       data: {
+        goal_type: goalType,
         initial_weight: Math.round(initialWeight * 100) / 100,
         target_weight: Math.round(targetWeight * 100) / 100,
         current_weight: Math.round(currentWeight * 100) / 100,

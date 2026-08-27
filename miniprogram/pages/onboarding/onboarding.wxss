@@ -73,6 +73,34 @@
   background: #FFF5EB;
 }
 
+.goal-type-select {
+  display: flex;
+  gap: 30rpx;
+}
+
+.goal-type-option {
+  flex: 1;
+  padding: 34rpx 30rpx;
+  background: #F8F4EC;
+  border-radius: 20rpx;
+  text-align: center;
+  border: 2rpx solid var(--border);
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.goal-type-option.selected {
+  border-color: var(--primary);
+  background: #FFF5EB;
+}
+
+.goal-type-icon {
+  font-size: 44rpx;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
 .gender-icon {
   font-size: 48rpx;
   display: block;

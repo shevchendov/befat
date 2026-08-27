@@ -43,7 +43,21 @@
   <!-- Step 2: 身高 + 体重 + 目标体重 -->
   <view class="step-content" wx:if="{{step === 2}}">
     <view class="title">身体数据</view>
-    <view class="subtitle margin-bottom">让我帮你计算增重目标</view>
+    <view class="subtitle margin-bottom">让我帮你计算{{goalTypeLabel}}目标</view>
+
+    <view class="form-group">
+      <text class="label">目标方向</text>
+      <view class="goal-type-select">
+        <view class="goal-type-option {{goalType === 'gain' ? 'selected' : ''}}" bindtap="setGoalType" data-goal-type="gain">
+          <text class="goal-type-icon">💪</text>
+          <text>增重</text>
+        </view>
+        <view class="goal-type-option {{goalType === 'lose' ? 'selected' : ''}}" bindtap="setGoalType" data-goal-type="lose">
+          <text class="goal-type-icon">🥗</text>
+          <text>减重</text>
+        </view>
+      </view>
+    </view>
 
     <view class="form-group">
       <text class="label">身高 (cm)</text>
@@ -58,7 +72,7 @@
     <view class="form-group">
       <text class="label">目标体重 (kg)</text>
       <input class="input-number" type="digit" placeholder="例如 65" value="{{form.target_weight_kg}}" bindinput="onInput" data-field="target_weight_kg" maxlength="5" />
-      <text class="hint">建议每月增重 2~4kg</text>
+      <text class="hint">建议每月{{goalType === 'lose' ? '减重' : '增重'}} 2~4kg</text>
     </view>
 
     <view class="form-group">
@@ -93,6 +107,10 @@
       <view class="activity-option {{form.activity_level === 'active' ? 'selected' : ''}}" bindtap="setActivity" data-level="active">
         <text class="activity-name">高度活动</text>
         <text class="activity-desc">每周高强度运动 6~7 天</text>
+      </view>
+      <view class="activity-option {{form.activity_level === 'very_active' ? 'selected' : ''}}" bindtap="setActivity" data-level="very_active">
+        <text class="activity-name">极高强度活动</text>
+        <text class="activity-desc">体力劳作或每日高强度训练</text>
       </view>
     </view>
 

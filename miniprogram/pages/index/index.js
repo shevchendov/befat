@@ -30,12 +30,35 @@ Page({
     showCelebration: false,
     caloriePercent: 0,
     proteinPercent: 0,
+    goalType: 'gain',
+    overLimit: false,
+    remainingCalorie: null,
+    isTodayAchieved: false,
+    targetProgressText: '',
     goalProgress: null,
     showGoalGuide: false
   },
 
   onShow() {
     this.loadData()
+  },
+
+  // 问候语按【时间段 × 目标模式】隔离，增重/减重文案独立，防止文案污染
+  getGreetingText(goalType) {
+    const gt = util.normalizeGoalType(goalType)
+    const hour = new Date().getHours()
+    if (gt === 'lose') {
+      if (hour < 9) return '早起先来杯温水，早餐吃够蛋白质！🥚'
+      if (hour < 12) return '上午别饿着，来点低卡高蛋白垫一垫？🥒'
+      if (hour < 14) return '午餐七分饱，瘦得更轻松！🥗'
+      if (hour < 18) return '下午加餐选错就白练了，来点轻食？🍅'
+      return '夜宵别碰高油高糖，早睡才是燃脂王！🌙'
+    }
+    if (hour < 9) return '早起的鸟儿有虫吃，早起的人儿要加餐！🌅'
+    if (hour < 12) return '离午饭还有一会儿，先垫垫肚子？🍙'
+    if (hour < 14) return '吃饱了吗？没吃饱再来一轮！🍖'
+    if (hour < 18) return '下午茶时间到，搞点零食不过分吧？🧋'
+    return '夜宵时间！做大只的黄金时刻！🌙'
   },
 
   // 判断是否刷新数据：reLaunch 场景（onboarding 提交后）用显式标记；
@@ -56,17 +79,10 @@ Page({
   async loadData() {
     const now = new Date()
     const today = util.formatDate(now)
-    const hour = now.getHours()
     const dateText = dateFormat.formatDateShortCN(now)
 
-    let greeting
-    if (hour < 9) greeting = '早起的鸟儿有虫吃，早起的人儿要加餐！🌅'
-    else if (hour < 12) greeting = '离午饭还有一会儿，先垫垫肚子？🍙'
-    else if (hour < 14) greeting = '吃饱了吗？没吃饱再来一轮！🍖'
-    else if (hour < 18) greeting = '下午茶时间到，搞点零食不过分吧？🧋'
-    else greeting = '夜宵时间！做大只的黄金时刻！🌙'
-
-    this.setData({ dateText, greeting })
+    // 问候语按目标模式隔离；本地阶段先以 globalData 已存 goal_type 兜底（缓存命中时也能正确显示）
+    this.setData({ dateText, greeting: this.getGreetingText(app.globalData.userInfo && app.globalData.userInfo.goal_type) })
 
     if (app.globalData.dailyTargets) {
       this.setData({ targets: app.globalData.dailyTargets })
@@ -118,10 +134,36 @@ Page({
           }
         })
 
-        const caloriePercent = data.target_calorie > 0 ? Math.min(data.total_calorie / data.target_calorie, 1) : 0
+        const goalType = util.normalizeGoalType(data.goal_type)
+        const isLose = goalType === 'lose'
+
+        // 达标口径：增重 = 摄入需达 target；减重 = 摄入不超 target（超标则警示）
+        let caloriePercent
+        if (isLose) {
+          caloriePercent = data.target_calorie > 0 ? Math.min(data.target_calorie / (data.total_calorie || 1), 1) : 0
+        } else {
+          caloriePercent = data.target_calorie > 0 ? Math.min(data.total_calorie / data.target_calorie, 1) : 0
+        }
         const proteinPercent = data.target_protein > 0 ? Math.min(data.total_protein_g / data.target_protein, 1) : 0
+        const overLimit = isLose && data.target_calorie > 0 && data.total_calorie > data.target_calorie
+
+        // 减重热量差值副标：withinBudget 时显示"还可吃"，超标时显示"已超标"
+        const remainingCalorie = isLose && data.target_calorie > 0 ? data.target_calorie - data.total_calorie : null
+
+        // 今日目标达成判定：
+        // gain = 热量≥目标 且 蛋白≥目标；
+        // lose = 热量未超标 且 蛋白达标 且 今日已有饮食记录（排除清晨 0 摄入误判达成）
+        const totalCalorie = data.total_calorie || 0
+        const totalProtein = data.total_protein_g || 0
+        const calorieTarget = data.target_calorie || 0
+        const proteinTarget = data.target_protein || 0
+        const isTodayAchieved = isLose
+          ? (calorieTarget > 0 && totalCalorie > 0 && totalCalorie <= calorieTarget && totalProtein >= proteinTarget)
+          : (calorieTarget > 0 && totalCalorie >= calorieTarget && totalProtein >= proteinTarget)
 
         this.setData({
+          goalType,
+          greeting: this.getGreetingText(goalType),
           dailySummary: {
             total_calorie: data.total_calorie,
             total_protein_g: data.total_protein_g
@@ -132,7 +174,10 @@ Page({
           },
           meals,
           caloriePercent,
-          proteinPercent
+          proteinPercent,
+          overLimit,
+          remainingCalorie,
+          isTodayAchieved
         })
 
         this.drawRings()
@@ -158,12 +203,13 @@ Page({
   drawRings() {
     const targets = this.data.targets
     const current = this.data.dailySummary
+    const isLose = this.data.goalType === 'lose'
 
-    this.drawSingleRing('calorieCanvas', current.total_calorie, targets.calorie)
-    this.drawSingleRing('proteinCanvas', current.total_protein_g, targets.protein)
+    this.drawSingleRing('calorieCanvas', current.total_calorie, targets.calorie, isLose && this.data.overLimit)
+    this.drawSingleRing('proteinCanvas', current.total_protein_g, targets.protein, false)
   },
 
-  drawSingleRing(canvasId, current, target) {
+  drawSingleRing(canvasId, current, target, overLimit) {
     const query = wx.createSelectorQuery()
     query.select('#' + canvasId).fields({ node: true, size: true }).exec((res) => {
       if (!res[0]) return
@@ -184,7 +230,8 @@ Page({
 
       const isCalorie = canvasId === 'calorieCanvas'
       const trackColor = isCalorie ? '#FFE8D0' : '#D8F5E0'
-      const fillColor = isCalorie ? '#FF7A2F' : '#2ECC71'
+      // 减重超标：热量环填充色切换为警示红；其余维持原配色
+      const fillColor = overLimit ? '#FF4D4F' : (isCalorie ? '#FF7A2F' : '#2ECC71')
 
       ctx.beginPath()
       ctx.arc(cx, cy, radius, -Math.PI / 2, Math.PI * 1.5)
@@ -205,7 +252,7 @@ Page({
       if (progress >= 1) {
         ctx.beginPath()
         ctx.arc(cx, cy, radius + 8 * dpr, 0, Math.PI * 2)
-        ctx.strokeStyle = isCalorie ? '#FF7A2F' : '#2ECC71'
+        ctx.strokeStyle = overLimit ? '#FF4D4F' : (isCalorie ? '#FF7A2F' : '#2ECC71')
         ctx.lineWidth = 4 * dpr
         ctx.globalAlpha = 0.3
         ctx.stroke()
@@ -231,7 +278,24 @@ Page({
         const d = res.result.data
         const progress = Math.max(0, Math.min(d.progress_percent, 100))
         const fmtW = v => Number(v).toFixed(2)
+        const goalType = util.normalizeGoalType(d.goal_type)
+        const currentWeight = Number(d.current_weight)
+        const targetWeight = Number(d.target_weight)
+
+        // 目标进度文案：按方向生成，避免"距目标还差 -20 kg"的负号别扭显示
+        let targetProgressText
+        if (d.achieved) {
+          targetProgressText = '已成功达标 🎉'
+        } else if (goalType === 'lose' && currentWeight > targetWeight) {
+          targetProgressText = '还需减重 ' + Math.abs(currentWeight - targetWeight).toFixed(2) + ' kg'
+        } else if (goalType === 'gain' && currentWeight < targetWeight) {
+          targetProgressText = '还需增重 ' + Math.abs(currentWeight - targetWeight).toFixed(2) + ' kg'
+        } else {
+          targetProgressText = '已成功达标 🎉'
+        }
+
         this.setData({
+          targetProgressText,
           goalProgress: {
             achieved: d.achieved,
             initial_weight: fmtW(d.initial_weight),

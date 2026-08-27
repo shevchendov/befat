@@ -1,7 +1,8 @@
 const mockDate = { today: '2026-07-30' }
 jest.mock('../../miniprogram/utils/util', () => ({
   formatDate: jest.fn(() => mockDate.today),
-  getMealTypeLabel: jest.fn(t => t)
+  getMealTypeLabel: jest.fn(t => t),
+  normalizeGoalType: jest.fn(v => v === 'lose' ? 'lose' : 'gain')
 }))
 
 require('./setup')

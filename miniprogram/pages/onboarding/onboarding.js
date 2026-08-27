@@ -8,6 +8,8 @@ Page({
     step: 1,
     submitting: false,
     loading: true,
+    goalType: 'gain',
+    goalTypeLabel: '增重',
     form: {
       gender: '',
       age: '',
@@ -40,6 +42,14 @@ Page({
   setGender(e) {
     const gender = e.currentTarget.dataset.gender
     this.setData({ 'form.gender': gender })
+  },
+
+  setGoalType(e) {
+    const goalType = e.currentTarget.dataset.goalType
+    this.setData({
+      goalType,
+      goalTypeLabel: goalType === 'lose' ? '减重' : '增重'
+    })
   },
 
   setActivity(e) {
@@ -96,9 +106,17 @@ Page({
         wx.showToast({ title: '请输入有效体重(20-300kg)', icon: 'none' })
         return
       }
-      if (!tw || tw <= cw) {
-        wx.showToast({ title: '目标体重应大于当前体重', icon: 'none' })
-        return
+      // 方向校验：增重目标体重应大于当前；减重目标体重应小于当前
+      if (this.data.goalType === 'lose') {
+        if (!tw || tw >= cw) {
+          wx.showToast({ title: '目标体重应小于当前体重', icon: 'none' })
+          return
+        }
+      } else {
+        if (!tw || tw <= cw) {
+          wx.showToast({ title: '目标体重应大于当前体重', icon: 'none' })
+          return
+        }
       }
       if (!weeks || weeks < 1 || weeks > 104) {
         wx.showToast({ title: '请输入有效计划周期(1-104周)', icon: 'none' })
@@ -109,7 +127,8 @@ Page({
         height_cm: h,
         current_weight_kg: cw,
         target_weight_kg: tw,
-        target_weeks: weeks
+        target_weeks: weeks,
+        goal_type: this.data.goalType
       })
       if (!guard.ok) {
         if (guard.code) {
@@ -138,13 +157,14 @@ Page({
           current_weight_kg: parseFloat(form.current_weight_kg),
           target_weight_kg: parseFloat(form.target_weight_kg),
           activity_level: form.activity_level,
-          target_weeks: parseInt(form.target_weeks)
+          target_weeks: parseInt(form.target_weeks),
+          goal_type: this.data.goalType
         }
       })
 
       const result = res.result
 
-      if (result.code === 2 || result.code === 3) {
+      if (result.code === 2 || result.code === 3 || result.code === 5) {
         wx.showModal({
           title: '温馨提示',
           content: result.message,

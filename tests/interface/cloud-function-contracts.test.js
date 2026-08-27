@@ -55,9 +55,24 @@ describe('calcTarget 接口合约', () => {
       tdee: expect.any(Number),
       daily_calorie_target: expect.any(Number),
       daily_protein_target_g: expect.any(Number),
+      goal_type: 'gain',
       bmi: expect.any(Number)
     })
     expect(res.data.daily_calorie_target).toBeGreaterThan(res.data.tdee)
+  })
+
+  test('未传 goal_type 时默认按 gain（增重）兜底', async () => {
+    const res = await calcTarget.main(VALID_USER, {})
+    expect(res.data.goal_type).toBe('gain')
+    expect(res.data.daily_calorie_target).toBe(res.data.tdee + 350)
+    expect(res.data.daily_protein_target_g).toBe(Math.round(60 * 1.8))
+  })
+
+  test('goal_type=lose 时按减重口径计算', async () => {
+    const res = await calcTarget.main({ ...VALID_USER, goal_type: 'lose' }, {})
+    expect(res.data.goal_type).toBe('lose')
+    expect(res.data.daily_calorie_target).toBe(res.data.tdee - 500)
+    expect(res.data.daily_protein_target_g).toBe(Math.round(60 * 2.0))
   })
 
   test('tdee = daily_calorie_target - 350', async () => {

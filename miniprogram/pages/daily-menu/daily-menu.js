@@ -4,6 +4,14 @@ const { searchNearbyPoi } = require('../../utils/map')
 const FAV_KEY = 'dailyMenuFavorites'
 const FAV_CACHE_KEY = 'favoriteMenuCache'
 const MEAL_LABELS = { breakfast: '早餐', lunch: '午餐', snack: '加餐', dinner: '晚餐' }
+const GOAL_POI_TAGS = {
+  gain: ['清淡粤菜', '地道茶楼', '海鲜大排档'],
+  lose: ['轻食沙拉', '蒸菜粥粉', '低卡减脂餐']
+}
+
+function normalizeGoalType(v) {
+  return v === 'lose' ? 'lose' : 'gain'
+}
 
 Page({
   data: {
@@ -30,13 +38,29 @@ Page({
     poiTotal: 0,
     poiSearch: '',
     poiResolved: '',
-    searchTags: ['清淡粤菜', '地道茶楼', '海鲜大排档']
+    searchTags: GOAL_POI_TAGS.gain,
+    goalType: 'gain'
   },
 
   onLoad() {
     this._poiReqId = 0
     this._searchTimer = null
     this.loadMenu(false)
+  },
+
+  onShow() {
+    this.applyGoalType()
+  },
+
+  applyGoalType() {
+    const app = getApp()
+    const goalType = normalizeGoalType(app.globalData.userInfo && app.globalData.userInfo.goal_type)
+    const title = goalType === 'lose' ? '今日减脂食谱' : '今日增肥食谱'
+    wx.setNavigationBarTitle({ title })
+    this.setData({
+      goalType,
+      searchTags: GOAL_POI_TAGS[goalType] || GOAL_POI_TAGS.gain
+    })
   },
 
   readFavMap() {

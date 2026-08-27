@@ -3,23 +3,32 @@
     <view class="hero-profile-btn" bindtap="goToProfile" hover-class="hero-profile-btn-hover">👤 我的</view>
     <text class="hero-date">{{dateText}}</text>
     <text class="hero-greeting">{{greeting}}</text>
-    <view class="hero-badge" wx:if="{{caloriePercent >= 1}}">🎯 今日目标达成！</view>
+    <view class="hero-badge" wx:if="{{isTodayAchieved}}">🎯 今日目标达成！</view>
+    <view class="hero-badge hero-badge-sprint" wx:else>🎯 今日目标冲刺中</view>
   </view>
 
   <view class="progress-rings">
     <view class="ring-wrapper">
       <canvas class="ring-canvas" type="2d" id="calorieCanvas"></canvas>
-      <view class="ring-label">
-        <text class="ring-value">{{dailySummary.total_calorie}}</text>
-        <text class="ring-unit">/ {{targets.calorie}}</text>
+      <view class="ring-center">
+        <view class="ring-value-row">
+          <text class="ring-value">{{dailySummary.total_calorie}}</text>
+          <text class="ring-unit" wx:if="{{goalType === 'lose'}}"> / 上限 {{targets.calorie}}</text>
+          <text class="ring-unit" wx:else>/ {{targets.calorie}}</text>
+        </view>
         <text class="ring-title">🔥 热量</text>
+        <text class="ring-sub" wx:if="{{goalType === 'lose' && remainingCalorie >= 0}}">还可吃 {{remainingCalorie}} kcal</text>
+        <text class="ring-sub ring-sub-warn" wx:elif="{{goalType === 'lose' && remainingCalorie < 0}}">已超标 {{-remainingCalorie}} kcal</text>
       </view>
     </view>
     <view class="ring-wrapper">
       <canvas class="ring-canvas" type="2d" id="proteinCanvas"></canvas>
-      <view class="ring-label">
-        <text class="ring-value">{{dailySummary.total_protein_g}}</text>
-        <text class="ring-unit">/ {{targets.protein}}g</text>
+      <view class="ring-center">
+        <view class="ring-value-row">
+          <text class="ring-value">{{dailySummary.total_protein_g}}</text>
+          <text class="ring-unit" wx:if="{{goalType === 'lose'}}"> / 保底 {{targets.protein}}g</text>
+          <text class="ring-unit" wx:else>/ {{targets.protein}}g</text>
+        </view>
         <text class="ring-title">💪 蛋白质</text>
       </view>
     </view>
@@ -42,7 +51,7 @@
       <view class="action-icon action-icon-coral">
         <text>📖</text>
       </view>
-      <text class="action-label">今日增肥食谱</text>
+      <text class="action-label">{{goalType === 'lose' ? '今日减脂食谱' : '今日增肥食谱'}}</text>
     </view>
     <view class="action-btn" bindtap="goToStats">
       <view class="action-icon action-icon-orange">
@@ -71,8 +80,7 @@
 
     <block wx:else>
       <view class="goal-remaining">
-        <text class="goal-remaining-label">距目标还差</text>
-        <text class="goal-remaining-value">{{goalProgress.remaining_kg}} kg</text>
+        <text class="goal-remaining-label">{{targetProgressText}}</text>
       </view>
       <view class="goal-bar">
         <view class="goal-bar-fill" style="width: {{goalProgress.barWidth}};"></view>
@@ -91,7 +99,7 @@
     <view class="goal-guide-content">
       <text class="goal-guide-emoji">🎯</text>
       <text class="goal-guide-title">设定你的目标，开始追踪进度</text>
-      <text class="goal-guide-sub">填好身高体重，系统帮你计算增重方案</text>
+      <text class="goal-guide-sub">填好身高体重，系统帮你计算{{goalType === 'lose' ? '减重' : '增重'}}方案</text>
     </view>
     <text class="goal-guide-btn">去设定 ›</text>
   </view>

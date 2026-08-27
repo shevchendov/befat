@@ -2,7 +2,7 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const logger = require('./common/logger')
-const { validateWeights, computeTargets, parseTargetWeeks, fmtDate, calcExpectedWeeklyRate } = require('./common/targetCalc')
+const { validateWeights, computeTargets, parseTargetWeeks, fmtDate, calcExpectedWeeklyRate, normalizeGoalType } = require('./common/targetCalc')
 const FN = 'calcTarget'
 
 exports.main = async (event, context) => {
@@ -12,7 +12,8 @@ exports.main = async (event, context) => {
   logger.info(FN, 'invoke', logger.sanitize(event))
 
   try {
-    const { height_cm, current_weight_kg, target_weight_kg, gender, activity_level, age } = event
+    const { height_cm, current_weight_kg, target_weight_kg, gender, activity_level, age, goal_type } = event
+    const goalType = normalizeGoalType(goal_type)
 
     if (!height_cm || !current_weight_kg || !target_weight_kg || !gender || !activity_level || !age) {
       const result = { code: 1, message: '缺少必要参数' }
@@ -34,14 +35,14 @@ exports.main = async (event, context) => {
       return result
     }
 
-    const guard = validateWeights(current_weight_kg, target_weight_kg, height_cm, weeks.value)
+    const guard = validateWeights(current_weight_kg, target_weight_kg, height_cm, weeks.value, goalType)
     if (!guard.ok) {
       logger.info(FN, 'return', { code: guard.code, bmi: guard.data.bmi, duration: Date.now() - start })
       return { code: guard.code, message: guard.message, data: guard.data }
     }
     const bmi = Math.round(guard.bmi * 10) / 10
 
-    const targets = computeTargets(gender, current_weight_kg, height_cm, age, activity_level)
+    const targets = computeTargets(gender, current_weight_kg, height_cm, age, activity_level, goalType)
     const dailyCalorieTarget = targets.daily_calorie_target
     const dailyProteinTargetG = targets.daily_protein_target_g
 
@@ -52,6 +53,7 @@ exports.main = async (event, context) => {
       gender,
       activity_level,
       age,
+      goal_type: goalType,
       daily_calorie_target: dailyCalorieTarget,
       daily_protein_target_g: dailyProteinTargetG,
       bmi,
@@ -83,6 +85,7 @@ exports.main = async (event, context) => {
         tdee: targets.tdee,
         daily_calorie_target: dailyCalorieTarget,
         daily_protein_target_g: dailyProteinTargetG,
+        goal_type: goalType,
         bmi
       }
     }

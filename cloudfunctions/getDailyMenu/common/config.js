@@ -4,6 +4,8 @@ let configCache = null
 
 const SYSTEM_PROMPT = '你是一位专业的中国增重营养师。你的任务是为「吃不胖、想增重」的用户设计安全、可落地的一日三餐。你只输出严格 JSON，不输出任何解释、标题、Markdown 代码块或多余文字。你推荐的每一道菜都必须使用常规熟食烹饪方法，杜绝任何食品安全风险。'
 
+const SYSTEM_PROMPT_LOSE = '你是一位专业的中国减重营养师。你的任务是为「想减脂、控体重」的用户设计安全、可落地的一日三餐。你只输出严格 JSON，不输出任何解释、标题、Markdown 代码块或多余文字。你推荐的每一道菜都必须使用常规熟食烹饪方法，杜绝任何食品安全风险，强调低热量、控糖、高蛋白高纤维、高饱腹感。'
+
 const DAILY_MENU_PROMPT = `今天是 {date}。请为增重人群设计一日增肥食谱的「概览」，包含 4 餐：早餐(breakfast)、午餐(lunch)、加餐(snack)、晚餐(dinner)。
 
 【安全食材池】你只能从以下食材中组合菜品，严禁使用池外任何食材：
@@ -30,6 +32,35 @@ const DAILY_MENU_PROMPT = `今天是 {date}。请为增重人群设计一日增�
 1. 4 餐必须齐全，meal_type 依次为 breakfast/lunch/snack/dinner
 2. 每餐 calorie 在 150~900 之间（加餐 snack 可放宽至 80~900），protein_g 在 0~80 之间
 3. 高热量、高蛋白，偏增重导向，但食材常见、可落地
+4. 不要输出任何数学总和，总和由后端计算
+只返回 JSON 本体。`
+
+const DAILY_MENU_PROMPT_LOSE = `今天是 {date}。请为减脂人群设计一日控卡减脂食谱的「概览」，包含 4 餐：早餐(breakfast)、午餐(lunch)、加餐(snack)、晚餐(dinner)。
+
+【安全食材池】你只能从以下食材中组合菜品，严禁使用池外任何食材：
+{ingredients}
+
+【强约束】
+1. 每一道菜的食材必须全部来自上述食材池，禁止使用生僻食材、野生动物、河豚、野菌等
+2. 严禁任何生食肉类/生食水产（如生肉、刺身、生鱼片），所有肉类鱼类必须完全煮熟
+3. 只能采用常规熟食烹饪（炒/煮/蒸/炖/烤/煎），少油少糖
+4. 绝不出现"相克""解毒""治疗"等无科学依据的说法
+5. 每次生成的 4 餐菜品名称与核心食材必须具有极高的多样性，严禁重复推荐前几轮已经出现过的雷同菜品（例如：避免连续出现鸡胸肉沙拉或燕麦粥，鼓励交替使用虾、豆腐、蒸鱼、蒸菜、南瓜、西兰花等其他安全食材池内的组合）
+
+每餐概览必须包含以下字段（不要 ingredients、不要 steps）：
+- meal_type: breakfast/lunch/snack/dinner
+- title: 菜品名称（中文，有辨识度的修饰，避免裸词如"水煮蛋"）
+- calorie: 该餐热量估算值(kcal，整数)
+- protein_g: 该餐蛋白质估算值(g，可含 1 位小数)
+
+严格输出以下 JSON 结构，不要计算 total_calorie 或 total_protein_g：
+
+{"meals":[{"meal_type":"breakfast","title":"...","calorie":0,"protein_g":0},{"meal_type":"lunch","title":"...","calorie":0,"protein_g":0},{"meal_type":"snack","title":"...","calorie":0,"protein_g":0},{"meal_type":"dinner","title":"...","calorie":0,"protein_g":0}]}
+
+约束：
+1. 4 餐必须齐全，meal_type 依次为 breakfast/lunch/snack/dinner
+2. 每餐 calorie 在 120~600 之间（加餐 snack 可放宽至 60~400），protein_g 在 8~60 之间
+3. 低热量、控糖、高蛋白高纤维、高饱腹感，偏减脂导向，但食材常见、可落地
 4. 不要输出任何数学总和，总和由后端计算
 只返回 JSON 本体。`
 
@@ -69,6 +100,12 @@ const LOCAL_FALLBACK_CONFIG = {
     { meal_type: 'lunch', title: '鸡腿肉蛋炒饭', calorie: 650, protein_g: 32, ingredients: ['鸡腿肉 150g', '米饭 250g', '鸡蛋 2个', '时蔬 1份'], steps: ['鸡腿肉切丁炒熟', '加米饭鸡蛋翻炒', '调味出锅'] },
     { meal_type: 'snack', title: '牛奶坚果燕麦杯', calorie: 180, protein_g: 8, ingredients: ['燕麦 40g', '全脂牛奶 250ml', '坚果 15g'], steps: ['燕麦加牛奶冲泡', '撒坚果'] },
     { meal_type: 'dinner', title: '红烧牛肉面', calorie: 620, protein_g: 28, ingredients: ['牛腩 150g', '面条 200g', '青菜 1把'], steps: ['牛肉炖软', '煮面', '浇牛肉汤'] }
+  ],
+  fallback_menus_lose: [
+    { meal_type: 'breakfast', title: '水煮蛋燕麦牛奶粥', calorie: 280, protein_g: 18, ingredients: ['燕麦 40g', '鸡蛋 1个', '无糖酸奶 100g', '蓝莓 1小把'], steps: ['燕麦煮软', '拌入无糖酸奶', '配水煮蛋与蓝莓'] },
+    { meal_type: 'lunch', title: '清蒸鲈鱼配杂粮饭', calorie: 420, protein_g: 36, ingredients: ['鲈鱼 150g', '杂粮米饭 120g', '西兰花 1份'], steps: ['鲈鱼清蒸', '西兰花焯熟', '配杂粮饭'] },
+    { meal_type: 'snack', title: '黄瓜番茄鸡胸沙拉', calorie: 120, protein_g: 20, ingredients: ['鸡胸肉 80g', '黄瓜 半根', '番茄 1个', '生菜 1份'], steps: ['鸡胸肉煮熟撕丝', '蔬菜切块', '拌少许酱油'] },
+    { meal_type: 'dinner', title: '虾仁豆腐蒸蛋', calorie: 300, protein_g: 32, ingredients: ['虾 100g', '豆腐 150g', '鸡蛋 1个', '青菜 1把'], steps: ['豆腐切片铺底', '虾仁与蛋液入锅蒸', '配焯青菜'] }
   ]
 }
 
@@ -115,4 +152,4 @@ function renderPrompt(template, vars) {
   }, template)
 }
 
-module.exports = { getConfig, renderPrompt, LOCAL_FALLBACK_CONFIG, SYSTEM_PROMPT }
+module.exports = { getConfig, renderPrompt, LOCAL_FALLBACK_CONFIG, SYSTEM_PROMPT, SYSTEM_PROMPT_LOSE, DAILY_MENU_PROMPT, DAILY_MENU_PROMPT_LOSE }

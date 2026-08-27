@@ -5,6 +5,11 @@ const _ = db.command
 const logger = require('./common/logger')
 const FN = 'getStats'
 
+// 目标方向归一化：仅 'lose' 视为减重，其余（含 undefined/null/''/老用户缺失）一律兜底为 'gain'
+function normalizeGoalType(v) {
+  return v === 'lose' ? 'lose' : 'gain'
+}
+
 const PAGE_SIZE = 100
 const MAX_DAYS = 365
 const DEFAULT_DAYS = 90
@@ -55,26 +60,28 @@ function pct(ok, recorded) {
   return Math.round((ok / recorded) * 100)
 }
 
-function judgeNutr(rec, targetCal, targetPro) {
+function judgeNutr(rec, targetCal, targetPro, goalType) {
   if (!rec) return 'none'
   const hasCal = targetCal > 0
   const hasPro = targetPro > 0
   if (!hasCal && !hasPro) return 'none'
-  const calOk = hasCal ? rec.cal >= targetCal : true
+  // 达标口径：增重 = 热量需达 target（越多越好）；减重 = 热量不超 target（控制上限），蛋白两种模式均须达标
+  const calOk = hasCal ? (normalizeGoalType(goalType) === 'lose' ? rec.cal <= targetCal : rec.cal >= targetCal) : true
   const proOk = hasPro ? rec.pro >= targetPro : true
   return calOk && proOk ? 'ok' : 'fail'
 }
 
-function summarizeWindow(dates, dayMap, targetCal, targetPro, n) {
+function summarizeWindow(dates, dayMap, targetCal, targetPro, n, goalType) {
   const windowDates = dates.slice(-n)
   let recorded = 0
   let calOk = 0
   let proOk = 0
+  const isLose = normalizeGoalType(goalType) === 'lose'
   windowDates.forEach(d => {
     const rec = dayMap[d]
     if (!rec) return
     recorded += 1
-    if (targetCal > 0 && rec.cal >= targetCal) calOk += 1
+    if (targetCal > 0 && (isLose ? rec.cal <= targetCal : rec.cal >= targetCal)) calOk += 1
     if (targetPro > 0 && rec.pro >= targetPro) proOk += 1
   })
   return {
@@ -98,10 +105,11 @@ function weekLabel(startDate, endDate) {
   return `${s}-${e}`
 }
 
-function buildWeeks(dates, dayMap, weightsByDate, targetCal, targetPro) {
+function buildWeeks(dates, dayMap, weightsByDate, targetCal, targetPro, goalType) {
   const weeks = []
   let start = null
   let bucket = []
+  const isLose = normalizeGoalType(goalType) === 'lose'
   const flush = () => {
     if (!start) return
     const first = bucket[0]
@@ -113,7 +121,7 @@ function buildWeeks(dates, dayMap, weightsByDate, targetCal, targetPro) {
       const rec = dayMap[d]
       if (!rec) return
       recorded += 1
-      if (targetCal > 0 && rec.cal >= targetCal) calOk += 1
+      if (targetCal > 0 && (isLose ? rec.cal <= targetCal : rec.cal >= targetCal)) calOk += 1
       if (targetPro > 0 && rec.pro >= targetPro) proOk += 1
     })
     const wDates = bucket.filter(d => weightsByDate[d] != null)
@@ -169,6 +177,7 @@ exports.main = async (event, context) => {
     const user = userRes.data[0] || null
     const targetCal = Number(user && user.daily_calorie_target) || 0
     const targetPro = Number(user && user.daily_protein_target_g) || 0
+    const goalType = normalizeGoalType(user ? user.goal_type : undefined)
 
     const dayMap = {}
     foodLogs.forEach(l => {
@@ -187,16 +196,16 @@ exports.main = async (event, context) => {
     const weights = weightLogs.map(w => ({
       date: w.date,
       weight_kg: w.weight_kg,
-      nutr: judgeNutr(dayMap[w.date], targetCal, targetPro)
+      nutr: judgeNutr(dayMap[w.date], targetCal, targetPro, goalType)
     }))
 
     const dates = genDates(startDate, endDate)
     const summary = {
       recorded_days: Object.keys(dayMap).length,
-      week: summarizeWindow(dates, dayMap, targetCal, targetPro, 7),
-      month: summarizeWindow(dates, dayMap, targetCal, targetPro, 30)
+      week: summarizeWindow(dates, dayMap, targetCal, targetPro, 7, goalType),
+      month: summarizeWindow(dates, dayMap, targetCal, targetPro, 30, goalType)
     }
-    const weeks = buildWeeks(dates, dayMap, weightsByDate, targetCal, targetPro)
+    const weeks = buildWeeks(dates, dayMap, weightsByDate, targetCal, targetPro, goalType)
 
     const result = {
       code: 0,
@@ -205,6 +214,7 @@ exports.main = async (event, context) => {
         start_date: startDate,
         end_date: endDate,
         days,
+        goal_type: goalType,
         target: { calorie: targetCal, protein_g: targetPro },
         weights,
         summary,

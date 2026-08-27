@@ -2,7 +2,7 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const logger = require('./common/logger')
-const { validateWeights, computeTargets, parseTargetWeeks, fmtDate, calcExpectedWeeklyRate } = require('./common/targetCalc')
+const { validateWeights, computeTargets, parseTargetWeeks, fmtDate, calcExpectedWeeklyRate, normalizeGoalType } = require('./common/targetCalc')
 const FN = 'recalcTarget'
 
 exports.main = async (event, context) => {
@@ -30,6 +30,9 @@ exports.main = async (event, context) => {
       return result
     }
 
+    // 目标方向：优先本次透传，缺失回退库中原值，再兜底 gain（老用户无感）
+    const goalType = normalizeGoalType(event.goal_type != null ? event.goal_type : user.goal_type)
+
     const { height_cm, gender, age, activity_level } = user
     if (!height_cm || !gender || !age || !activity_level) {
       const result = { code: 1, message: '用户档案不完整，请重新初始化' }
@@ -55,18 +58,19 @@ exports.main = async (event, context) => {
     const storedWeeksOk = user.target_weeks != null && Number.isInteger(user.target_weeks) && user.target_weeks >= 1 && user.target_weeks <= 104
     const effectiveWeeks = weeks.value !== null ? weeks.value : (storedWeeksOk ? user.target_weeks : null)
 
-    // 复用 calcTarget 的安全校验（BMI 过低拦截、增重速率过快拦截），校验不通过不写库
-    const guard = validateWeights(currentWeightKg, targetWeightKg, height_cm, effectiveWeeks)
+    // 复用 calcTarget 的安全校验（BMI 过低拦截、速率过快拦截），校验不通过不写库
+    const guard = validateWeights(currentWeightKg, targetWeightKg, height_cm, effectiveWeeks, goalType)
     if (!guard.ok) {
       logger.info(FN, 'return', { code: guard.code, bmi: guard.data.bmi, duration: Date.now() - start })
       return { code: guard.code, message: guard.message, data: guard.data }
     }
     const bmi = Math.round(guard.bmi * 10) / 10
 
-    const targets = computeTargets(gender, currentWeightKg, height_cm, age, activity_level)
+    const targets = computeTargets(gender, currentWeightKg, height_cm, age, activity_level, goalType)
 
     const updateData = {
       target_weight_kg: Math.round(targetWeightKg * 10) / 10,
+      goal_type: goalType,
       daily_calorie_target: targets.daily_calorie_target,
       daily_protein_target_g: targets.daily_protein_target_g,
       bmi,
@@ -98,6 +102,7 @@ exports.main = async (event, context) => {
         tdee: targets.tdee,
         daily_calorie_target: targets.daily_calorie_target,
         daily_protein_target_g: targets.daily_protein_target_g,
+        goal_type: goalType,
         bmi
       }
     }

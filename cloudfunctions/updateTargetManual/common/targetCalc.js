@@ -2,19 +2,26 @@ const ACTIVITY_MULTIPLIERS = {
   sedentary: 1.2,
   light: 1.375,
   moderate: 1.55,
-  active: 1.725
+  active: 1.725,
+  very_active: 1.95
+}
+
+// 目标方向归一化：仅 'lose' 视为减重，其余（含 undefined/null/''/老用户缺失）一律兜底为 'gain'
+function normalizeGoalType(v) {
+  return v === 'lose' ? 'lose' : 'gain'
+}
+
+// Mifflin-St Jeor 基础代谢率（BMR，不含活动系数），用于减重模式热量下限保护
+function calcBMR(gender, weightKg, heightCm, age) {
+  if (gender === 'male') {
+    return 10 * weightKg + 6.25 * heightCm - 5 * age + 5
+  }
+  return 10 * weightKg + 6.25 * heightCm - 5 * age - 161
 }
 
 // Mifflin-St Jeor 公式计算 TDEE，与 calcTarget 原逻辑保持一致
 function calcTDEE(gender, weightKg, heightCm, age, activityLevel) {
-  let bmr
-  if (gender === 'male') {
-    bmr = 10 * weightKg + 6.25 * heightCm - 5 * age + 5
-  } else {
-    bmr = 10 * weightKg + 6.25 * heightCm - 5 * age - 161
-  }
-
-  const tdee = bmr * (ACTIVITY_MULTIPLIERS[activityLevel] || 1.2)
+  const tdee = calcBMR(gender, weightKg, heightCm, age) * (ACTIVITY_MULTIPLIERS[activityLevel] || 1.2)
   return Math.round(tdee)
 }
 
@@ -51,12 +58,13 @@ function calcExpectedWeeklyRate(targetWeightKg, startWeightKg, targetWeeks) {
   return rate > 0 ? rate : null
 }
 
-// 安全校验（合规红线，不可绕过）：BMI 过低拦截 + 增重速率过快拦截
+// 安全校验（合规红线，不可绕过）：BMI 过低拦截 + 速率过快拦截（增/减重双向）
 // 返回 { ok: true, bmi } 或 { ok: false, code, message, data }
-// targetWeeks 为用户计划达成周期（周），决定"每周增重"的基准周数；
+// targetWeeks 为用户计划达成周期（周），决定"每周增/减重"的基准周数；
 // 不传或非正整数时回退到默认 4 周（保持旧调用方行为不变）
-function validateWeights(currentWeightKg, targetWeightKg, heightCm, targetWeeks) {
+function validateWeights(currentWeightKg, targetWeightKg, heightCm, targetWeeks, goalType) {
   const bmi = calcBmi(currentWeightKg, heightCm)
+  const gt = normalizeGoalType(goalType)
 
   if (bmi < 16) {
     return {
@@ -68,12 +76,28 @@ function validateWeights(currentWeightKg, targetWeightKg, heightCm, targetWeeks)
   }
 
   const weeks = targetWeeks && targetWeeks > 0 ? targetWeeks : 4
-  const weeklyGain = (targetWeightKg - currentWeightKg) / weeks
-  if (weeklyGain > 1) {
+  const weeklyDelta = (targetWeightKg - currentWeightKg) / weeks
+
+  // 减重：每周减重超过 1kg 视为过快，相应拦截
+  if (gt === 'lose') {
+    const weeklyLoss = -weeklyDelta
+    if (weeklyLoss > 1) {
+      return {
+        ok: false,
+        code: 5,
+        message: '您设定的目标体重减少过快（每周约' + weeklyLoss.toFixed(1) + 'kg），建议将每周减重目标控制在 0.5~1kg。请调整目标体重或延长计划周期。',
+        data: { bmi: Math.round(bmi * 10) / 10 }
+      }
+    }
+    return { ok: true, bmi }
+  }
+
+  // 增重：原主干逻辑保持不变
+  if (weeklyDelta > 1) {
     return {
       ok: false,
       code: 3,
-      message: '您设定的目标体重增长过快（每周约' + weeklyGain.toFixed(1) + 'kg），建议将每周增重目标控制在 0.5~1kg。请调整目标体重或延长计划周期。',
+      message: '您设定的目标体重增长过快（每周约' + weeklyDelta.toFixed(1) + 'kg），建议将每周增重目标控制在 0.5~1kg。请调整目标体重或延长计划周期。',
       data: { bmi: Math.round(bmi * 10) / 10 }
     }
   }
@@ -82,8 +106,20 @@ function validateWeights(currentWeightKg, targetWeightKg, heightCm, targetWeeks)
 }
 
 // 由完整用户档案计算每日目标
-function computeTargets(gender, currentWeightKg, heightCm, age, activityLevel) {
+// goalType='gain'（默认）：TDEE + 350，蛋白 1.8g/kg（增重）——原主干不变
+// goalType='lose'：TDEE - 500，蛋白 2.0g/kg，且不低于 BMR 下限
+function computeTargets(gender, currentWeightKg, heightCm, age, activityLevel, goalType) {
+  const gt = normalizeGoalType(goalType)
   const tdee = calcTDEE(gender, currentWeightKg, heightCm, age, activityLevel)
+
+  if (gt === 'lose') {
+    const bmr = calcBMR(gender, currentWeightKg, heightCm, age)
+    const bmrLowerBound = Math.round(bmr)
+    const dailyCalorieTarget = Math.max(Math.round(tdee - 500), bmrLowerBound)
+    const dailyProteinTargetG = Math.round(currentWeightKg * 2.0)
+    return { tdee, daily_calorie_target: dailyCalorieTarget, daily_protein_target_g: dailyProteinTargetG }
+  }
+
   const dailyCalorieTarget = tdee + 350
   const dailyProteinTargetG = Math.round(currentWeightKg * 1.8)
   return { tdee, daily_calorie_target: dailyCalorieTarget, daily_protein_target_g: dailyProteinTargetG }
@@ -91,6 +127,8 @@ function computeTargets(gender, currentWeightKg, heightCm, age, activityLevel) {
 
 module.exports = {
   ACTIVITY_MULTIPLIERS,
+  normalizeGoalType,
+  calcBMR,
   calcTDEE,
   calcBmi,
   fmtDate,

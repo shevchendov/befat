@@ -2,6 +2,7 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const logger = require('./common/logger')
+const { normalizeGoalType } = require('./common/targetCalc')
 const FN = 'updateTargetManual'
 
 // 手动微调模式：允许直接写入具体数值，跳过自动计算。
@@ -86,6 +87,9 @@ exports.main = async (event, context) => {
       return result
     }
 
+    // 目标方向：优先本次透传，缺失回退库中原值，再兜底 gain（老用户无感）
+    const goalType = normalizeGoalType(event.goal_type != null ? event.goal_type : user.goal_type)
+
     const check = validateManualInput(user, {
       daily_calorie_target: dailyCalorieTarget,
       daily_protein_target_g: dailyProteinTargetG,
@@ -101,6 +105,8 @@ exports.main = async (event, context) => {
     if (targetWeightKg != null) updateData.target_weight_kg = Math.round(targetWeightKg * 10) / 10
     if (dailyCalorieTarget != null) updateData.daily_calorie_target = dailyCalorieTarget
     if (dailyProteinTargetG != null) updateData.daily_protein_target_g = dailyProteinTargetG
+    // 仅当显式透传 goal_type 时才落库切换方向，避免手动微调无意覆盖既有方向
+    if (event.goal_type != null) updateData.goal_type = goalType
 
     await db.collection('users').doc(user._id).update({ data: updateData })
 
