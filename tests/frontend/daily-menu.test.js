@@ -32,6 +32,36 @@ beforeEach(() => {
   page.data.favHasMore = false
   page.data.date = '2026-08-24'
   page.data.meals = []
+  page.data.tips = []
+})
+
+describe('applyGoalType - 文案动态映射', () => {
+  test('gain 模式使用食谱主题文案', () => {
+    getApp().globalData.userInfo = { goal_type: 'gain' }
+    page.applyGoalType()
+    expect(page.data.goalType).toBe('gain')
+    expect(page.data.loadingText).toBe('营养师正在配餐，稍等片刻… 🥗')
+    expect(page.data.emptyText).toBe('今日食谱准备中，请稍后')
+    expect(page.data.fetchingText).toBe('正在获取今日食谱...')
+    expect(wx.setNavigationBarTitle).toHaveBeenCalledWith({ title: '今日增肥食谱' })
+  })
+
+  test('lose 模式使用燃脂锦囊主题文案', () => {
+    getApp().globalData.userInfo = { goal_type: 'lose' }
+    page.applyGoalType()
+    expect(page.data.goalType).toBe('lose')
+    expect(page.data.loadingText).toBe('燃脂锦囊生成中...')
+    expect(page.data.emptyText).toBe('今日燃脂锦囊准备中，请稍后')
+    expect(page.data.fetchingText).toBe('正在定制今日燃脂锦囊...')
+    expect(wx.setNavigationBarTitle).toHaveBeenCalledWith({ title: '今日燃脂锦囊' })
+  })
+
+  test('goal_type 缺失时兜底 gain 文案', () => {
+    getApp().globalData.userInfo = null
+    page.applyGoalType()
+    expect(page.data.goalType).toBe('gain')
+    expect(page.data.loadingText).toBe('营养师正在配餐，稍等片刻… 🥗')
+  })
 })
 
 describe('openFavoriteDrawer', () => {

@@ -1,5 +1,27 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-28] 0d055de
+
+**fix: 修复周边地图类目死锁与燃脂锦囊首屏空白**
+
+- getNearbyPoi 按目标模式分类检索分流：lose 去除 category=美食 过滤，意图转译改运动场所
+- daily-menu POI 生命周期修复：定位成功后请求、置空搜索回退默认检索
+- 燃脂锦囊首屏秒开：前端静态兜底 + 云函数缓存方向一致性校验防止 gain/lose 串味
+- 地图 placeholder/提示语/错误态按目标模式动态化
+DEPLOY: cloudfunctions/getNearbyPoi, cloudfunctions/getDailyMenu
+VERIFIED: 仅本地jest测试通过（613/613），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `cloudfunctions/getDailyMenu/index.js`
+- `cloudfunctions/getNearbyPoi/index.js`
+- `miniprogram/pages/daily-menu/daily-menu.js`
+- `miniprogram/pages/daily-menu/daily-menu.wxml`
+- `miniprogram/utils/map.js`
+- `tests/getDailyMenu.test.js`
+- `tests/getNearbyPoi.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getNearbyPoi, cloudfunctions/getDailyMenu
+
 ## [2026-08-28] 358add8
 
 **feat: 减重体验升级方案A——燃脂锦囊化与统计语义重塑**

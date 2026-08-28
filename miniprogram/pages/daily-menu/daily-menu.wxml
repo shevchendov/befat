@@ -11,8 +11,8 @@
         <view class="sk-line w40"></view>
       </view>
       <view class="sk-cook">
-        <view class="sk-emoji">🍳</view>
-        <view class="sk-tip">营养师正在配餐，稍等片刻… 🥗</view>
+        <view class="sk-emoji">{{goalType === 'lose' ? '🧭' : '🍳'}}</view>
+        <view class="sk-tip">{{loadingText}}</view>
       </view>
     </view>
 
@@ -101,8 +101,8 @@
 
         <view wx:if="{{!tips || tips.length === 0}}" class="drawer-empty">
           <text class="empty-emoji">🧭</text>
-          <text class="empty-main">今日燃脂锦囊准备中…</text>
-          <text class="empty-sub">稍等一下，马上为你送上减脂建议</text>
+          <text class="empty-main">{{emptyText}}</text>
+          <text class="empty-sub">{{fetchingText}}</text>
         </view>
 
         <view class="from-fallback" wx:if="{{fromFallback}}">今日减脂建议暂不可用，已为你准备备用建议</view>

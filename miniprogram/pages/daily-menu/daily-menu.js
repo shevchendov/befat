@@ -16,6 +16,20 @@ const FALLBACK_TIPS_LOSE = [
   { title: '饭后散步 20 分钟', content: '饭后别急着坐下，慢走 20 分钟，平稳血糖，助力消耗多余热量。' }
 ]
 
+// 按目标模式动态映射的 UI 提示文案（gain 与原表现保持一致，lose 走燃脂锦囊主题）
+const UI_TEXT = {
+  gain: {
+    loadingText: '营养师正在配餐，稍等片刻… 🥗',
+    emptyText: '今日食谱准备中，请稍后',
+    fetchingText: '正在获取今日食谱...'
+  },
+  lose: {
+    loadingText: '燃脂锦囊生成中...',
+    emptyText: '今日燃脂锦囊准备中，请稍后',
+    fetchingText: '正在定制今日燃脂锦囊...'
+  }
+}
+
 function normalizeGoalType(v) {
   return v === 'lose' ? 'lose' : 'gain'
 }
@@ -47,7 +61,10 @@ Page({
     poiSearch: '',
     poiResolved: '',
     searchTags: GOAL_POI_TAGS.gain,
-    goalType: 'gain'
+    goalType: 'gain',
+    loadingText: UI_TEXT.gain.loadingText,
+    emptyText: UI_TEXT.gain.emptyText,
+    fetchingText: UI_TEXT.gain.fetchingText
   },
 
   onLoad() {
@@ -67,7 +84,10 @@ Page({
     wx.setNavigationBarTitle({ title })
     this.setData({
       goalType,
-      searchTags: GOAL_POI_TAGS[goalType] || GOAL_POI_TAGS.gain
+      searchTags: GOAL_POI_TAGS[goalType] || GOAL_POI_TAGS.gain,
+      loadingText: UI_TEXT[goalType].loadingText,
+      emptyText: UI_TEXT[goalType].emptyText,
+      fetchingText: UI_TEXT[goalType].fetchingText
     }, () => {
       // lose 模式：首次进入先本地兜底秒开，再尝试云端拉取；云端返回后再覆盖
       if (goalType === 'lose' && !this.data.tips.length && !this.data.isGenerating) {
@@ -147,7 +167,10 @@ Page({
         generated_by: d.generated_by,
         fromFallback: !!d.from_fallback,
         isGenerating: false,
-        refreshing: false
+        refreshing: false,
+        loadingText: UI_TEXT[goalType].loadingText,
+        emptyText: UI_TEXT[goalType].emptyText,
+        fetchingText: UI_TEXT[goalType].fetchingText
       })
     } catch (err) {
       logger.error('loadMenu', err)
