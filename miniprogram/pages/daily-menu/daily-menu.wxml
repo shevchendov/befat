@@ -17,63 +17,91 @@
     </view>
 
     <block wx:if="{{!isGenerating}}">
-      <view class="summary-card">
-        <view class="pill">
-          <text>约 </text>
-          <text class="pill-num">{{total_calorie}}</text>
-          <text class="pill-unit"> kcal</text>
-          <text class="pill-sep">·</text>
-          <text>蛋白质约 </text>
-          <text class="pill-num">{{total_protein_g}}</text>
-          <text class="pill-unit">g</text>
+      <block wx:if="{{goalType === 'gain'}}">
+        <view class="summary-card">
+          <view class="pill">
+            <text>约 </text>
+            <text class="pill-num">{{total_calorie}}</text>
+            <text class="pill-unit"> kcal</text>
+            <text class="pill-sep">·</text>
+            <text>蛋白质约 </text>
+            <text class="pill-num">{{total_protein_g}}</text>
+            <text class="pill-unit">g</text>
+          </view>
+          <view class="summary-date">{{date}}</view>
+          <view class="poi-link" bindtap="switchView" data-view="poi">📍 附近美食 ➔</view>
         </view>
-        <view class="summary-date">{{date}}</view>
-        <view class="poi-link" bindtap="switchView" data-view="poi">📍 附近美食 ➔</view>
-      </view>
 
-      <view class="action-bar-row">
-        <view class="action-btn primary {{refreshing ? 'refreshing' : ''}}" bindtap="refreshMenu">
-          <text class="action-btn-icon">🔄</text>
-          <text>{{refreshing ? '生成中…' : '换一换'}}</text>
-        </view>
-        <view class="action-btn secondary" bindtap="openFavoriteDrawer">
-          <text class="action-btn-icon">🙋</text>
-          <text>我的菜库</text>
-        </view>
-      </view>
-
-      <view class="card meal-card" wx:for="{{meals}}" wx:for-item="meal" wx:for-index="idx" wx:key="meal_type">
-        <view class="meal-header">
-          <view class="meal-tag">{{meal.mealLabel}}</view>
-          <view class="fav-btn {{meal.favorited ? 'fav-on' : ''}}" catchtap="toggleFav" data-index="{{idx}}">
-            <view class="fav-icon"></view>
+        <view class="action-bar-row">
+          <view class="action-btn primary {{refreshing ? 'refreshing' : ''}}" bindtap="refreshMenu">
+            <text class="action-btn-icon">🔄</text>
+            <text>{{refreshing ? '生成中…' : '换一换'}}</text>
+          </view>
+          <view class="action-btn secondary" bindtap="openFavoriteDrawer">
+            <text class="action-btn-icon">🙋</text>
+            <text>我的菜库</text>
           </view>
         </view>
-        <view class="meal-title">{{meal.title}}</view>
-        <view class="meal-nutrition">
-          <text>约 </text>
-          <text class="nutrition-num">{{meal.calorie}}</text>
-          <text class="nutrition-unit"> kcal</text>
-          <text> · 蛋白质约 </text>
-          <text class="nutrition-num">{{meal.protein_g}}</text>
-          <text class="nutrition-unit">g</text>
+
+        <view class="card meal-card" wx:for="{{meals}}" wx:for-item="meal" wx:for-index="idx" wx:key="meal_type">
+          <view class="meal-header">
+            <view class="meal-tag">{{meal.mealLabel}}</view>
+            <view class="fav-btn {{meal.favorited ? 'fav-on' : ''}}" catchtap="toggleFav" data-index="{{idx}}">
+              <view class="fav-icon"></view>
+            </view>
+          </view>
+          <view class="meal-title">{{meal.title}}</view>
+          <view class="meal-nutrition">
+            <text>约 </text>
+            <text class="nutrition-num">{{meal.calorie}}</text>
+            <text class="nutrition-unit"> kcal</text>
+            <text> · 蛋白质约 </text>
+            <text class="nutrition-num">{{meal.protein_g}}</text>
+            <text class="nutrition-unit">g</text>
+          </view>
+
+          <view class="detail-toggle {{meal.detailLoading ? 'detail-loading' : ''}}" bindtap="toggleDetail" data-index="{{idx}}">
+            <text>{{meal.detailLoading ? '生成中…' : (meal.expanded ? '收起 ▲' : '查看食材与步骤 ▼')}}</text>
+          </view>
+
+          <block wx:if="{{meal.expanded}}">
+            <view class="list-label">食材</view>
+            <view class="meal-ingredient" wx:for="{{meal.ingredients}}" wx:for-item="ing" wx:key="*this">{{ing}}</view>
+
+            <view class="list-label">步骤</view>
+            <view class="meal-step" wx:for="{{meal.steps}}" wx:for-item="step" wx:key="*this">{{index + 1}}. {{step}}</view>
+          </block>
         </view>
 
-        <view class="detail-toggle {{meal.detailLoading ? 'detail-loading' : ''}}" bindtap="toggleDetail" data-index="{{idx}}">
-          <text>{{meal.detailLoading ? '生成中…' : (meal.expanded ? '收起 ▲' : '查看食材与步骤 ▼')}}</text>
+        <view class="from-fallback" wx:if="{{fromFallback}}">今日食谱暂不可用，已为你准备备用食谱</view>
+        <view class="disclaimer">💡 营养数据基于通用食材均值估算，仅供备餐灵感参考，不构成医疗建议。</view>
+      </block>
+
+      <block wx:elif="{{goalType === 'lose'}}">
+        <view class="summary-card">
+          <view class="tip-summary-title">🧭 今日燃脂锦囊</view>
+          <view class="summary-date">{{date}}</view>
+          <view class="poi-link" bindtap="switchView" data-view="poi">📍 附近运动场所 ➔</view>
         </view>
 
-        <block wx:if="{{meal.expanded}}">
-          <view class="list-label">食材</view>
-          <view class="meal-ingredient" wx:for="{{meal.ingredients}}" wx:for-item="ing" wx:key="*this">{{ing}}</view>
+        <view class="action-bar-row">
+          <view class="action-btn primary {{refreshing ? 'refreshing' : ''}}" bindtap="refreshMenu">
+            <text class="action-btn-icon">🔄</text>
+            <text>{{refreshing ? '生成中…' : '换一换'}}</text>
+          </view>
+        </view>
 
-          <view class="list-label">步骤</view>
-          <view class="meal-step" wx:for="{{meal.steps}}" wx:for-item="step" wx:key="*this">{{index + 1}}. {{step}}</view>
-        </block>
-      </view>
+        <view class="tip-card" wx:for="{{tips}}" wx:for-item="tip" wx:for-index="idx" wx:key="title">
+          <view class="tip-index">{{idx + 1}}</view>
+          <view class="tip-body">
+            <view class="tip-title">{{tip.title}}</view>
+            <view class="tip-content">{{tip.content}}</view>
+          </view>
+        </view>
 
-      <view class="from-fallback" wx:if="{{fromFallback}}">今日食谱暂不可用，已为你准备备用食谱</view>
-      <view class="disclaimer">💡 营养数据基于通用食材均值估算，仅供备餐灵感参考，不构成医疗建议。</view>
+        <view class="from-fallback" wx:if="{{fromFallback}}">今日减脂建议暂不可用，已为你准备备用建议</view>
+        <view class="disclaimer">💡 以上为通用减脂生活建议，不构成医疗建议。</view>
+      </block>
     </block>
   </block>
 

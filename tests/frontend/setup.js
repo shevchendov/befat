@@ -56,6 +56,7 @@ global.wx = {
   navigateTo: jest.fn(),
   navigateBack: jest.fn(),
   reLaunch: jest.fn(),
+  setNavigationBarTitle: jest.fn(),
   createSelectorQuery: jest.fn(() => ({
     select: jest.fn(() => ({
       fields: jest.fn(function(_, cb) { if (typeof cb === 'function') process.nextTick(() => cb([{ node: null, width: 300, height: 200 }])); return { exec: jest.fn() } })

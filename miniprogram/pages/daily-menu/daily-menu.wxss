@@ -47,6 +47,54 @@
   padding: 4rpx 0;
 }
 
+.tip-summary-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.tip-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+  margin: 20rpx 30rpx 0;
+  padding: 30rpx;
+  background: var(--card-bg);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.tip-index {
+  flex-shrink: 0;
+  width: 52rpx;
+  height: 52rpx;
+  line-height: 52rpx;
+  text-align: center;
+  background: var(--primary-bg);
+  border-radius: 50%;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 30rpx;
+}
+
+.tip-body {
+  flex: 1;
+}
+
+.tip-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8rpx;
+}
+
+.tip-content {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
 .action-bar-row {
   display: flex;
   justify-content: space-between;

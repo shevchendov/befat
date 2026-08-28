@@ -186,6 +186,86 @@ describe('getDailyMenu - 校验单元测试', () => {
   })
 })
 
+describe('getDailyMenu - lose tips 解析与降级', () => {
+  const { parseAndValidate, pickFallbackTips } = getDailyMenu
+
+  function tipsRaw(tips) {
+    return JSON.stringify({ tips })
+  }
+
+  test('lose 模式解析 3 条 tips（title/content 均非空）', () => {
+    const parsed = parseAndValidate(tipsRaw([
+      { title: '晨起一杯温水', content: '起床后喝 500ml 温水。' },
+      { title: '餐前饮水', content: '正餐前喝一碗清汤。' },
+      { title: '饭后散步', content: '饭后慢走 20 分钟。' }
+    ]), 'lose')
+    expect(parsed).toHaveLength(3)
+    expect(parsed[0].title).toBe('晨起一杯温水')
+    expect(parsed[0].content).toContain('500ml')
+  })
+
+  test('lose 模式不足 3 条抛错', () => {
+    expect(() => parseAndValidate(tipsRaw([
+      { title: 'a', content: 'b' },
+      { title: 'c', content: 'd' }
+    ]), 'lose')).toThrow('tips 须为 3 条')
+  })
+
+  test('lose 模式 title 为空抛错', () => {
+    expect(() => parseAndValidate(tipsRaw([
+      { title: '', content: 'b' },
+      { title: 'c', content: 'd' },
+      { title: 'e', content: 'f' }
+    ]), 'lose')).toThrow('不能为空')
+  })
+
+  test('lose 模式 content 为空抛错', () => {
+    expect(() => parseAndValidate(tipsRaw([
+      { title: 'a', content: 'b' },
+      { title: 'c', content: '' },
+      { title: 'e', content: 'f' }
+    ]), 'lose')).toThrow('不能为空')
+  })
+
+  test('lose 模式忽略热量字段（不查热量区间）', () => {
+    const parsed = parseAndValidate(tipsRaw([
+      { title: 'a', content: 'b', calorie: 0 },
+      { title: 'c', content: 'd', calorie: 0 },
+      { title: 'e', content: 'f', calorie: 0 }
+    ]), 'lose')
+    expect(parsed).toHaveLength(3)
+    expect(parsed[0].calorie).toBeUndefined()
+  })
+
+  test('gain 模式仍走 4 餐校验（不受 tips 逻辑影响）', () => {
+    expect(() => parseAndValidate(tipsRaw([
+      { title: 'a', content: 'b' }, { title: 'c', content: 'd' }, { title: 'e', content: 'f' }
+    ]), 'gain')).toThrow('meals 须为 4 餐')
+  })
+
+  test('pickFallbackTips 兜底返回 3 条', () => {
+    const tips = pickFallbackTips({})
+    expect(tips).toHaveLength(3)
+    expect(tips[0].title).toBeTruthy()
+    expect(tips[0].content).toBeTruthy()
+  })
+
+  test('pickFallbackTips 使用配置的 fallback_tips_lose（3 条时）', () => {
+    const custom = [
+      { title: 'T1', content: 'C1' },
+      { title: 'T2', content: 'C2' },
+      { title: 'T3', content: 'C3' }
+    ]
+    const tips = pickFallbackTips({ fallback_tips_lose: custom })
+    expect(tips).toEqual(custom)
+  })
+
+  test('pickFallbackTips 配置不足 3 条时回退本地默认', () => {
+    const tips = pickFallbackTips({ fallback_tips_lose: [{ title: 'T1', content: 'C1' }] })
+    expect(tips).toHaveLength(3)
+  })
+})
+
 describe('getDailyMenu - 正则安全网', () => {
   const { blockingChecks } = getDailyMenu
   const patterns = ['生肉', '刺身', '生吃', '生食', '生鱼', '毒', '相克', '解药', '治疗', '野生', '河豚', '野菌', '霉变', '变质', '发芽土豆']

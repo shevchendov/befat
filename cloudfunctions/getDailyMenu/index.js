@@ -3,7 +3,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const axios = require('axios')
 const logger = require('./common/logger')
-const { getConfig, renderPrompt, SYSTEM_PROMPT, SYSTEM_PROMPT_LOSE, DAILY_MENU_PROMPT_LOSE } = require('./common/config')
+const { getConfig, renderPrompt, SYSTEM_PROMPT, SYSTEM_PROMPT_LOSE_TIPS, DAILY_MENU_TIPS_PROMPT_LOSE, LOCAL_FALLBACK_CONFIG } = require('./common/config')
 const FN = 'getDailyMenu'
 
 // 目标方向归一化：仅 'lose' 视为减重，其余（含 undefined/null/''/老用户缺失）一律兜底为 'gain'
@@ -60,15 +60,23 @@ function pickFallback(menus) {
   })
 }
 
+// 减重模式兜底：返回 tips 数组（3 条），缺省回退本地 fallback_tips_lose
+function pickFallbackTips(config) {
+  const tips = config && config.fallback_tips_lose && config.fallback_tips_lose.length === 3
+    ? config.fallback_tips_lose
+    : LOCAL_FALLBACK_CONFIG.fallback_tips_lose
+  return tips.map(t => ({ title: t.title, content: t.content }))
+}
+
 async function callGlmMenu(date, config, goalType) {
   const apiKey = process.env.MENU_API_KEY || process.env.ZHIPU_API_KEY
   if (!apiKey) throw new Error('MENU_API_KEY not configured')
   const model = process.env.MENU_MODEL || 'glm-4-flash'
   const apiUrl = process.env.MENU_API_URL || MENU_API_URL_DEFAULT
   const isLose = goalType === 'lose'
-  // 减重走本地 lose 常量；增重保留 config.prompts.daily_menu（system_config 动态配置）原逻辑
-  const promptTemplate = isLose ? DAILY_MENU_PROMPT_LOSE : config.prompts.daily_menu
-  const systemPrompt = isLose ? SYSTEM_PROMPT_LOSE : SYSTEM_PROMPT
+  // 减重走独立 tips Prompt（生活减脂建议）；增重保留 config.prompts.daily_menu（system_config 动态配置）原逻辑
+  const promptTemplate = isLose ? DAILY_MENU_TIPS_PROMPT_LOSE : config.prompts.daily_menu
+  const systemPrompt = isLose ? SYSTEM_PROMPT_LOSE_TIPS : SYSTEM_PROMPT
   const user = renderPrompt(promptTemplate, {
     date,
     ingredients: config.ingredient_whitelist.join('、')
@@ -98,19 +106,31 @@ async function callGlmMenu(date, config, goalType) {
 function parseAndValidate(raw, goalType) {
   const clean = sanitizeJson(stripCodeFence(raw))
   const obj = JSON.parse(clean)
+  const isLose = goalType === 'lose'
+
+  // 减重：解析 tips 数组（3 条，title/content 非空），不查热量区间
+  if (isLose) {
+    const tips = obj.tips
+    if (!Array.isArray(tips) || tips.length !== 3) throw new Error('tips 须为 3 条')
+    return tips.map(t => {
+      const title = (t.title || '').trim()
+      const content = (t.content || '').trim()
+      if (!title || !content) throw new Error('tip title/content 不能为空')
+      return { title, content }
+    })
+  }
+
+  // 增重：原 4 餐解析与热量/蛋白校验，逐字节保留
   const meals = obj.meals
   if (!Array.isArray(meals) || meals.length !== 4) throw new Error('meals 须为 4 餐')
-  const isLose = goalType === 'lose'
 
   return MEAL_ORDER.map((type, i) => {
     const m = meals.find(x => x.meal_type === type) || meals[i]
     if (!m) throw new Error('缺少 ' + type)
     const calorie = Math.round(Number(m.calorie) || 0)
     const protein = Math.round((Number(m.protein_g) || 0) * 10) / 10
-    // 减重：热量下限更宽（低卡导向），上限 600；增重：原口径（正餐 150~900，加餐 80~900）
-    const calMin = isLose ? (type === 'snack' ? 60 : 120) : (type === 'snack' ? 80 : 150)
-    const calMax = isLose ? 600 : 900
-    if (!(calorie >= calMin && calorie <= calMax)) throw new Error('calorie 越界')
+    const calMin = type === 'snack' ? 80 : 150
+    if (!(calorie >= calMin && calorie <= 900)) throw new Error('calorie 越界')
     if (!(protein >= 0 && protein <= 80)) throw new Error('protein 越界')
     return {
       meal_type: type,
@@ -126,6 +146,8 @@ function parseAndValidate(raw, goalType) {
 function toDto(doc, fromFallback) {
   return {
     date: doc.date,
+    goal_type: doc.goal_type || 'gain',
+    tips: doc.tips,
     meals: doc.meals,
     total_calorie: doc.total_calorie,
     total_protein_g: doc.total_protein_g,
@@ -191,29 +213,46 @@ async function fetchOrGenerate(date, forceRefresh, goalType) {
   try {
     const config = await getConfig(db)
     const raw = await callGlmMenu(date, config, goalType)
-    const meals = parseAndValidate(raw, goalType)
-    blockingChecks(meals, config.blocking_checks)
-    const total_calorie = meals.reduce((s, m) => s + m.calorie, 0)
-    const total_protein_g = Math.round(meals.reduce((s, m) => s + m.protein_g, 0) * 10) / 10
     const generatedBy = process.env.MENU_MODEL || 'glm-4-flash'
     const refreshCount = ((doc && doc.refresh_count) || 0) + (forceRefresh ? 1 : 0)
+    const isLose = goalType === 'lose'
+
+    // 减重：解析 tips，安全网检查 title/content；增重：解析 4 餐并做热量/蛋白校验（原逻辑不变）
+    let updatePayload
+    if (isLose) {
+      const tips = parseAndValidate(raw, goalType)
+      // 安全网：复用 blockingChecks，将 content 并入 steps 供其检查
+      blockingChecks(tips.map(t => ({ title: t.title, ingredients: [], steps: [t.content] })), config.blocking_checks)
+      updatePayload = { tips }
+    } else {
+      const meals = parseAndValidate(raw, goalType)
+      blockingChecks(meals, config.blocking_checks)
+      const total_calorie = meals.reduce((s, m) => s + m.calorie, 0)
+      const total_protein_g = Math.round(meals.reduce((s, m) => s + m.protein_g, 0) * 10) / 10
+      updatePayload = { meals, total_calorie, total_protein_g }
+    }
 
     await db.collection('daily_menus').doc(date).update({
       data: {
         status: 'READY',
-        meals,
-        total_calorie,
-        total_protein_g,
         goal_type: goalType,
         generated_by: generatedBy,
         generated_at: db.serverDate(),
         updated_at: db.serverDate(),
         refresh_count: refreshCount,
-        refreshed_at: forceRefresh ? db.serverDate() : null
+        refreshed_at: forceRefresh ? db.serverDate() : null,
+        ...updatePayload
       }
     })
 
-    return { date, meals, total_calorie, total_protein_g, goal_type: goalType, generated_by: generatedBy, refresh_count: refreshCount, from_fallback: false }
+    return {
+      date,
+      goal_type: goalType,
+      generated_by: generatedBy,
+      refresh_count: refreshCount,
+      from_fallback: false,
+      ...updatePayload
+    }
   } catch (e) {
     if (e.code === 94) throw e
     await db.collection('daily_menus').doc(date).remove().catch(() => {})
@@ -256,16 +295,22 @@ exports.main = async (event, context) => {
     }
     logger.warn(FN, 'generate failed, use fallback', { error: err.message, duration: Date.now() - start })
     const config = await getConfig(db)
-    const fallbackMenus = goalType === 'lose' ? (config.fallback_menus_lose || config.fallback_menus) : config.fallback_menus
-    const meals = pickFallback(fallbackMenus)
-    const data = toDto({
-      date,
-      meals,
-      total_calorie: meals.reduce((s, m) => s + m.calorie, 0),
-      total_protein_g: Math.round(meals.reduce((s, m) => s + m.protein_g, 0) * 10) / 10,
-      generated_by: 'fallback'
-    }, true)
-    return { code: 93, message: '今日食谱暂不可用，已返回备用食谱', data }
+    let data
+    if (goalType === 'lose') {
+      const tips = pickFallbackTips(config)
+      data = toDto({ date, tips, goal_type: 'lose', generated_by: 'fallback' }, true)
+    } else {
+      const meals = pickFallback(config.fallback_menus)
+      data = toDto({
+        date,
+        meals,
+        total_calorie: meals.reduce((s, m) => s + m.calorie, 0),
+        total_protein_g: Math.round(meals.reduce((s, m) => s + m.protein_g, 0) * 10) / 10,
+        generated_by: 'fallback'
+      }, true)
+    }
+    const message = goalType === 'lose' ? '今日减脂建议暂不可用，已返回备用建议' : '今日食谱暂不可用，已返回备用食谱'
+    return { code: 93, message, data }
   }
 }
 
@@ -273,3 +318,4 @@ exports.fmtBeijingDate = fmtBeijingDate
 exports.parseAndValidate = parseAndValidate
 exports.blockingChecks = blockingChecks
 exports.pickFallback = pickFallback
+exports.pickFallbackTips = pickFallbackTips

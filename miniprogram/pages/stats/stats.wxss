@@ -192,6 +192,10 @@
   border-radius: 12rpx;
 }
 
+.week-bar-warn {
+  background: #FF4D4F;
+}
+
 .week-rate {
   width: 90rpx;
   text-align: right;

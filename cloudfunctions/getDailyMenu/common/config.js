@@ -4,7 +4,7 @@ let configCache = null
 
 const SYSTEM_PROMPT = '你是一位专业的中国增重营养师。你的任务是为「吃不胖、想增重」的用户设计安全、可落地的一日三餐。你只输出严格 JSON，不输出任何解释、标题、Markdown 代码块或多余文字。你推荐的每一道菜都必须使用常规熟食烹饪方法，杜绝任何食品安全风险。'
 
-const SYSTEM_PROMPT_LOSE = '你是一位专业的中国减重营养师。你的任务是为「想减脂、控体重」的用户设计安全、可落地的一日三餐。你只输出严格 JSON，不输出任何解释、标题、Markdown 代码块或多余文字。你推荐的每一道菜都必须使用常规熟食烹饪方法，杜绝任何食品安全风险，强调低热量、控糖、高蛋白高纤维、高饱腹感。'
+const SYSTEM_PROMPT_LOSE_TIPS = '你是一位专业的中国减脂生活教练。你的任务是为「想减脂、控体重」的用户，结合当天天气与季节，输出 3 条实操性强、可立即执行的生活减脂建议。你只输出严格 JSON，不输出任何解释、标题、Markdown 代码块或多余文字。建议必须安全、科学、健康，不得涉及极端节食、药物、催吐等危险行为。'
 
 const DAILY_MENU_PROMPT = `今天是 {date}。请为增重人群设计一日增肥食谱的「概览」，包含 4 餐：早餐(breakfast)、午餐(lunch)、加餐(snack)、晚餐(dinner)。
 
@@ -35,34 +35,23 @@ const DAILY_MENU_PROMPT = `今天是 {date}。请为增重人群设计一日增�
 4. 不要输出任何数学总和，总和由后端计算
 只返回 JSON 本体。`
 
-const DAILY_MENU_PROMPT_LOSE = `今天是 {date}。请为减脂人群设计一日控卡减脂食谱的「概览」，包含 4 餐：早餐(breakfast)、午餐(lunch)、加餐(snack)、晚餐(dinner)。
-
-【安全食材池】你只能从以下食材中组合菜品，严禁使用池外任何食材：
-{ingredients}
+const DAILY_MENU_TIPS_PROMPT_LOSE = `今天是 {date}。请为减脂人群提供 3 条贴合当天天气与季节的实操性减脂生活建议（例：多喝水、餐前饮水、饭后快走、规律作息、饮食清淡等）。
 
 【强约束】
-1. 每一道菜的食材必须全部来自上述食材池，禁止使用生僻食材、野生动物、河豚、野菌等
-2. 严禁任何生食肉类/生食水产（如生肉、刺身、生鱼片），所有肉类鱼类必须完全煮熟
-3. 只能采用常规熟食烹饪（炒/煮/蒸/炖/烤/煎），少油少糖
-4. 绝不出现"相克""解毒""治疗"等无科学依据的说法
-5. 每次生成的 4 餐菜品名称与核心食材必须具有极高的多样性，严禁重复推荐前几轮已经出现过的雷同菜品（例如：避免连续出现鸡胸肉沙拉或燕麦粥，鼓励交替使用虾、豆腐、蒸鱼、蒸菜、南瓜、西兰花等其他安全食材池内的组合）
+1. 只给正向、健康、可每天执行的小建议，避免极端节食、药物、催吐等危险做法
+2. 建议要具体、有画面感、可量化（如"每天喝够 1500ml 水"而非"多喝水"）
+3. 3 条建议主题应错开（饮水/运动/作息/饮食结构等），避免雷同
+4. 每条建议要简短、口语化、温暖鼓励，不贩卖焦虑
+5. 结合当前季节气候（如天冷提醒保暖代谢、天热提醒补水），使建议有当日感
 
-每餐概览必须包含以下字段（不要 ingredients、不要 steps）：
-- meal_type: breakfast/lunch/snack/dinner
-- title: 菜品名称（中文，有辨识度的修饰，避免裸词如"水煮蛋"）
-- calorie: 该餐热量估算值(kcal，整数)
-- protein_g: 该餐蛋白质估算值(g，可含 1 位小数)
+严格输出以下 JSON 结构：
 
-严格输出以下 JSON 结构，不要计算 total_calorie 或 total_protein_g：
-
-{"meals":[{"meal_type":"breakfast","title":"...","calorie":0,"protein_g":0},{"meal_type":"lunch","title":"...","calorie":0,"protein_g":0},{"meal_type":"snack","title":"...","calorie":0,"protein_g":0},{"meal_type":"dinner","title":"...","calorie":0,"protein_g":0}]}
+{"tips":[{"title":"建议标题","content":"建议具体内容"},{"title":"建议标题","content":"建议具体内容"},{"title":"建议标题","content":"建议具体内容"}]}
 
 约束：
-1. 4 餐必须齐全，meal_type 依次为 breakfast/lunch/snack/dinner
-2. 每餐 calorie 在 120~600 之间（加餐 snack 可放宽至 60~400），protein_g 在 8~60 之间
-3. 低热量、控糖、高蛋白高纤维、高饱腹感，偏减脂导向，但食材常见、可落地
-4. 不要输出任何数学总和，总和由后端计算
-只返回 JSON 本体。`
+1. tips 必须恰好 3 条，每条都有 title 与 content 两个字段，均不能为空
+2. title 简短（8~16 字），content 为一句话（30~80 字）
+3. 只返回 JSON 本体。`
 
 const MEAL_DETAIL_PROMPT = `请为以下菜品补充具体食材与烹饪步骤：
 - 菜名：{title}
@@ -101,11 +90,10 @@ const LOCAL_FALLBACK_CONFIG = {
     { meal_type: 'snack', title: '牛奶坚果燕麦杯', calorie: 180, protein_g: 8, ingredients: ['燕麦 40g', '全脂牛奶 250ml', '坚果 15g'], steps: ['燕麦加牛奶冲泡', '撒坚果'] },
     { meal_type: 'dinner', title: '红烧牛肉面', calorie: 620, protein_g: 28, ingredients: ['牛腩 150g', '面条 200g', '青菜 1把'], steps: ['牛肉炖软', '煮面', '浇牛肉汤'] }
   ],
-  fallback_menus_lose: [
-    { meal_type: 'breakfast', title: '水煮蛋燕麦牛奶粥', calorie: 280, protein_g: 18, ingredients: ['燕麦 40g', '鸡蛋 1个', '无糖酸奶 100g', '蓝莓 1小把'], steps: ['燕麦煮软', '拌入无糖酸奶', '配水煮蛋与蓝莓'] },
-    { meal_type: 'lunch', title: '清蒸鲈鱼配杂粮饭', calorie: 420, protein_g: 36, ingredients: ['鲈鱼 150g', '杂粮米饭 120g', '西兰花 1份'], steps: ['鲈鱼清蒸', '西兰花焯熟', '配杂粮饭'] },
-    { meal_type: 'snack', title: '黄瓜番茄鸡胸沙拉', calorie: 120, protein_g: 20, ingredients: ['鸡胸肉 80g', '黄瓜 半根', '番茄 1个', '生菜 1份'], steps: ['鸡胸肉煮熟撕丝', '蔬菜切块', '拌少许酱油'] },
-    { meal_type: 'dinner', title: '虾仁豆腐蒸蛋', calorie: 300, protein_g: 32, ingredients: ['虾 100g', '豆腐 150g', '鸡蛋 1个', '青菜 1把'], steps: ['豆腐切片铺底', '虾仁与蛋液入锅蒸', '配焯青菜'] }
+  fallback_tips_lose: [
+    { title: '晨起一杯温水', content: '起床后先喝 500ml 温水，唤醒代谢，帮助身体轻盈启动新一天。' },
+    { title: '餐前先喝汤/水', content: '正餐前先喝一碗清汤或一杯水，增强饱腹感，自然减少进食量。' },
+    { title: '饭后散步 20 分钟', content: '饭后别急着坐下，慢走 20 分钟，平稳血糖，助力消耗多余热量。' }
   ]
 }
 
@@ -152,4 +140,4 @@ function renderPrompt(template, vars) {
   }, template)
 }
 
-module.exports = { getConfig, renderPrompt, LOCAL_FALLBACK_CONFIG, SYSTEM_PROMPT, SYSTEM_PROMPT_LOSE, DAILY_MENU_PROMPT, DAILY_MENU_PROMPT_LOSE }
+module.exports = { getConfig, renderPrompt, LOCAL_FALLBACK_CONFIG, SYSTEM_PROMPT, SYSTEM_PROMPT_LOSE_TIPS, DAILY_MENU_PROMPT, DAILY_MENU_TIPS_PROMPT_LOSE }

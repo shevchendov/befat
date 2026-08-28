@@ -1,5 +1,46 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-27] d2ebffd
+
+**feat: 增重/减重双模式引擎全链路落地**
+
+- 引入 goal_type(gain/lose) 字段，normalizeGoalType 统一兜底，老用户无感回退增重
+- 减重计算 TDEE-500(≥BMR)、蛋白 2.0g/kg；活动系数补 very_active=1.95
+- 食谱 Prompt/POI 标签/达标判定按方向隔离，首页问候语与双环差值文案动态化
+- 修复双环文本重叠、达成徽章盲区、目标进度负数文案
+DEPLOY: cloudfunctions/calcTarget, cloudfunctions/recalcTarget, cloudfunctions/updateTargetManual, cloudfunctions/getStats, cloudfunctions/getGoalProgress, cloudfunctions/getDailySummary, cloudfunctions/getDailyMenu
+VERIFIED: 仅本地jest测试通过（586/586），未做真机/云端验证
+DATA IMPACT: users.goal_type、daily_menus.goal_type 为新增可选字段，老数据缺失自动按 gain 兜底，无需迁移脚本
+
+**涉及文件:**
+- `AGENTS.md`
+- `CHANGELOG.md`
+- `cloudfunctions/calcTarget/common/targetCalc.js`
+- `cloudfunctions/calcTarget/index.js`
+- `cloudfunctions/getDailyMenu/common/config.js`
+- `cloudfunctions/getDailyMenu/index.js`
+- `cloudfunctions/getDailySummary/index.js`
+- `cloudfunctions/getGoalProgress/index.js`
+- `cloudfunctions/getStats/index.js`
+- `cloudfunctions/recalcTarget/common/targetCalc.js`
+- `cloudfunctions/recalcTarget/index.js`
+- `cloudfunctions/updateTargetManual/common/targetCalc.js`
+- `cloudfunctions/updateTargetManual/index.js`
+- `miniprogram/pages/daily-menu/daily-menu.js`
+- `miniprogram/pages/index/index.js`
+- `miniprogram/pages/index/index.wxml`
+- `miniprogram/pages/index/index.wxss`
+- `miniprogram/pages/onboarding/onboarding.js`
+- `miniprogram/pages/onboarding/onboarding.wxml`
+- `miniprogram/pages/onboarding/onboarding.wxss`
+- `miniprogram/utils/targetGuard.js`
+- `miniprogram/utils/util.js`
+- `tests/frontend/index.test.js`
+- `tests/interface/cloud-function-contracts.test.js`
+- `功能交互与菜单入口说明.md`
+- `双模式引擎详细设计说明书.md`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/calcTarget, cloudfunctions/recalcTarget, cloudfunctions/updateTargetManual, cloudfunctions/getStats, cloudfunctions/getGoalProgress, cloudfunctions/getDailySummary, cloudfunctions/getDailyMenu
+
 ## [2026-08-25] 417113d
 
 **docs: 更新 CHANGELOG**

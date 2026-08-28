@@ -6,7 +6,7 @@ const FAV_CACHE_KEY = 'favoriteMenuCache'
 const MEAL_LABELS = { breakfast: '早餐', lunch: '午餐', snack: '加餐', dinner: '晚餐' }
 const GOAL_POI_TAGS = {
   gain: ['清淡粤菜', '地道茶楼', '海鲜大排档'],
-  lose: ['轻食沙拉', '蒸菜粥粉', '低卡减脂餐']
+  lose: ['周边公园', '健身房', '绿道', '游泳馆']
 }
 
 function normalizeGoalType(v) {
@@ -19,6 +19,7 @@ Page({
     refreshing: false,
     date: '',
     meals: [],
+    tips: [],
     total_calorie: 0,
     total_protein_g: 0,
     generated_by: '',
@@ -55,11 +56,16 @@ Page({
   applyGoalType() {
     const app = getApp()
     const goalType = normalizeGoalType(app.globalData.userInfo && app.globalData.userInfo.goal_type)
-    const title = goalType === 'lose' ? '今日减脂食谱' : '今日增肥食谱'
+    const title = goalType === 'lose' ? '今日燃脂锦囊' : '今日增肥食谱'
     wx.setNavigationBarTitle({ title })
     this.setData({
       goalType,
       searchTags: GOAL_POI_TAGS[goalType] || GOAL_POI_TAGS.gain
+    }, () => {
+      // lose 模式进入时若已加载过食谱数据，需按 tips 口径重新拉取
+      if (goalType === 'lose' && !this.data.tips.length && !this.data.isGenerating) {
+        this.loadMenu(false)
+      }
     })
   },
 
@@ -111,10 +117,17 @@ Page({
         expanded: false,
         detailLoading: false
       }))
+      const tips = (d.tips || []).map(t => ({
+        title: t.title || '',
+        content: t.content || ''
+      }))
+      const goalType = normalizeGoalType(d.goal_type)
 
       this.setData({
         date: d.date,
+        goalType,
         meals,
+        tips,
         total_calorie: d.total_calorie,
         total_protein_g: d.total_protein_g,
         generated_by: d.generated_by,

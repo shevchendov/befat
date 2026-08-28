@@ -1,5 +1,6 @@
 const logger = require('../../utils/logger')
 const canvasChart = require('../../utils/canvasChart')
+const { normalizeGoalType } = require('../../utils/util')
 
 const NUTR_COLORS = { ok: '#43A047', fail: '#FF6B35', none: '#C9C2B8' }
 
@@ -9,11 +10,32 @@ Page({
     error: '',
     summaryItems: [],
     weights: [],
-    weeks: []
+    weeks: [],
+    goalType: 'gain',
+    summaryTitle: '营养达标率',
+    weekTitle: '每周达标率 vs 体重变化',
+    legendLabel: '达标'
   },
 
   onLoad() {
     this.loadData()
+  },
+
+  onShow() {
+    this.applyGoalType()
+  },
+
+  applyGoalType() {
+    const app = getApp()
+    const goalType = normalizeGoalType(app.globalData.userInfo && app.globalData.userInfo.goal_type)
+    const isLose = goalType === 'lose'
+    wx.setNavigationBarTitle({ title: isLose ? '热量与缺口' : '达标统计' })
+    this.setData({
+      goalType,
+      summaryTitle: isLose ? '热量控制成功率' : '营养达标率',
+      weekTitle: isLose ? '每周热量控制 vs 体重变化' : '每周达标率 vs 体重变化',
+      legendLabel: isLose ? '控制成功' : '达标'
+    })
   },
 
   async loadData() {
@@ -26,10 +48,12 @@ Page({
 
       if (res.result.code === 0) {
         const d = res.result.data
-        const summaryItems = this.buildSummaryItems(d)
+        const goalType = normalizeGoalType(d.goal_type)
+        this.setData({ goalType })
+        const summaryItems = this.buildSummaryItems(d, goalType)
         const weeks = (d.weeks || [])
           .filter(w => w.recorded > 0 || w.weight_delta != null)
-          .map(w => this.buildWeekItem(w))
+          .map(w => this.buildWeekItem(w, goalType))
         this.setData({
           summaryItems,
           weeks,
@@ -49,36 +73,43 @@ Page({
     }
   },
 
-  buildSummaryItems(d) {
+  buildSummaryItems(d, goalType) {
     const target = d.target || {}
     const hasCal = Number(target.calorie) > 0
     const hasPro = Number(target.protein_g) > 0
     const summary = d.summary || {}
+    const isLose = goalType === 'lose'
+    const calorieLabel = isLose ? '热量控制成功率' : '热量'
+    const proteinLabel = isLose ? '肌肉保护伞 · 蛋白' : '蛋白'
     const mk = (label, rate, recorded, hasTarget) => ({
       label,
       recorded: recorded || 0,
       rateText: hasTarget && rate != null ? `${rate}%` : '--'
     })
     return [
-      mk('近7天 · 热量', summary.week && summary.week.calorie_rate, summary.week && summary.week.recorded, hasCal),
-      mk('近7天 · 蛋白', summary.week && summary.week.protein_rate, summary.week && summary.week.recorded, hasPro),
-      mk('近30天 · 热量', summary.month && summary.month.calorie_rate, summary.month && summary.month.recorded, hasCal),
-      mk('近30天 · 蛋白', summary.month && summary.month.protein_rate, summary.month && summary.month.recorded, hasPro)
+      mk(`近7天 · ${calorieLabel}`, summary.week && summary.week.calorie_rate, summary.week && summary.week.recorded, hasCal),
+      mk(`近7天 · ${proteinLabel}`, summary.week && summary.week.protein_rate, summary.week && summary.week.recorded, hasPro),
+      mk(`近30天 · ${calorieLabel}`, summary.month && summary.month.calorie_rate, summary.month && summary.month.recorded, hasCal),
+      mk(`近30天 · ${proteinLabel}`, summary.month && summary.month.protein_rate, summary.month && summary.month.recorded, hasPro)
     ]
   },
 
-  buildWeekItem(w) {
+  buildWeekItem(w, goalType) {
     const hasRate = w.calorie_rate != null
+    const isLose = goalType === 'lose'
     let deltaText = '无体重记录'
     if (w.weight_delta != null) {
       const sign = w.weight_delta > 0 ? '+' : ''
       deltaText = `${sign}${w.weight_delta}kg`
     }
+    // 减重模式：热量控制成功率 < 100% 即存在超标日，标注警示红
+    const warn = isLose && hasRate && w.calorie_rate < 100
     return {
       label: w.label,
       barWidth: hasRate ? w.calorie_rate : 0,
       rateText: hasRate ? `${w.calorie_rate}%` : '--',
-      deltaText
+      deltaText,
+      warn
     }
   },
 

@@ -9,7 +9,7 @@
   <block wx:else>
     <view class="summary-card">
       <view class="summary-header">
-        <text class="summary-title">📈 营养达标率</text>
+        <text class="summary-title">{{summaryTitle}}</text>
         <text class="summary-note">按当前目标计算</text>
       </view>
       <view class="summary-grid">
@@ -27,11 +27,11 @@
         <view class="chart-legend">
           <view class="legend-item">
             <view class="legend-dot dot-ok"></view>
-            <text>达标</text>
+            <text>{{legendLabel}}</text>
           </view>
           <view class="legend-item">
             <view class="legend-dot dot-fail"></view>
-            <text>未达标</text>
+            <text>{{goalType === 'lose' ? '超标' : '未达标'}}</text>
           </view>
           <view class="legend-item">
             <view class="legend-dot dot-none"></view>
@@ -44,12 +44,12 @@
     </view>
 
     <view class="stats-section" wx:if="{{weeks.length > 0}}">
-      <view class="stats-section-title">📅 每周达标率 vs 体重变化</view>
+      <view class="stats-section-title">📅 {{weekTitle}}</view>
       <view class="week-card">
         <view class="week-row" wx:for="{{weeks}}" wx:key="label">
           <text class="week-label">{{item.label}}</text>
           <view class="week-bar">
-            <view class="week-bar-fill" style="width: {{item.barWidth}}%;"></view>
+            <view class="week-bar-fill {{item.warn ? 'week-bar-warn' : ''}}" style="width: {{item.barWidth}}%;"></view>
           </view>
           <text class="week-rate">{{item.rateText}}</text>
           <text class="week-delta">{{item.deltaText}}</text>

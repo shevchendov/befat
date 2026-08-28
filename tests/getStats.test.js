@@ -187,6 +187,48 @@ describe('getStats - weekly aggregation', () => {
   })
 })
 
+describe('getStats - lose 达标反向判定', () => {
+  test('lose 模式：热量未超标且蛋白达标 → ok', async () => {
+    await seed('users', { _openid: 'test-openid', goal_type: 'lose', daily_calorie_target: 1500, daily_protein_target_g: 90 })
+    await seed('food_logs', { _openid: 'test-openid', date: '2026-08-01', meal_type: 'lunch', total_calorie: 1200, total_protein_g: 95 })
+    await seed('weight_logs', { _openid: 'test-openid', date: '2026-08-01', weight_kg: 70.0 })
+    const res = await getStats.main({ days: 30, endDate: '2026-08-02' }, {})
+    expect(res.data.goal_type).toBe('lose')
+    expect(res.data.summary.week.calorie_rate).toBe(100)
+    expect(res.data.summary.week.protein_rate).toBe(100)
+    expect(res.data.weights[0].nutr).toBe('ok')
+  })
+
+  test('lose 模式：热量超标（> 目标）→ fail', async () => {
+    await seed('users', { _openid: 'test-openid', goal_type: 'lose', daily_calorie_target: 1500, daily_protein_target_g: 90 })
+    await seed('food_logs', { _openid: 'test-openid', date: '2026-08-01', meal_type: 'lunch', total_calorie: 1800, total_protein_g: 95 })
+    await seed('weight_logs', { _openid: 'test-openid', date: '2026-08-01', weight_kg: 70.0 })
+    const res = await getStats.main({ days: 30, endDate: '2026-08-02' }, {})
+    expect(res.data.summary.week.calorie_rate).toBe(0)
+    expect(res.data.weights[0].nutr).toBe('fail')
+  })
+
+  test('lose 模式：蛋白不足（< 目标）→ fail（热量达标也不行）', async () => {
+    await seed('users', { _openid: 'test-openid', goal_type: 'lose', daily_calorie_target: 1500, daily_protein_target_g: 90 })
+    await seed('food_logs', { _openid: 'test-openid', date: '2026-08-01', meal_type: 'lunch', total_calorie: 1200, total_protein_g: 60 })
+    await seed('weight_logs', { _openid: 'test-openid', date: '2026-08-01', weight_kg: 70.0 })
+    const res = await getStats.main({ days: 30, endDate: '2026-08-02' }, {})
+    expect(res.data.summary.week.calorie_rate).toBe(100)
+    expect(res.data.summary.week.protein_rate).toBe(0)
+    expect(res.data.weights[0].nutr).toBe('fail')
+  })
+
+  test('gain 模式（无 goal_type 老用户）仍按 >= 目标 判定', async () => {
+    await seed('users', { _openid: 'test-openid', daily_calorie_target: 1500, daily_protein_target_g: 90 })
+    await seed('food_logs', { _openid: 'test-openid', date: '2026-08-01', meal_type: 'lunch', total_calorie: 1200, total_protein_g: 95 })
+    await seed('weight_logs', { _openid: 'test-openid', date: '2026-08-01', weight_kg: 70.0 })
+    const res = await getStats.main({ days: 30, endDate: '2026-08-02' }, {})
+    expect(res.data.goal_type).toBe('gain')
+    expect(res.data.summary.week.calorie_rate).toBe(0)
+    expect(res.data.weights[0].nutr).toBe('fail')
+  })
+})
+
 describe('getStats - pagination', () => {
   test('paginates more than 100 food logs', async () => {
     await seed('users', { _openid: 'test-openid', daily_calorie_target: 2500, daily_protein_target_g: 90 })
