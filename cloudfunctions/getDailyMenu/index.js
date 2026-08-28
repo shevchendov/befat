@@ -171,11 +171,11 @@ async function readDoc(date) {
   }
 }
 
-async function waitAndRead(date) {
+async function waitAndRead(date, goalType) {
   for (let i = 0; i < POLL_MAX; i++) {
     await sleep(POLL_INTERVAL)
     const doc = await readDoc(date)
-    if (doc && doc.status === 'READY') return toDto(doc, false)
+    if (doc && doc.status === 'READY' && normalizeGoalType(doc.goal_type) === goalType) return toDto(doc, false)
   }
   throw new Error('poll timeout')
 }
@@ -183,7 +183,10 @@ async function waitAndRead(date) {
 async function fetchOrGenerate(date, forceRefresh, goalType) {
   let doc = await readDoc(date)
 
-  if (!forceRefresh && doc && doc.status === 'READY') return toDto(doc, false)
+  // 缓存命中必须校验 direction：跨目标模式的旧文档视为未命中，重新生成，杜绝 gain/lose 串味
+  if (!forceRefresh && doc && doc.status === 'READY' && normalizeGoalType(doc.goal_type) === goalType) {
+    return toDto(doc, false)
+  }
 
   if (forceRefresh) {
     const cnt = (doc && doc.refresh_count) || 0
@@ -200,14 +203,14 @@ async function fetchOrGenerate(date, forceRefresh, goalType) {
         data: { _id: date, date, status: 'GENERATING', created_at: db.serverDate(), refresh_count: 0 }
       })
     } catch (e) {
-      return await waitAndRead(date)
+      return await waitAndRead(date, goalType)
     }
   } else if (doc.status === 'GENERATING') {
     if (Date.now() - new Date(doc.created_at).getTime() > ZOMBIE_MS) {
       await db.collection('daily_menus').doc(date).remove()
       return await fetchOrGenerate(date, forceRefresh, goalType)
     }
-    return await waitAndRead(date)
+    return await waitAndRead(date, goalType)
   }
 
   try {

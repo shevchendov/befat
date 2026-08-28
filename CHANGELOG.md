@@ -1,5 +1,33 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-28] 358add8
+
+**feat: 减重体验升级方案A——燃脂锦囊化与统计语义重塑**
+
+- 减重模式 LLM 由减脂食谱改为生活减脂建议 tips（独立 Prompt + fallback_tips_lose）
+- 首页金刚区/统计页文案按目标模式分流（燃脂锦囊、热量与缺口、热量控制成功率、柱状图警示红）
+- 锦囊地图标签 lose 改运动耗能场所；锦囊页 tips 清单渲染
+- 补充 22 项单元测试（tips 解析/降级、lose 达标反向判定、警示标记、文案分流）
+DEPLOY: cloudfunctions/getDailyMenu
+VERIFIED: 仅本地jest测试通过（608/608），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `cloudfunctions/getDailyMenu/common/config.js`
+- `cloudfunctions/getDailyMenu/index.js`
+- `miniprogram/pages/daily-menu/daily-menu.js`
+- `miniprogram/pages/daily-menu/daily-menu.wxml`
+- `miniprogram/pages/daily-menu/daily-menu.wxss`
+- `miniprogram/pages/index/index.wxml`
+- `miniprogram/pages/stats/stats.js`
+- `miniprogram/pages/stats/stats.wxml`
+- `miniprogram/pages/stats/stats.wxss`
+- `tests/frontend/setup.js`
+- `tests/frontend/stats.test.js`
+- `tests/getDailyMenu.test.js`
+- `tests/getStats.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getDailyMenu
+
 ## [2026-08-27] d2ebffd
 
 **feat: 增重/减重双模式引擎全链路落地**

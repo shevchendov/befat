@@ -24,11 +24,11 @@ function setCache(data) {
   } catch (e) {}
 }
 
-function searchPoi({ lat, lng, radius, page, searchQuery }) {
+function searchPoi({ lat, lng, radius, page, searchQuery, goalType }) {
   return new Promise((resolve, reject) => {
     wx.cloud.callFunction({
       name: 'getNearbyPoi',
-      data: { lat, lng, radius, page, searchQuery },
+      data: { lat, lng, radius, page, searchQuery, goal_type: goalType },
       success: res => {
         const r = res && res.result
         if (r && r.code === 0) {
@@ -71,30 +71,31 @@ function parseData(data) {
   }
 }
 
-async function searchNearbyPoi({ lat, lng, page, searchQuery }) {
+async function searchNearbyPoi({ lat, lng, page, searchQuery, goalType }) {
   page = page || 1
   const q = searchQuery ? String(searchQuery).trim() : ''
+  const gt = goalType === 'lose' ? 'lose' : 'gain'
   const rLat = roundCoord(lat)
   const rLng = roundCoord(lng)
 
-  // 首页命中缓存（同百米级坐标 + 同 query + 5 分钟 TTL）
+  // 首页命中缓存（同百米级坐标 + 同 query + 同 goalType + 5 分钟 TTL）
   if (page === 1) {
     const cached = getCache()
-    if (cached && cached.lat === rLat && cached.lng === rLng && (cached.query || '') === q && Date.now() - cached.ts < CACHE_TTL) {
+    if (cached && cached.lat === rLat && cached.lng === rLng && (cached.query || '') === q && (cached.goalType || 'gain') === gt && Date.now() - cached.ts < CACHE_TTL) {
       return { list: cached.list, total: cached.total, from_cache: true, resolvedTags: cached.resolvedTags }
     }
   }
 
   // 1km 检索，空则自动扩 3km 重试一次
   let raw
-  raw = await withTimeout(searchPoi({ lat, lng, radius: 1000, page, searchQuery: q }), TIMEOUT)
+  raw = await withTimeout(searchPoi({ lat, lng, radius: 1000, page, searchQuery: q, goalType: gt }), TIMEOUT)
   if (!raw.data || !raw.data.data || raw.data.data.length === 0) {
-    raw = await withTimeout(searchPoi({ lat, lng, radius: 3000, page, searchQuery: q }), TIMEOUT)
+    raw = await withTimeout(searchPoi({ lat, lng, radius: 3000, page, searchQuery: q, goalType: gt }), TIMEOUT)
   }
 
   const parsed = parseData(raw.data)
   if (page === 1) {
-    setCache({ ts: Date.now(), lat: rLat, lng: rLng, query: q, list: parsed.list, total: parsed.total, resolvedTags: raw.resolvedTags })
+    setCache({ ts: Date.now(), lat: rLat, lng: rLng, query: q, goalType: gt, list: parsed.list, total: parsed.total, resolvedTags: raw.resolvedTags })
   }
   return { list: parsed.list, total: parsed.total, from_cache: false, resolvedTags: raw.resolvedTags }
 }

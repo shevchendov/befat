@@ -91,12 +91,18 @@
           </view>
         </view>
 
-        <view class="tip-card" wx:for="{{tips}}" wx:for-item="tip" wx:for-index="idx" wx:key="title">
+        <view class="tip-card" wx:if="{{tips && tips.length > 0}}" wx:for="{{tips}}" wx:for-item="tip" wx:for-index="idx" wx:key="title">
           <view class="tip-index">{{idx + 1}}</view>
           <view class="tip-body">
             <view class="tip-title">{{tip.title}}</view>
             <view class="tip-content">{{tip.content}}</view>
           </view>
+        </view>
+
+        <view wx:if="{{!tips || tips.length === 0}}" class="drawer-empty">
+          <text class="empty-emoji">🧭</text>
+          <text class="empty-main">今日燃脂锦囊准备中…</text>
+          <text class="empty-sub">稍等一下，马上为你送上减脂建议</text>
         </view>
 
         <view class="from-fallback" wx:if="{{fromFallback}}">今日减脂建议暂不可用，已为你准备备用建议</view>
@@ -108,7 +114,7 @@
   <block wx:if="{{currentView === 'poi'}}">
     <view class="poi-search-bar">
       <view class="poi-search-input-wrap">
-        <input class="poi-search-input" placeholder="想吃点什么？如：清淡粤菜、早茶..." value="{{poiSearch}}" bindinput="onPoiSearchInput" confirm-type="search" bindconfirm="doPoiSearch" />
+        <input class="poi-search-input" placeholder="{{goalType === 'lose' ? '想去哪运动？如：周边公园、健身房...' : '想吃点什么？如：清淡粤菜、早茶...'}}" value="{{poiSearch}}" bindinput="onPoiSearchInput" confirm-type="search" bindconfirm="doPoiSearch" />
       </view>
       <view class="poi-search-btn" bindtap="doPoiSearch">帮我找</view>
     </view>
@@ -117,12 +123,12 @@
       <view class="poi-tag" wx:for="{{searchTags}}" wx:for-item="tag" wx:key="*this" bindtap="clickPoiTag" data-tag="{{tag}}">{{tag}}</view>
     </view>
 
-    <view wx:if="{{poiResolved}}" class="poi-resolved">为你匹配：{{poiResolved}}</view>
+    <view wx:if="{{poiResolved}}" class="poi-resolved">{{poiResolved}}</view>
 
     <view wx:if="{{poiLoading}}" class="poi-loading">正在帮你找…</view>
 
     <view wx:if="{{poiError && !poiLoading}}" class="poi-error">
-      <text class="poi-error-emoji">🍜</text>
+      <text class="poi-error-emoji">{{goalType === 'lose' ? '🏃' : '🍜'}}</text>
       <text class="poi-error-text">{{poiMsg}}</text>
       <view class="action-btn secondary poi-retry" bindtap="retryPoi">重新定位</view>
     </view>

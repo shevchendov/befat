@@ -9,6 +9,13 @@ const GOAL_POI_TAGS = {
   lose: ['周边公园', '健身房', '绿道', '游泳馆']
 }
 
+// 减重模式本地静态兜底锦囊：后端异常/空返回时保证绝不白屏，且首次进入可秒开展示
+const FALLBACK_TIPS_LOSE = [
+  { title: '晨起一杯温水', content: '起床后先喝 500ml 温水，唤醒身体代谢，帮助轻盈启动新一天。' },
+  { title: '餐前先喝水或汤', content: '正餐前先喝一碗清汤或一杯水，增强饱腹感，自然减少进食量。' },
+  { title: '饭后散步 20 分钟', content: '饭后别急着坐下，慢走 20 分钟，平稳血糖，助力消耗多余热量。' }
+]
+
 function normalizeGoalType(v) {
   return v === 'lose' ? 'lose' : 'gain'
 }
@@ -62,8 +69,9 @@ Page({
       goalType,
       searchTags: GOAL_POI_TAGS[goalType] || GOAL_POI_TAGS.gain
     }, () => {
-      // lose 模式进入时若已加载过食谱数据，需按 tips 口径重新拉取
+      // lose 模式：首次进入先本地兜底秒开，再尝试云端拉取；云端返回后再覆盖
       if (goalType === 'lose' && !this.data.tips.length && !this.data.isGenerating) {
+        this.setData({ tips: FALLBACK_TIPS_LOSE })
         this.loadMenu(false)
       }
     })
@@ -123,11 +131,17 @@ Page({
       }))
       const goalType = normalizeGoalType(d.goal_type)
 
+      // 减重模式：云端返回空/异常时，用本地静态锦囊兜底，确保绝不白屏
+      let finalTips = tips
+      if (goalType === 'lose' && (!finalTips || finalTips.length === 0)) {
+        finalTips = FALLBACK_TIPS_LOSE
+      }
+
       this.setData({
         date: d.date,
         goalType,
         meals,
-        tips,
+        tips: finalTips,
         total_calorie: d.total_calorie,
         total_protein_g: d.total_protein_g,
         generated_by: d.generated_by,
@@ -468,12 +482,19 @@ Page({
     }
   },
 
-  async loadPoi(searchQuery) {
+  // 首次进入/置空搜索共用的默认检索：不传 searchQuery，交给云函数按 goalType 下发默认关键词
+  loadPoi(searchQuery) {
     const reqId = ++this._poiReqId
     this.setData({ poiLoading: true, poiError: false, poiMsg: '', poiResolved: '' })
+    return this.fetchPoi(reqId, searchQuery)
+  },
+
+  async fetchPoi(reqId, searchQuery) {
     try {
+      // 确保定位成功后再发起请求；定位失败由 getUserLocation 内部走手动选点/授权引导兜底
       const loc = await getUserLocation()
-      const res = await searchNearbyPoi({ lat: loc.latitude, lng: loc.longitude, page: 1, searchQuery })
+      if (reqId !== this._poiReqId) return
+      const res = await searchNearbyPoi({ lat: loc.latitude, lng: loc.longitude, page: 1, searchQuery, goalType: this.data.goalType })
       if (reqId !== this._poiReqId) return
       this.setData({
         poiList: res.list || [],
@@ -509,8 +530,13 @@ Page({
 
   doPoiSearch() {
     const q = this.data.poiSearch.trim()
-    if (!q) return
     if (this._searchTimer) clearTimeout(this._searchTimer)
+    // 置空搜索：清空列表与输入，回退到当前 goalType 的默认周边检索，而非拦截 return
+    if (!q) {
+      this.setData({ poiSearch: '', poiList: [], poiTotal: 0 })
+      this.loadPoi()
+      return
+    }
     this.loadPoi(q)
   },
 
@@ -532,7 +558,7 @@ Page({
     this.setData({ poiLoadMore: true })
     try {
       const loc = await getUserLocation()
-      const res = await searchNearbyPoi({ lat: loc.latitude, lng: loc.longitude, page })
+      const res = await searchNearbyPoi({ lat: loc.latitude, lng: loc.longitude, page, goalType: this.data.goalType })
       this.setData({ poiList: this.data.poiList.concat(res.list || []), poiTotal: res.total || 0 })
     } catch (err) {
       wx.showToast({ title: '加载更多失败', icon: 'none' })

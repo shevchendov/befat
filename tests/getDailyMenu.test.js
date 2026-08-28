@@ -1,5 +1,6 @@
 let mockMenus = []
 let mockNotExist = false
+let mockUsers = []
 
 jest.mock('wx-server-sdk', () => {
   const mockServerDate = jest.fn(() => '2026-08-21T00:00:00.000Z')
@@ -7,34 +8,43 @@ jest.mock('wx-server-sdk', () => {
     init: jest.fn(),
     DYNAMIC_CURRENT_ENV: 'env-mock',
     database: jest.fn(() => ({
-      collection: jest.fn(() => ({
-        doc: jest.fn((id) => ({
-          get: jest.fn().mockImplementation(() => {
-            const doc = mockMenus.find(m => m._id === id)
-            if (!doc && mockNotExist) {
-              return Promise.reject(new Error('document.get:fail document with _id ' + id + ' does not exist'))
-            }
-            return Promise.resolve({ data: doc || null })
-          }),
-          update: jest.fn().mockImplementation(({ data }) => {
-            const idx = mockMenus.findIndex(m => m._id === id)
-            if (idx !== -1) Object.assign(mockMenus[idx], data)
-            return Promise.resolve({})
-          }),
-          remove: jest.fn().mockImplementation(() => {
-            const idx = mockMenus.findIndex(m => m._id === id)
-            if (idx !== -1) mockMenus.splice(idx, 1)
-            return Promise.resolve({})
-          })
-        })),
-        add: jest.fn().mockImplementation(({ data }) => {
-          if (mockMenus.find(m => m._id === data._id)) {
-            return Promise.reject(new Error('duplicate key'))
+      collection: jest.fn((name) => {
+        if (name === 'users') {
+          return {
+            where: jest.fn(() => ({
+              get: jest.fn(() => Promise.resolve({ data: mockUsers }))
+            }))
           }
-          mockMenus.push({ _id: data._id, ...data })
-          return Promise.resolve({ _id: data._id })
-        })
-      })),
+        }
+        return {
+          doc: jest.fn((id) => ({
+            get: jest.fn().mockImplementation(() => {
+              const doc = mockMenus.find(m => m._id === id)
+              if (!doc && mockNotExist) {
+                return Promise.reject(new Error('document.get:fail document with _id ' + id + ' does not exist'))
+              }
+              return Promise.resolve({ data: doc || null })
+            }),
+            update: jest.fn().mockImplementation(({ data }) => {
+              const idx = mockMenus.findIndex(m => m._id === id)
+              if (idx !== -1) Object.assign(mockMenus[idx], data)
+              return Promise.resolve({})
+            }),
+            remove: jest.fn().mockImplementation(() => {
+              const idx = mockMenus.findIndex(m => m._id === id)
+              if (idx !== -1) mockMenus.splice(idx, 1)
+              return Promise.resolve({})
+            })
+          })),
+          add: jest.fn().mockImplementation(({ data }) => {
+            if (mockMenus.find(m => m._id === data._id)) {
+              return Promise.reject(new Error('duplicate key'))
+            }
+            mockMenus.push({ _id: data._id, ...data })
+            return Promise.resolve({ _id: data._id })
+          })
+        }
+      }),
       serverDate: mockServerDate
     })),
     getWXContext: jest.fn(() => ({ OPENID: 'test-openid', APPID: 'test-appid', UNIONID: null }))
@@ -63,6 +73,7 @@ function validMeals() {
 beforeEach(() => {
   mockMenus = []
   mockNotExist = false
+  mockUsers = []
   process.env = { ...origEnv }
   process.env.MENU_API_KEY = 'test-key'
   axios.post.mockReset()
@@ -263,6 +274,24 @@ describe('getDailyMenu - lose tips 解析与降级', () => {
   test('pickFallbackTips 配置不足 3 条时回退本地默认', () => {
     const tips = pickFallbackTips({ fallback_tips_lose: [{ title: 'T1', content: 'C1' }] })
     expect(tips).toHaveLength(3)
+  })
+
+  test('缓存 READY 但 goal_type 方向不一致时，不命中并重新按 lose 生成 tips', async () => {
+    // 预置一个 gain 方向的 READY 文档（meals），lose 用户访问时不得复用，必须重生成 tips
+    mockMenus.push({
+      _id: '2026-08-21', date: '2026-08-21', status: 'READY', goal_type: 'gain',
+      meals: validMeals(), total_calorie: 1620, total_protein_g: 98, generated_by: 'glm-4-flash', refresh_count: 0
+    })
+    mockUsers = [{ goal_type: 'lose' }]
+    axios.post.mockResolvedValue({ data: { choices: [{ message: { content: JSON.stringify({ tips: [
+      { title: 'T1', content: 'C1' }, { title: 'T2', content: 'C2' }, { title: 'T3', content: 'C3' }
+    ] }) } }] } })
+    const res = await getDailyMenu.main({ date: '2026-08-21' }, {})
+    expect(res.code).toBe(0)
+    expect(res.data.goal_type).toBe('lose')
+    expect(res.data.tips).toHaveLength(3)
+    expect(res.data.tips[0].title).toBe('T1')
+    expect(res.data.meals).toBeUndefined()
   })
 })
 
