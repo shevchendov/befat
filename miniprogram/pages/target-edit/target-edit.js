@@ -9,6 +9,7 @@ Page({
     mode: 'recalc',
     loading: true,
     submitting: false,
+    goalType: 'gain',
     form: {
       current_weight_kg: '',
       target_weight_kg: '',
@@ -17,6 +18,20 @@ Page({
       target_weeks: ''
     },
     profileText: ''
+  },
+
+  // 目标方向合法性校验：gain 目标须 > 当前；lose 目标须 < 当前
+  validateDirection(currentWeight, targetWeight) {
+    if (this.data.goalType === 'lose') {
+      if (targetWeight >= currentWeight) {
+        return { ok: false, message: '减重目标须小于当前体重' }
+      }
+      return { ok: true }
+    }
+    if (targetWeight <= currentWeight) {
+      return { ok: false, message: '增重目标须大于当前体重' }
+    }
+    return { ok: true }
   },
 
   onShow() {
@@ -38,6 +53,7 @@ Page({
       const targetWeight = gp ? gp.target_weight : (user && user.target_weight_kg != null ? user.target_weight_kg : '')
 
       this.setData({
+        goalType: util.normalizeGoalType(user && user.goal_type),
         form: {
           current_weight_kg: currentWeight != null ? String(currentWeight) : '',
           target_weight_kg: targetWeight != null ? String(targetWeight) : '',
@@ -113,12 +129,20 @@ Page({
       return
     }
 
+    // 方向合法性校验：增重需目标>当前，减重需目标<当前
+    const dir = this.validateDirection(currentWeight, targetWeight)
+    if (!dir.ok) {
+      wx.showToast({ title: dir.message, icon: 'none' })
+      return
+    }
+
     // 与云函数 recalcTarget 的 validateWeights 同口径的前端预校验，提前拦截避免白填
     const guard = validateTargetInput({
       height_cm: this.data.height_cm,
       current_weight_kg: currentWeight,
       target_weight_kg: targetWeight,
-      target_weeks: targetWeeks || this.data.userWeeks || null
+      target_weeks: targetWeeks || this.data.userWeeks || null,
+      goal_type: this.data.goalType
     })
     if (!guard.ok) {
       if (guard.code) {
@@ -136,7 +160,8 @@ Page({
         data: {
           current_weight_kg: currentWeight,
           target_weight_kg: targetWeight,
-          target_weeks: targetWeeks
+          target_weeks: targetWeeks,
+          goal_type: this.data.goalType
         }
       })
       this.handleSubmitResult(res.result, '目标已更新!')
@@ -155,6 +180,19 @@ Page({
     if (!calorie && !protein && !target) {
       wx.showToast({ title: '请至少填写一项', icon: 'none' })
       return
+    }
+
+    // 手动模式若同时填写了目标体重，仍需做方向校验（需要当前体重作参照）
+    if (target) {
+      const targetNum = parseFloat(target)
+      const currentNum = parseFloat(this.data.form.current_weight_kg)
+      if (!isNaN(targetNum) && !isNaN(currentNum)) {
+        const dir = this.validateDirection(currentNum, targetNum)
+        if (!dir.ok) {
+          wx.showToast({ title: dir.message, icon: 'none' })
+          return
+        }
+      }
     }
 
     const payload = {}
@@ -181,6 +219,9 @@ Page({
         return
       }
       payload.target_weight_kg = v
+    }
+    if (this.data.goalType) {
+      payload.goal_type = this.data.goalType
     }
 
     this.setData({ submitting: true })

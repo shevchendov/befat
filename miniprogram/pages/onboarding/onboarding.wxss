@@ -62,15 +62,20 @@
 .gender-option {
   flex: 1;
   padding: 30rpx;
-  background: #F8F4EC;
+  background: #FFFFFF;
   border-radius: 20rpx;
   text-align: center;
-  border: 2rpx solid var(--border);
+  border: 2rpx solid #E5E5E5;
+  color: #666666;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .gender-option.selected {
-  border-color: var(--primary);
-  background: #FFF5EB;
+  border: 4rpx solid var(--theme-primary);
+  background: var(--theme-light);
+  color: var(--theme-primary);
+  font-weight: 600;
 }
 
 .goal-type-select {
@@ -81,18 +86,22 @@
 .goal-type-option {
   flex: 1;
   padding: 34rpx 30rpx;
-  background: #F8F4EC;
+  background: #FFFFFF;
   border-radius: 20rpx;
   text-align: center;
-  border: 2rpx solid var(--border);
+  border: 2rpx solid #E5E5E5;
   font-size: 28rpx;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 500;
+  color: #666666;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .goal-type-option.selected {
-  border-color: var(--primary);
-  background: #FFF5EB;
+  border: 4rpx solid var(--theme-primary);
+  background: var(--theme-light);
+  color: var(--theme-primary);
+  font-weight: 600;
 }
 
 .goal-type-icon {
@@ -126,14 +135,19 @@
 
 .activity-option {
   padding: 30rpx;
-  background: #F8F4EC;
+  background: #FFFFFF;
   border-radius: 20rpx;
-  border: 2rpx solid var(--border);
+  border: 2rpx solid #E5E5E5;
+  color: #666666;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .activity-option.selected {
-  border-color: var(--primary);
-  background: #FFF5EB;
+  border: 4rpx solid var(--theme-primary);
+  background: var(--theme-light);
+  color: var(--theme-primary);
+  font-weight: 600;
 }
 
 .activity-name {
@@ -142,6 +156,10 @@
   color: var(--text-primary);
   display: block;
   margin-bottom: 8rpx;
+}
+
+.activity-option.selected .activity-name {
+  color: var(--theme-primary);
 }
 
 .activity-desc {

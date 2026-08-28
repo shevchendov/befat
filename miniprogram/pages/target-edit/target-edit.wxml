@@ -1,4 +1,6 @@
-<view class="page-container target-edit-page">
+<view class="page-container target-edit-page {{goalType === 'lose' ? 'goal-lose' : ''}}">
+  <view class="goal-type-badge goal-type-badge-{{goalType}}">{{goalType === 'lose' ? '减重模式' : '增重模式'}}</view>
+
   <view class="mode-tabs">
     <view class="mode-tab {{mode === 'recalc' ? 'mode-tab-active' : ''}}" bindtap="switchMode" data-mode="recalc">
       <text>重新计算</text>
@@ -9,7 +11,8 @@
   </view>
 
   <view class="mode-hint" wx:if="{{mode === 'recalc'}}">
-    <text>只需更新当前体重和目标体重，系统会按你的档案重新计算每日目标</text>
+    <text wx:if="{{goalType === 'lose'}}">更新当前体重与目标体重，系统按减重口径重新计算日目标（建议每周减重 0.25~1.0 kg）</text>
+    <text wx:else>只需更新当前体重和目标体重，系统会按你的档案重新计算每日目标</text>
   </view>
   <view class="mode-hint" wx:else>
     <text>直接填入具体数值，跳过自动计算（请确保数值在合理范围内）</text>

@@ -81,7 +81,7 @@ exports.main = async (event, context) => {
     const currentWeight = logs.length > 0 ? logs[logs.length - 1].weight_kg : initialWeight
 
     // 目标方向判定：优先依据 normalizeGoalType(user.goal_type)；
-// lose 明确为减重（isGain=false）；gain 或老用户无字段时回退「目标体重 >= 初始体重」推断（保持旧口径）
+    // lose 明确为减重（isGain=false）；gain 或老用户无字段时回退「目标体重 >= 初始体重」推断（保持旧口径）
     const goalType = normalizeGoalType(user.goal_type)
     const isGain = goalType === 'lose' ? false : (targetWeight >= initialWeight)
 
@@ -98,8 +98,10 @@ exports.main = async (event, context) => {
     }
     progressPercent = Math.round(progressPercent * 10) / 10 || 0
 
-    // 剩余差距（带方向）：target - current，未达成时为正（还差多少），达成后为 0 或负数（超出）
-    const remainingKg = Math.round((targetWeight - currentWeight) * 100) / 100
+    // 剩余差距（带方向）：未达成时为正（还差多少），达成后为 0 或负数（超出）
+    // gain：target - current（还需增重多少）
+    // lose：current - target（还需减重多少）
+    const remainingKg = Math.round(((isGain ? targetWeight - currentWeight : currentWeight - targetWeight)) * 100) / 100
 
     // 计划周期（周）：仅当为 1~104 的合法整数时视为已设置
     const hasPlan = user.target_weeks != null && Number.isInteger(user.target_weeks) && user.target_weeks >= 1 && user.target_weeks <= 104

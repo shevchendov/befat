@@ -11,17 +11,19 @@
   flex: 1;
   padding: 20rpx 0;
   text-align: center;
-  background: #F8F4EC;
+  background: #FFFFFF;
   border-radius: 16rpx;
   font-size: 28rpx;
-  color: var(--text-secondary);
-  border: 2rpx solid var(--border);
+  color: #666666;
+  border: 2rpx solid #E5E5E5;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .type-option.selected {
-  border-color: var(--primary);
-  color: var(--primary);
-  background: #FFF5EB;
+  border: 4rpx solid var(--theme-primary, #E8471F);
+  color: var(--theme-primary, #E8471F);
+  background: var(--theme-light, #FFF5F2);
   font-weight: 600;
 }
 

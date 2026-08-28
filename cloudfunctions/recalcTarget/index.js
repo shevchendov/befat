@@ -5,6 +5,36 @@ const logger = require('./common/logger')
 const { validateWeights, computeTargets, parseTargetWeeks, fmtDate, calcExpectedWeeklyRate, normalizeGoalType } = require('./common/targetCalc')
 const FN = 'recalcTarget'
 
+// 北京时间"今天"日期 YYYY-MM-DD：云函数可能运行于 UTC 时区，写 weight_logs 需与前端 saveWeightLog 的本地日期口径对齐
+function fmtBeijingDate(d = new Date()) {
+  const bj = new Date(d.getTime() + 8 * 3600 * 1000)
+  return bj.toISOString().slice(0, 10)
+}
+
+// 同步今天的体重记录：与 saveWeightLog 口径一致（同日期覆盖）
+// 确保修改目标后 getGoalProgress 的「最新称重优先」逻辑能取到本次修改的当前体重。
+// 仅写「今天」这一条日期记录，不触碰其它日期的称重打卡数据。
+async function syncTodayWeightLog(openid, currentWeightKg) {
+  const today = fmtBeijingDate()
+  const existing = await db.collection('weight_logs').where({ _openid: openid, date: today }).get()
+  const rounded = Math.round(currentWeightKg * 100) / 100
+
+  if (existing.data.length > 0) {
+    await db.collection('weight_logs').doc(existing.data[0]._id).update({
+      data: { weight_kg: rounded, updated_at: db.serverDate() }
+    })
+  } else {
+    await db.collection('weight_logs').add({
+      data: {
+        _openid: openid,
+        date: today,
+        weight_kg: rounded,
+        created_at: db.serverDate()
+      }
+    })
+  }
+}
+
 exports.main = async (event, context) => {
   const start = Date.now()
   const wxContext = cloud.getWXContext()
@@ -70,6 +100,7 @@ exports.main = async (event, context) => {
 
     const updateData = {
       target_weight_kg: Math.round(targetWeightKg * 10) / 10,
+      current_weight_kg: Math.round(currentWeightKg * 10) / 10,
       goal_type: goalType,
       daily_calorie_target: targets.daily_calorie_target,
       daily_protein_target_g: targets.daily_protein_target_g,
@@ -94,6 +125,9 @@ exports.main = async (event, context) => {
       }
     }
     await db.collection('users').doc(user._id).update({ data: updateData })
+
+    // 同步写入/更新今天的 weight_logs 记录，保证 getGoalProgress 的「最新称重优先」逻辑取到本次修改的当前体重
+    await syncTodayWeightLog(openid, currentWeightKg)
 
     const result = {
       code: 0,

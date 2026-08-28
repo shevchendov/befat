@@ -1,5 +1,20 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-28] 5dc6d9d
+
+**fix: daily-menu 加载与空态文案按目标模式动态化**
+
+- 新增 UI_TEXT 映射表，增益保持食谱主题文案原样，减重切换燃脂锦囊主题
+- skeleton 加载文案与减重空态占位改为动态绑定，去除硬编码配餐文案
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过（616/616），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `miniprogram/pages/daily-menu/daily-menu.js`
+- `miniprogram/pages/daily-menu/daily-menu.wxml`
+- `tests/frontend/daily-menu.test.js`
+
 ## [2026-08-28] 0d055de
 
 **fix: 修复周边地图类目死锁与燃脂锦囊首屏空白**

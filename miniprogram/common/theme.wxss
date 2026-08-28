@@ -9,6 +9,13 @@ page {
   --color-primary-dark: #D43D1A;
   --color-primary-bg: #FFF8E7;
 
+  /* ----- 选择卡片选中态主题（随目标模式动态覆盖） ----- */
+  /* 默认 = gain 增重橙；.goal-lose 下覆盖为减重绿 */
+  --theme-primary: #E8471F;
+  --theme-light: #FFF5F2;
+  --theme-primary-lose: #639922;
+  --theme-light-lose: #F0F7EA;
+
   /* ----- 卡片/背景色 ----- */
   --card-bg-warm: #FFF8F0;
   --card-bg-light: #FFF3E0;
@@ -37,4 +44,10 @@ page {
 
   /* ----- 倾斜角度（装饰用，非高强度页面不加） ----- */
   --tilt-subtle: -2deg;
+}
+
+/* 减重模式：覆盖选择卡片选中态主题为绿色系 */
+.goal-lose {
+  --theme-primary: var(--theme-primary-lose);
+  --theme-light: var(--theme-light-lose);
 }

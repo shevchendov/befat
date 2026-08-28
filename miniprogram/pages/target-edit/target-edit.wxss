@@ -2,6 +2,28 @@
   padding: 30rpx 30rpx 60rpx;
 }
 
+/* ========== 目标模式徽章 ========== */
+.goal-type-badge {
+  display: inline-block;
+  padding: 8rpx 24rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  margin-bottom: 20rpx;
+}
+
+.goal-type-badge-gain {
+  background: #FFF5EB;
+  color: var(--color-primary);
+  border: 2rpx solid var(--color-primary);
+}
+
+.goal-type-badge-lose {
+  background: #EAF7EF;
+  color: #2ECC71;
+  border: 2rpx solid #2ECC71;
+}
+
 /* ========== 模式切换 Tab ========== */
 .mode-tabs {
   display: flex;
@@ -17,17 +39,21 @@
   text-align: center;
   padding: 20rpx 0;
   font-size: 30rpx;
-  font-weight: 600;
-  color: var(--color-text-secondary);
+  font-weight: 500;
+  color: #666666;
+  background: #FFFFFF;
+  border: 2rpx solid #E5E5E5;
   border-radius: var(--radius-md);
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .mode-tab-active {
-  background: var(--card-bg-white);
-  color: var(--color-primary);
+  background: var(--theme-light);
+  color: var(--theme-primary);
+  font-weight: 600;
+  border: 4rpx solid var(--theme-primary);
   box-shadow: var(--shadow-card);
-  border: 2rpx solid var(--color-border);
 }
 
 .mode-hint {

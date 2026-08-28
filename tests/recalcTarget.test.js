@@ -1,22 +1,39 @@
 let mockUsers = []
 let mockUpdateData = null
+let mockWeightLogs = []
+let mockWeightLogUpdate = null
 
-const mockWhere = jest.fn(() => ({ get: jest.fn().mockResolvedValue({ data: mockUsers }) }))
-const mockDoc = jest.fn((id) => ({
+const mockWhereUsers = jest.fn(() => ({ get: jest.fn().mockResolvedValue({ data: mockUsers }) }))
+const mockDocUsers = jest.fn((id) => ({
   update: jest.fn(({ data }) => {
     mockUpdateData = data
     return Promise.resolve({})
   })
 }))
+const mockWhereWeightLogs = jest.fn((q) => ({
+  get: jest.fn().mockResolvedValue({ data: mockWeightLogs.filter(l => !q || (l.date === q.date && l._openid === q._openid)) })
+}))
+const mockDocWeightLogs = jest.fn((id) => ({
+  update: jest.fn(({ data }) => {
+    mockWeightLogUpdate = data
+    return Promise.resolve({})
+  })
+}))
+const mockAddWeightLogs = jest.fn(({ data }) => {
+  mockWeightLogs.push(data)
+  return Promise.resolve({ _id: 'wl1' })
+})
 
 jest.mock('wx-server-sdk', () => ({
   init: jest.fn(),
   DYNAMIC_CURRENT_ENV: 'env-mock',
   database: jest.fn(() => ({
-    collection: jest.fn(() => ({
-      where: mockWhere,
-      doc: mockDoc
-    })),
+    collection: jest.fn((name) => {
+      if (name === 'weight_logs') {
+        return { where: mockWhereWeightLogs, doc: mockDocWeightLogs, add: mockAddWeightLogs }
+      }
+      return { where: mockWhereUsers, doc: mockDocUsers }
+    }),
     serverDate: jest.fn(() => '2026-07-31T00:00:00.000Z')
   })),
   getWXContext: jest.fn(() => ({
@@ -45,6 +62,11 @@ const USER = {
 beforeEach(() => {
   mockUsers = []
   mockUpdateData = null
+  mockWeightLogs = []
+  mockWeightLogUpdate = null
+  mockWhereWeightLogs.mockClear()
+  mockDocWeightLogs.mockClear()
+  mockAddWeightLogs.mockClear()
 })
 
 describe('recalcTarget.main - parameter validation', () => {
@@ -120,11 +142,32 @@ describe('recalcTarget.main - success', () => {
     expect(mockUpdateData.updated_at).toBe('2026-07-31T00:00:00.000Z')
   })
 
-  test('does NOT overwrite initial_weight or current_weight_kg', async () => {
+  test('写入当前体重 current_weight_kg 且不改 initial_weight', async () => {
     mockUsers = [USER]
     await recalcTarget.main({ current_weight_kg: 62, target_weight_kg: 65 }, {})
     expect(mockUpdateData.initial_weight).toBeUndefined()
-    expect(mockUpdateData.current_weight_kg).toBeUndefined()
+    // 修改目标时必须同步更新 current_weight_kg，供 getGoalProgress 计算 remaining 使用
+    expect(mockUpdateData.current_weight_kg).toBe(62)
+  })
+
+  test('同步写入今天的 weight_logs 记录（覆盖旧称重）', async () => {
+    mockUsers = [USER]
+    await recalcTarget.main({ current_weight_kg: 70, target_weight_kg: 60 }, {})
+    expect(mockAddWeightLogs).toHaveBeenCalled()
+    const added = mockAddWeightLogs.mock.calls[0][0].data
+    expect(added._openid).toBe('test-openid')
+    expect(added.weight_kg).toBe(70)
+    expect(added.date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+
+  test('今日已有 weight_logs 时更新该记录而非新增', async () => {
+    mockUsers = [USER]
+    const today = (() => { const bj = new Date(Date.now() + 8 * 3600 * 1000); return bj.toISOString().slice(0, 10) })()
+    mockWeightLogs = [{ _id: 'wl-existing', _openid: 'test-openid', date: today, weight_kg: 68 }]
+    await recalcTarget.main({ current_weight_kg: 70, target_weight_kg: 60 }, {})
+    expect(mockAddWeightLogs).not.toHaveBeenCalled()
+    expect(mockWeightLogUpdate).not.toBeNull()
+    expect(mockWeightLogUpdate.weight_kg).toBe(70)
   })
 
   test('uses stored height/gender/age/activity from user profile', async () => {
@@ -134,6 +177,48 @@ describe('recalcTarget.main - success', () => {
     const bmr = 10 * 50 + 6.25 * 160 - 5 * 30 - 161
     const tdee = Math.round(bmr * 1.375)
     expect(result.data.tdee).toBe(tdee)
+  })
+})
+
+describe('recalcTarget.main - lose 模式', () => {
+  test('lose 模式按 max(tdee - 500, BMR) 计算热量，蛋白 2.0g/kg', async () => {
+    mockUsers = [{ ...USER, goal_type: 'lose' }]
+    const result = await recalcTarget.main({ current_weight_kg: 80, target_weight_kg: 70, target_weeks: 40, goal_type: 'lose' }, {})
+    expect(result.code).toBe(0)
+    const bmr = 10 * 80 + 6.25 * 175 - 5 * 25 + 5
+    const tdee = Math.round(bmr * 1.55)
+    expect(result.data.tdee).toBe(tdee)
+    expect(result.data.daily_calorie_target).toBe(Math.max(Math.round(tdee - 500), Math.round(bmr)))
+    expect(result.data.daily_protein_target_g).toBe(Math.round(80 * 2.0))
+    expect(result.data.goal_type).toBe('lose')
+    expect(mockUpdateData.goal_type).toBe('lose')
+  })
+
+  test('lose 模式年长/低体重者触发 BMR 兜底下限', async () => {
+    mockUsers = [{ ...USER, goal_type: 'lose', gender: 'female', height_cm: 150, age: 60, activity_level: 'sedentary' }]
+    const result = await recalcTarget.main({ current_weight_kg: 40, target_weight_kg: 38, target_weeks: 40, goal_type: 'lose' }, {})
+    expect(result.code).toBe(0)
+    const bmr = 10 * 40 + 6.25 * 150 - 5 * 60 - 161
+    const tdee = Math.round(bmr * 1.2)
+    // 缺口后低于 BMR 时，必须回退到 BMR（兜底），严禁跌破基础代谢
+    expect(result.data.daily_calorie_target).toBe(Math.max(Math.round(tdee - 500), Math.round(bmr)))
+    expect(result.data.daily_calorie_target).toBeGreaterThanOrEqual(Math.round(bmr))
+  })
+
+  test('lose 模式每周减重 > 1kg 返回 code 5', async () => {
+    mockUsers = [{ ...USER, goal_type: 'lose' }]
+    const result = await recalcTarget.main({ current_weight_kg: 80, target_weight_kg: 60, goal_type: 'lose' }, {})
+    expect(result.code).toBe(5)
+    expect(result.message).toContain('减少过快')
+    expect(mockUpdateData).toBeNull()
+  })
+
+  test('lose 模式未透传 goal_type 时回退用户库中 lose', async () => {
+    mockUsers = [{ ...USER, goal_type: 'lose' }]
+    const result = await recalcTarget.main({ current_weight_kg: 80, target_weight_kg: 70, target_weeks: 40 }, {})
+    expect(result.code).toBe(0)
+    expect(result.data.goal_type).toBe('lose')
+    expect(result.data.daily_protein_target_g).toBe(Math.round(80 * 2.0))
   })
 })
 

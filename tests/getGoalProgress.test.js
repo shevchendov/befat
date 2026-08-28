@@ -332,6 +332,39 @@ describe('getGoalProgress.main', function () {
     expect(res.data.trend_data).toHaveLength(100)
   })
 
+  test('lose 模式 remaining_kg = current - target（正值还需减重）', async function () {
+    // 减重：当前 70 → 目标 60，remaining 应为 +10
+    seed('users', { current_weight_kg: 68, target_weight_kg: 60, goal_type: 'lose' })
+    seed('weight_logs', { date: daysAgo(0), weight_kg: 70 })
+
+    var res = await getGoalProgress.main({}, {})
+    expect(res.code).toBe(0)
+    expect(res.data.goal_type).toBe('lose')
+    expect(res.data.current_weight).toBe(70)
+    expect(res.data.remaining_kg).toBe(10)
+    expect(res.data.achieved).toBe(false)
+  })
+
+  test('lose 模式达成后 remaining_kg 为负（已减过头）', async function () {
+    seed('users', { current_weight_kg: 68, target_weight_kg: 60, goal_type: 'lose' })
+    seed('weight_logs', { date: daysAgo(0), weight_kg: 58 })
+
+    var res = await getGoalProgress.main({}, {})
+    expect(res.code).toBe(0)
+    expect(res.data.current_weight).toBe(58)
+    expect(res.data.remaining_kg).toBe(-2)
+    expect(res.data.achieved).toBe(true)
+  })
+
+  test('gain 模式 remaining_kg 仍为 target - current（原口径不变）', async function () {
+    seed('users', { current_weight_kg: 68, target_weight_kg: 70, goal_type: 'gain' })
+    seed('weight_logs', { date: daysAgo(0), weight_kg: 68 })
+
+    var res = await getGoalProgress.main({}, {})
+    expect(res.code).toBe(0)
+    expect(res.data.remaining_kg).toBe(2)
+  })
+
   test('returns error -1 on db crash', async function () {
     seed('users', { current_weight_kg: 60, target_weight_kg: 70 })
     mockDbError = true
