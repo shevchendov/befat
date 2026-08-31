@@ -1,5 +1,26 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-31] 7610506
+
+**fix: 修复导航标题与双模式不匹配并清理增肥敏感词**
+
+- daily-menu 标题按视图×目标模式动态化（附近推荐=约饭吧/去运动，食谱=增重食谱/燃脂锦囊）
+- goal-detail 标题按模式区分增重进度/减重进度
+- 全端用户可见文案与食谱 Prompt 统一增肥→增重合规
+DEPLOY: cloudfunctions/getDailyMenu
+VERIFIED: 仅本地jest测试通过（648/648），未做真机/云端验证
+
+**涉及文件:**
+- `cloudfunctions/common/config.js`
+- `cloudfunctions/getDailyMenu/common/config.js`
+- `miniprogram/app.json`
+- `miniprogram/pages/daily-menu/daily-menu.js`
+- `miniprogram/pages/daily-menu/daily-menu.json`
+- `miniprogram/pages/goal-detail/goal-detail.js`
+- `miniprogram/pages/index/index.wxml`
+- `tests/frontend/daily-menu.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getDailyMenu
+
 ## [2026-08-31] 5b8f69c
 
 **feat: 附近推荐多服务商适配器重构 + 约饭吧入口 + 全端体重两位小数**
