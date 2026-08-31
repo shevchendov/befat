@@ -1,5 +1,47 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-31] 5b8f69c
+
+**feat: 附近推荐多服务商适配器重构 + 约饭吧入口 + 全端体重两位小数**
+
+- getNearbyPoi 重构为策略+适配器模式，支持腾讯/百度/高德三服务商插拔与容错降级
+- 首页快捷导航动态化：减重去运动🏃/增重约饭吧🍲，直达附近推荐视图
+- 目标进度页新增称体重/修改目标双按钮；全端体重/图表刻度统一两位小数
+- 用户可见文案合规化（移除 AI/智能/人工智能等敏感词）
+DEPLOY: cloudfunctions/getNearbyPoi
+VERIFIED: 仅本地jest测试通过（646/646），未做真机/云端验证
+
+**涉及文件:**
+- `README.md`
+- `cloudfunctions/getNearbyPoi/adapters/amap.js`
+- `cloudfunctions/getNearbyPoi/adapters/baidu.js`
+- `cloudfunctions/getNearbyPoi/adapters/tencent.js`
+- `cloudfunctions/getNearbyPoi/common/intent.js`
+- `cloudfunctions/getNearbyPoi/common/schema.js`
+- `cloudfunctions/getNearbyPoi/config.js`
+- `cloudfunctions/getNearbyPoi/index.js`
+- `miniprogram/pages/daily-menu/daily-menu.js`
+- `miniprogram/pages/daily-menu/daily-menu.wxml`
+- `miniprogram/pages/daily-menu/daily-menu.wxss`
+- `miniprogram/pages/goal-detail/goal-detail.js`
+- `miniprogram/pages/goal-detail/goal-detail.wxml`
+- `miniprogram/pages/goal-detail/goal-detail.wxss`
+- `miniprogram/pages/index/index.js`
+- `miniprogram/pages/index/index.wxml`
+- `miniprogram/pages/stats/stats.js`
+- `miniprogram/utils/canvasChart.js`
+- `miniprogram/utils/location.js`
+- `miniprogram/utils/map.js`
+- `tests/frontend/canvasChart.test.js`
+- `tests/frontend/daily-menu.test.js`
+- `tests/frontend/index.test.js`
+- `tests/getNearbyPoi.test.js`
+- `tests/getNearbyPoiAdapters.test.js`
+- `tests/unit/map.test.js`
+- `功能交互与菜单入口说明.md`
+- `双模式引擎详细设计说明书.md`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getNearbyPoi
+
 ## [2026-08-31] 9965174
 
 **chore: 更新 CHANGELOG 记录首页快捷图标暖色化提交**
