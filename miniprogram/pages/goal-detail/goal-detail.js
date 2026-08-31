@@ -78,6 +78,8 @@ Page({
 
       if (res.result.code === 0) {
         const d = res.result.data
+        const goalType = (d.goal_type === 'lose') ? 'lose' : 'gain'
+        wx.setNavigationBarTitle({ title: goalType === 'lose' ? '减重进度' : '增重进度' })
         // 体重数值统一 2 位小数展示（当前/目标/初始/差值）
         const fmt = v => (v !== null && v !== undefined ? Number(v).toFixed(2) : '--')
         this.setData({

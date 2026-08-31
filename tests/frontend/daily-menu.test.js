@@ -37,16 +37,18 @@ beforeEach(() => {
 
 describe('applyGoalType - 文案动态映射', () => {
   test('gain 模式使用食谱主题文案', () => {
+    page.data.currentView = 'recipe'
     getApp().globalData.userInfo = { goal_type: 'gain' }
     page.applyGoalType()
     expect(page.data.goalType).toBe('gain')
     expect(page.data.loadingText).toBe('营养师正在配餐，稍等片刻… 🥗')
     expect(page.data.emptyText).toBe('今日食谱准备中，请稍后')
     expect(page.data.fetchingText).toBe('正在获取今日食谱...')
-    expect(wx.setNavigationBarTitle).toHaveBeenCalledWith({ title: '今日增肥食谱' })
+    expect(wx.setNavigationBarTitle).toHaveBeenCalledWith({ title: '今日增重食谱' })
   })
 
   test('lose 模式使用燃脂锦囊主题文案', () => {
+    page.data.currentView = 'recipe'
     getApp().globalData.userInfo = { goal_type: 'lose' }
     page.applyGoalType()
     expect(page.data.goalType).toBe('lose')
@@ -57,10 +59,27 @@ describe('applyGoalType - 文案动态映射', () => {
   })
 
   test('goal_type 缺失时兜底 gain 文案', () => {
+    page.data.currentView = 'recipe'
     getApp().globalData.userInfo = null
     page.applyGoalType()
     expect(page.data.goalType).toBe('gain')
     expect(page.data.loadingText).toBe('营养师正在配餐，稍等片刻… 🥗')
+  })
+})
+
+describe('applyGoalType - 附近推荐视图标题', () => {
+  test('poi 视图 gain 标题为「约饭吧」', () => {
+    page.data.currentView = 'poi'
+    getApp().globalData.userInfo = { goal_type: 'gain' }
+    page.applyGoalType()
+    expect(wx.setNavigationBarTitle).toHaveBeenCalledWith({ title: '约饭吧' })
+  })
+
+  test('poi 视图 lose 标题为「去运动」', () => {
+    page.data.currentView = 'poi'
+    getApp().globalData.userInfo = { goal_type: 'lose' }
+    page.applyGoalType()
+    expect(wx.setNavigationBarTitle).toHaveBeenCalledWith({ title: '去运动' })
   })
 })
 

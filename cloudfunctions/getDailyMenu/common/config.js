@@ -6,7 +6,7 @@ const SYSTEM_PROMPT = '你是一位专业的中国增重营养师。你的任务
 
 const SYSTEM_PROMPT_LOSE_TIPS = '你是一位专业的中国减脂生活教练。你的任务是为「想减脂、控体重」的用户，结合当天天气与季节，输出 3 条实操性强、可立即执行的生活减脂建议。你只输出严格 JSON，不输出任何解释、标题、Markdown 代码块或多余文字。建议必须安全、科学、健康，不得涉及极端节食、药物、催吐等危险行为。'
 
-const DAILY_MENU_PROMPT = `今天是 {date}。请为增重人群设计一日增肥食谱的「概览」，包含 4 餐：早餐(breakfast)、午餐(lunch)、加餐(snack)、晚餐(dinner)。
+const DAILY_MENU_PROMPT = `今天是 {date}。请为增重人群设计一日增重食谱的「概览」，包含 4 餐：早餐(breakfast)、午餐(lunch)、加餐(snack)、晚餐(dinner)。
 
 【安全食材池】你只能从以下食材中组合菜品，严禁使用池外任何食材：
 {ingredients}

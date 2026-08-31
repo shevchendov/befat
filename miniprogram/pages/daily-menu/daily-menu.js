@@ -86,7 +86,8 @@ Page({
   applyGoalType() {
     const app = getApp()
     const goalType = normalizeGoalType(app.globalData.userInfo && app.globalData.userInfo.goal_type)
-    const title = goalType === 'lose' ? '今日燃脂锦囊' : '今日增肥食谱'
+    // 标题按「视图 × 目标模式」动态设置，避免附近推荐视图误显示食谱标题
+    const title = this.resolveNavTitle(goalType, this.data.currentView)
     wx.setNavigationBarTitle({ title })
     this.setData({
       goalType,
@@ -105,6 +106,14 @@ Page({
         this.loadPoi()
       }
     })
+  },
+
+  // 统一导航栏标题规则：附近推荐视图按方向取「约饭吧/去运动」；食谱视图按方向取「增重食谱/燃脂锦囊」
+  resolveNavTitle(goalType, currentView) {
+    if (currentView === 'poi') {
+      return goalType === 'lose' ? '去运动' : '约饭吧'
+    }
+    return goalType === 'lose' ? '今日燃脂锦囊' : '今日增重食谱'
   },
 
   readFavMap() {

@@ -51,7 +51,7 @@
       <view class="action-icon action-icon-coral">
         <text>📖</text>
       </view>
-      <text class="action-label">{{goalType === 'lose' ? '今日燃脂锦囊' : '今日增肥食谱'}}</text>
+      <text class="action-label">{{goalType === 'lose' ? '今日燃脂锦囊' : '今日增重食谱'}}</text>
     </view>
     <view class="action-btn" bindtap="goToStats">
       <view class="action-icon action-icon-orange">
