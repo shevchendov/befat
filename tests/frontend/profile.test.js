@@ -160,43 +160,8 @@ function seedBmiUser(currentWeightKg, heightCm) {
 }
 
 describe('toggleHealthInfo', () => {
-  test('切换健康信息显示状态', () => {
-    page.data.showHealthInfo = false
-    page.toggleHealthInfo()
-    expect(page.data.showHealthInfo).toBe(true)
-    page.toggleHealthInfo()
-    expect(page.data.showHealthInfo).toBe(false)
-  })
-})
-
-describe('goToOnboarding', () => {
-  test('导航到 onboarding 页', () => {
-    wx.navigateTo.mockClear()
-    page.goToOnboarding()
-    expect(wx.navigateTo).toHaveBeenCalledWith(expect.objectContaining({
-      url: expect.stringContaining('onboarding')
-    }))
-  })
-})
-
-describe('exportData', () => {
-  test('导出成功', async () => {
-    callFnMock.mockResolvedValue({ result: { code: 0, data: { user_info: null, food_logs: [], weight_logs: [] } } })
-    await page.exportData()
-    expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('成功') }))
-  })
-
-  test('导出失败', async () => {
-    callFnMock.mockResolvedValue({ result: { code: 1 } })
-    wx.showToast.mockClear()
-    await page.exportData()
-    expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('失败') }))
-  })
-
-  test('导出异常', async () => {
-    callFnMock.mockRejectedValue(new Error('timeout'))
-    await page.exportData()
-    expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('异常') }))
+  test('健康提示固定展示，无折叠交互', () => {
+    expect(page.toggleHealthInfo).toBeUndefined()
   })
 })
 
@@ -236,24 +201,5 @@ describe('resetUserData', () => {
     wx.showToast.mockClear()
     await page.resetUserData()
     expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('异常') }))
-  })
-})
-
-describe('deleteUserData', () => {
-  test('确认后删除成功', async () => {
-    callFnMock.mockResolvedValue({ result: { code: 0 } })
-    await page.confirmDeleteData()
-    await page.deleteUserData()
-    const app = getApp()
-    expect(app.globalData.userInfo).toBeNull()
-    expect(app.globalData.dailyTargets).toBeNull()
-    expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('已删除') }))
-  })
-
-  test('删除失败时 toast', async () => {
-    callFnMock.mockResolvedValue({ result: { code: 1 } })
-    wx.showToast.mockClear()
-    await page.deleteUserData()
-    expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('失败') }))
   })
 })

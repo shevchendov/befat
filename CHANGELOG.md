@@ -1,5 +1,31 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-28] b8fea24
+
+**fix: 修复修改目标当前体重失效与选择卡片选中态对比度**
+
+- recalcTarget 写 current_weight_kg 并同步今日 weight_logs；getGoalProgress 减重 remaining 方向修正
+- target-edit 增加 goal_type 展示与方向校验，透传 goal_type 至云函数
+- 选择卡片统高对比度选中态（onboarding/log-food/target-edit），减重绿/增重橙动态主题
+DEPLOY: cloudfunctions/recalcTarget, cloudfunctions/getGoalProgress
+VERIFIED: 仅本地jest测试通过（631/631），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `cloudfunctions/getGoalProgress/index.js`
+- `cloudfunctions/recalcTarget/index.js`
+- `miniprogram/common/theme.wxss`
+- `miniprogram/pages/log-food/log-food.wxss`
+- `miniprogram/pages/onboarding/onboarding.wxml`
+- `miniprogram/pages/onboarding/onboarding.wxss`
+- `miniprogram/pages/target-edit/target-edit.js`
+- `miniprogram/pages/target-edit/target-edit.wxml`
+- `miniprogram/pages/target-edit/target-edit.wxss`
+- `tests/frontend/target-edit.test.js`
+- `tests/getGoalProgress.test.js`
+- `tests/recalcTarget.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/recalcTarget, cloudfunctions/getGoalProgress
+
 ## [2026-08-28] 5dc6d9d
 
 **fix: daily-menu 加载与空态文案按目标模式动态化**

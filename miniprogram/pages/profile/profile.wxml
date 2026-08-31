@@ -54,46 +54,22 @@
   </view>
 
   <view class="card">
-    <view class="menu-item" bindtap="goToOnboarding">
-      <text>重新设置目标</text>
-      <text class="menu-arrow">›</text>
-    </view>
-  </view>
-
-  <view class="card">
-    <view class="menu-item" bindtap="subscribeReminder">
-      <text>吃饭提醒</text>
-      <text class="menu-arrow">›</text>
-    </view>
-    <text class="reminder-hint">开启后，两餐间隔超过 5 小时会收到提醒</text>
-  </view>
-
-  <view class="card">
-    <view class="menu-item" bindtap="exportData">
-      <text>导出数据</text>
-      <text class="menu-arrow">›</text>
-    </view>
     <view class="menu-item danger" bindtap="confirmResetData">
       <text>重置为新用户</text>
       <text class="menu-arrow">›</text>
     </view>
-    <view class="menu-item danger" bindtap="confirmDeleteData">
-      <text>删除所有数据</text>
-      <text class="menu-arrow">›</text>
-    </view>
   </view>
 
-  <view class="card">
-    <view class="menu-item" bindtap="toggleHealthInfo">
-      <text>健康提示</text>
-      <text class="menu-arrow">{{showHealthInfo ? 'v' : '›'}}</text>
+  <view class="card health-tip-card">
+    <view class="health-tip-header">
+      <text class="health-tip-title">⚠️ 健康提示</text>
     </view>
-    <view class="health-info-content" wx:if="{{showHealthInfo}}">
-      <text class="health-info-text">• 本应用提供的信息仅供参考，不构成医疗建议</text>
-      <text class="health-info-text">• 如果你有甲亢、糖尿病、消化道疾病等健康问题，请先咨询医生</text>
-      <text class="health-info-text">• 食物热量估算可能存在一定误差</text>
-      <text class="health-info-text">• 建议逐步增重，每周 0.5~1kg 为宜</text>
-      <text class="health-info-text">• 本产品面向 18 岁以上用户</text>
+    <view class="health-tip-content">
+      <view class="health-tip-item">💡 本应用提供的信息仅供参考，<text class="health-tip-strong">不构成医疗建议</text></view>
+      <view class="health-tip-item">⚠️ 如果你有甲亢、糖尿病、消化道疾病等健康问题，<text class="health-tip-strong">请先咨询医生</text></view>
+      <view class="health-tip-item">💡 食物热量估算可能存在一定误差</view>
+      <view class="health-tip-item">💡 建议逐步增重，每周 0.5~1kg 为宜</view>
+      <view class="health-tip-item">💡 本产品面向 18 岁以上用户</view>
     </view>
   </view>
 
