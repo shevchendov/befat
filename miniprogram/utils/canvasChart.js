@@ -1,6 +1,11 @@
 const FONT_DEFAULT = '20px sans-serif'
 const FONT_SIZE_DEFAULT = 20
 
+// 统一重量格式化：所有 kg 刻度/标签/tooltip 一律保留 2 位小数
+function formatWeight(val) {
+  return Number(val).toFixed(2)
+}
+
 function initCanvas(canvas, cssW, cssH) {
   const dpr = wx.getWindowInfo().pixelRatio
   canvas.width = cssW * dpr
@@ -109,6 +114,7 @@ function buildObstacles(points, opts) {
 
 module.exports = {
   initCanvas,
+  formatWeight,
   measureYAxisPadding,
   calcXLabelMetrics,
   computeLabelStep,

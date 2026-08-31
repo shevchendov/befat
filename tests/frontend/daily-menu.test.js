@@ -64,6 +64,20 @@ describe('applyGoalType - 文案动态映射', () => {
   })
 })
 
+describe('onLoad - 约饭吧 view=poi 直达', () => {
+  test('options.view=poi 时设置 currentView 为 poi', () => {
+    page.data.currentView = 'recipe'
+    page.onLoad({ view: 'poi' })
+    expect(page.data.currentView).toBe('poi')
+  })
+
+  test('无 view 参数时保持 recipe 视图', () => {
+    page.data.currentView = 'recipe'
+    page.onLoad({})
+    expect(page.data.currentView).toBe('recipe')
+  })
+})
+
 describe('openFavoriteDrawer', () => {
   test('打开抽屉并拉取收藏列表', async () => {
     callFnMock.mockResolvedValue({

@@ -1,6 +1,6 @@
 const logger = require('../../utils/logger')
 const { getUserLocation } = require('../../utils/location')
-const { searchNearbyPoi } = require('../../utils/map')
+const { searchNearbyPoi, typewriterEffect } = require('../../utils/map')
 const FAV_KEY = 'dailyMenuFavorites'
 const FAV_CACHE_KEY = 'favoriteMenuCache'
 const MEAL_LABELS = { breakfast: '早餐', lunch: '午餐', snack: '加餐', dinner: '晚餐' }
@@ -60,6 +60,8 @@ Page({
     poiTotal: 0,
     poiSearch: '',
     poiResolved: '',
+    bannerText: '',
+    bannerTyping: false,
     searchTags: GOAL_POI_TAGS.gain,
     goalType: 'gain',
     loadingText: UI_TEXT.gain.loadingText,
@@ -67,10 +69,14 @@ Page({
     fetchingText: UI_TEXT.gain.fetchingText
   },
 
-  onLoad() {
+  onLoad(options) {
     this._poiReqId = 0
     this._searchTimer = null
     this.loadMenu(false)
+    // 从首页「约饭吧」进入时直达附近推荐视图
+    if (options && options.view === 'poi') {
+      this.setData({ currentView: 'poi' })
+    }
   },
 
   onShow() {
@@ -93,6 +99,10 @@ Page({
       if (goalType === 'lose' && !this.data.tips.length && !this.data.isGenerating) {
         this.setData({ tips: FALLBACK_TIPS_LOSE })
         this.loadMenu(false)
+      }
+      // 从首页「约饭吧」进入时，goalType 校正后按方向初始化附近推荐数据
+      if (this.data.currentView === 'poi' && this.data.poiList.length === 0 && !this.data.poiLoading) {
+        this.loadPoi()
       }
     })
   },
@@ -496,19 +506,10 @@ Page({
     }
   },
 
-  switchView(e) {
-    const view = e.currentTarget.dataset.view
-    if (view === this.data.currentView) return
-    this.setData({ currentView: view })
-    if (view === 'poi' && this.data.poiList.length === 0 && !this.data.poiLoading) {
-      this.loadPoi()
-    }
-  },
-
   // 首次进入/置空搜索共用的默认检索：不传 searchQuery，交给云函数按 goalType 下发默认关键词
   loadPoi(searchQuery) {
     const reqId = ++this._poiReqId
-    this.setData({ poiLoading: true, poiError: false, poiMsg: '', poiResolved: '' })
+    this.setData({ poiLoading: true, poiError: false, poiMsg: '', poiResolved: '', bannerText: '', bannerTyping: false })
     return this.fetchPoi(reqId, searchQuery)
   },
 
@@ -519,12 +520,19 @@ Page({
       if (reqId !== this._poiReqId) return
       const res = await searchNearbyPoi({ lat: loc.latitude, lng: loc.longitude, page: 1, searchQuery, goalType: this.data.goalType })
       if (reqId !== this._poiReqId) return
+      const reason = res.resolvedTags && res.resolvedTags.reason ? res.resolvedTags.reason : ''
       this.setData({
         poiList: res.list || [],
         poiTotal: res.total || 0,
         poiLoading: false,
-        poiResolved: res.resolvedTags && res.resolvedTags.reason ? res.resolvedTags.reason : ''
+        poiResolved: reason
       })
+      // 推荐 Banner：伪打字机逐字渲染推荐理由
+      if (reason) {
+        typewriterEffect(this, reason,
+          t => this.setData({ bannerText: t, bannerTyping: true }),
+          () => this.setData({ bannerTyping: false }))
+      }
       if (!res.list || res.list.length === 0) {
         this.setData({ poiError: true, poiMsg: '附近没找到，换个词或位置试试' })
       }

@@ -41,11 +41,11 @@
       </view>
       <text class="action-label">记录一餐</text>
     </view>
-    <view class="action-btn" bindtap="goToWeightTrack">
+    <view class="action-btn" bindtap="onTapYuefan">
       <view class="action-icon action-icon-green">
-        <text>⚖️</text>
+        <text>{{goalType === 'lose' ? '🏃' : '🍲'}}</text>
       </view>
-      <text class="action-label">称体重</text>
+      <text class="action-label">{{goalType === 'lose' ? '去运动' : '约饭吧'}}</text>
     </view>
     <view class="action-btn" bindtap="goToDailyMenu">
       <view class="action-icon action-icon-coral">

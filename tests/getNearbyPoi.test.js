@@ -95,12 +95,12 @@ describe('getNearbyPoi - 双目标类目隔离', () => {
     expect(params.keyword).toBe('美食')
   })
 
-  test('lose 模式不带美食 filter，默认运动关键词', async () => {
+  test('lose 模式带 category=体育休闲 filter，默认运动关键词', async () => {
     mockMap({ status: 0, count: 0, data: [] })
     await getNearbyPoi.main({ lat: 22.5, lng: 113.9, goal_type: 'lose' }, {})
     expect(axios.get).toHaveBeenCalled()
     const params = axios.get.mock.calls[0][1].params
-    expect(params.filter).toBeUndefined()
+    expect(params.filter).toBe('category=体育休闲')
     expect(params.keyword).toBe('公园 健身房 绿道 游泳馆')
   })
 

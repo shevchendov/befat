@@ -32,6 +32,11 @@
       <view wx:elif="{{goal.estimated_date}}" class="goal-estimate">
         ⏱ 按你的计划，预计 {{goal.estimated_date}} 达成
       </view>
+
+      <view class="goal-actions">
+        <button class="btn-weight" bindtap="onRecordWeight">⚖️ 称体重</button>
+        <button class="btn-edit-goal" bindtap="onEditGoal">修改目标</button>
+      </view>
     </view>
 
     <view class="goal-section">
@@ -40,10 +45,6 @@
         <canvas class="trend-canvas" type="2d" id="trendChart"></canvas>
       </view>
       <view wx:else class="goal-empty">打卡体重后，这里会显示你的变化趋势</view>
-    </view>
-
-    <view class="action-section">
-      <view class="btn-modify-goal" bindtap="handleModifyGoal">修改目标</view>
     </view>
   </block>
 

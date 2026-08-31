@@ -100,7 +100,7 @@ Page({
     let deltaText = '无体重记录'
     if (w.weight_delta != null) {
       const sign = w.weight_delta > 0 ? '+' : ''
-      deltaText = `${sign}${w.weight_delta}kg`
+      deltaText = `${sign}${Number(w.weight_delta).toFixed(2)}kg`
     }
     // 减重模式：热量控制成功率 < 100% 即存在超标日，标注警示红
     const warn = isLose && hasRate && w.calorie_rate < 100
@@ -145,7 +145,7 @@ Page({
       const yLabels = []
       for (let i = 0; i <= gridCount; i++) {
         const gv = min + (max - min) * i / gridCount
-        yLabels.push(String(Math.round(gv * 10) / 10))
+        yLabels.push(canvasChart.formatWeight(gv))
       }
       const padL = canvasChart.measureYAxisPadding(ctx, yLabels, { font: '16px sans-serif', margin: 10 })
       const padR = 20

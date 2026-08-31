@@ -209,3 +209,19 @@ describe('loadData 请求竞态', () => {
     expect(page.data.dailySummary.total_calorie).toBe(1000)
   })
 })
+
+describe('onTapYuefan 快捷导航', () => {
+  test('点击约饭吧跳转到 daily-menu 并携带 view=poi 参数', () => {
+    wx.navigateTo.mockClear()
+    page.onTapYuefan()
+    expect(wx.navigateTo).toHaveBeenCalledWith({ url: '/pages/daily-menu/daily-menu?view=poi' })
+  })
+
+  test('loadData 按 globalData goal_type 更新页面 goalType（缓存命中前兜底）', async () => {
+    getApp().globalData.userInfo = { goal_type: 'lose' }
+    page._lastLoadTs = Date.now()
+    page._lastLoadDate = mockDate.today
+    await page.loadData()
+    expect(page.data.goalType).toBe('lose')
+  })
+})

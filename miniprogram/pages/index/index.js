@@ -93,7 +93,8 @@ Page({
     const dateText = dateFormat.formatDateShortCN(now)
 
     // 问候语按目标模式隔离；本地阶段先以 globalData 已存 goal_type 兜底（缓存命中时也能正确显示）
-    this.setData({ dateText, greeting: this.getGreetingText(app.globalData.userInfo && app.globalData.userInfo.goal_type) })
+    const localGoalType = util.normalizeGoalType(app.globalData.userInfo && app.globalData.userInfo.goal_type)
+    this.setData({ dateText, goalType: localGoalType, greeting: this.getGreetingText(localGoalType) })
 
     if (app.globalData.dailyTargets) {
       this.setData({ targets: app.globalData.dailyTargets })
@@ -360,8 +361,8 @@ Page({
     wx.navigateTo({ url: '/pages/log-food/log-food' })
   },
 
-  goToWeightTrack() {
-    wx.navigateTo({ url: '/pages/weight-track/weight-track' })
+  onTapYuefan() {
+    wx.navigateTo({ url: '/pages/daily-menu/daily-menu?view=poi' })
   },
 
   goToDailyMenu() {

@@ -20,9 +20,13 @@ const samplePoi = (id, dist) => ({
   title: '店' + id,
   address: '某地址',
   category: '小吃快餐',
-  _distance: dist,
-  location: { lat: 22.5, lng: 113.9 },
-  tel: '13800000000'
+  distance_m: dist,
+  latitude: 22.5,
+  longitude: 113.9,
+  tel: '13800000000',
+  rating: 4.2,
+  avg_price: 30,
+  tags: ['好吃', '实惠']
 })
 
 describe('searchNearbyPoi - 缓存', () => {
@@ -56,6 +60,9 @@ describe('searchNearbyPoi - 检索与扩距', () => {
     expect(res.list).toHaveLength(2)
     expect(res.list[0].distance_text).toBe('800m')
     expect(res.list[1].distance_text).toBe('1.5km')
+    expect(res.list[0].rating).toBe(4.2)
+    expect(res.list[0].avg_price).toBe(30)
+    expect(res.list[0].tags).toEqual(['好吃', '实惠'])
     expect(wx.cloud.callFunction).toHaveBeenCalledTimes(1)
   })
 

@@ -39,14 +39,6 @@
   margin-top: 8rpx;
 }
 
-.poi-link {
-  display: inline-block;
-  font-size: 26rpx;
-  color: var(--primary);
-  margin-top: 8rpx;
-  padding: 4rpx 0;
-}
-
 .tip-summary-title {
   font-size: 40rpx;
   font-weight: 700;
@@ -515,61 +507,109 @@
   margin-top: 8rpx;
 }
 
-.poi-search-bar {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  padding: 20rpx 24rpx 0;
+/* ========== 附近美食推荐搜索区（手绘复古硬朗风格） ========== */
+.poi-search-card {
+  margin: 20rpx 28rpx 0;
+  padding: 28rpx;
+  background: #FFFFFF;
+  border: 2rpx solid #3D2C29;
+  border-radius: 24rpx;
+  box-shadow: var(--shadow-card);
 }
 
-.poi-search-input-wrap {
-  flex: 1;
+.poi-card-header {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #3D2C29;
+  margin-bottom: 20rpx;
+}
+
+.poi-input-container {
   display: flex;
   align-items: center;
-  height: 72rpx;
+  height: 80rpx;
   background: #FFFFFF;
-  border: 2rpx solid var(--border);
-  border-radius: 999rpx;
-  padding: 0 28rpx;
+  border: 2rpx solid #3D2C29;
+  border-radius: 16rpx;
+  padding: 0 24rpx;
 }
 
 .poi-search-input {
   flex: 1;
   font-size: 28rpx;
+  color: #3D2C29;
 }
 
-.poi-search-btn {
-  flex-shrink: 0;
-  height: 72rpx;
-  line-height: 72rpx;
-  padding: 0 32rpx;
-  font-size: 28rpx;
-  font-weight: 500;
-  color: #FFFFFF;
-  background: #FF5722;
-  border-radius: 999rpx;
+.poi-tip-row {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #8A7A6B;
 }
 
-.poi-search-tags {
+.poi-tags-row {
   display: flex;
   flex-wrap: wrap;
   gap: 16rpx;
-  padding: 16rpx 24rpx 0;
+  margin-top: 20rpx;
 }
 
 .poi-tag {
   font-size: 24rpx;
-  color: var(--primary);
-  background: var(--primary-bg);
-  border: 2rpx solid rgba(255, 87, 34, 0.3);
+  color: #3D2C29;
+  background: #FFF6EC;
+  border: 2rpx solid #3D2C29;
   border-radius: 999rpx;
   padding: 8rpx 24rpx;
 }
 
-.poi-resolved {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  padding: 12rpx 28rpx 0;
+.poi-submit-btn {
+  margin-top: 24rpx;
+  height: 84rpx;
+  line-height: 84rpx;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+  background: #3D2C29;
+  border-radius: 16rpx;
+}
+
+.poi-submit-btn:active {
+  opacity: 0.85;
+}
+
+.poi-banner {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin: 24rpx 28rpx 0;
+  padding: 20rpx 24rpx;
+  background: #FFF5F0;
+  border: 2rpx solid #FFE0D2;
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+}
+
+.poi-banner-icon {
+  font-size: 30rpx;
+  flex-shrink: 0;
+}
+
+.poi-banner-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: #FF6B35;
+  font-weight: 600;
+}
+
+.poi-banner-cursor {
+  font-size: 26rpx;
+  color: #FF6B35;
+  animation: banner-blink 0.8s infinite;
+}
+
+@keyframes banner-blink {
+  50% { opacity: 0; }
 }
 
 .poi-loading {
@@ -647,6 +687,22 @@
   font-size: 24rpx;
   color: var(--text-light);
   line-height: 1.6;
+}
+
+.poi-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-bottom: 10rpx;
+}
+
+.poi-tag-s {
+  font-size: 20rpx;
+  color: #A86032;
+  font-weight: 600;
+  background: #FFF2E6;
+  border-radius: 999rpx;
+  padding: 4rpx 12rpx;
 }
 
 .poi-actions {

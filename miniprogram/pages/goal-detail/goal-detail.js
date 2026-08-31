@@ -1,5 +1,6 @@
 const logger = require('../../utils/logger')
 const canvasChart = require('../../utils/canvasChart')
+const util = require('../../utils/util')
 
 function rndRect(ctx, x, y, w, h, r) {
   ctx.beginPath()
@@ -29,6 +30,46 @@ Page({
     wx.navigateTo({ url: '/pages/target-edit/target-edit' })
   },
 
+  onEditGoal() {
+    wx.navigateTo({ url: '/pages/target-edit/target-edit' })
+  },
+
+  onRecordWeight() {
+    wx.showModal({
+      title: '记录体重',
+      editable: true,
+      placeholderText: '请输入今日体重(kg)',
+      confirmText: '保存',
+      success: async (res) => {
+        if (!res.confirm) return
+        const raw = (res.content || '').trim()
+        const weight = parseFloat(raw)
+        if (isNaN(weight) || weight < 20 || weight > 300) {
+          wx.showToast({ title: '请输入有效体重(20-300kg)', icon: 'none' })
+          return
+        }
+        wx.showLoading({ title: '保存中...' })
+        try {
+          const callRes = await wx.cloud.callFunction({
+            name: 'saveWeightLog',
+            data: { date: util.formatDate(new Date()), weight_kg: weight }
+          })
+          wx.hideLoading()
+          if (callRes.result && callRes.result.code === 0) {
+            wx.showToast({ title: '已记录', icon: 'success' })
+            this.loadGoalProgress()
+          } else {
+            wx.showToast({ title: (callRes.result && callRes.result.message) || '保存失败', icon: 'none' })
+          }
+        } catch (err) {
+          wx.hideLoading()
+          logger.error('goalDetail onRecordWeight', err)
+          wx.showToast({ title: '保存失败，请重试', icon: 'none' })
+        }
+      }
+    })
+  },
+
   async loadGoalProgress() {
     try {
       const res = await wx.cloud.callFunction({
@@ -36,11 +77,20 @@ Page({
       })
 
       if (res.result.code === 0) {
+        const d = res.result.data
+        // 体重数值统一 2 位小数展示（当前/目标/初始/差值）
+        const fmt = v => (v !== null && v !== undefined ? Number(v).toFixed(2) : '--')
         this.setData({
-          goal: res.result.data,
+          goal: {
+            ...d,
+            current_weight: fmt(d.current_weight),
+            target_weight: fmt(d.target_weight),
+            initial_weight: fmt(d.initial_weight),
+            remaining_kg: fmt(d.remaining_kg),
+            trend_data: (d.trend_data || []).map(r => ({ ...r, weight_kg: fmt(r.weight_kg) }))
+          },
           loading: false
         }, () => {
-          const d = res.result.data
           if (d.trend_data && d.trend_data.length > 0) {
             setTimeout(() => this.drawTrendChart(d.trend_data, d.target_weight), 300)
           }
@@ -91,7 +141,7 @@ Page({
       const yLabels = []
       for (let i = 0; i <= gridCount; i++) {
         const gv = min + (max - min) * i / gridCount
-        yLabels.push(String(Math.round(gv * 10) / 10))
+        yLabels.push(canvasChart.formatWeight(gv))
       }
       const padL = canvasChart.measureYAxisPadding(ctx, yLabels, { font: '16px sans-serif', margin: 10 })
       const padR = 20
@@ -172,7 +222,7 @@ Page({
 
       // 目标标签：亮黄底 + 2px 黑描边 + 深棕文字
       // 紧贴在目标虚线上方：Y = targetY - 标签高 - 安全间隙，水平居中于绘图区
-      const labelText = '目标 ' + target
+      const labelText = '目标 ' + canvasChart.formatWeight(target)
       ctx.font = 'bold 16px sans-serif'
       ctx.textAlign = 'right'
       const labelW = ctx.measureText(labelText).width

@@ -2,6 +2,23 @@ const canvasChart = require('../../miniprogram/utils/canvasChart')
 
 function rect(x, y, w, h) { return { x, y, w, h } }
 
+describe('formatWeight', () => {
+  test('整数补足 2 位小数', () => {
+    expect(canvasChart.formatWeight(60)).toBe('60.00')
+    expect(canvasChart.formatWeight(65)).toBe('65.00')
+  })
+
+  test('保留 2 位小数并四舍五入', () => {
+    expect(canvasChart.formatWeight(65.5)).toBe('65.50')
+    expect(canvasChart.formatWeight(60.456)).toBe('60.46')
+  })
+
+  test('字符串数字同样归一化', () => {
+    expect(canvasChart.formatWeight('65')).toBe('65.00')
+    expect(canvasChart.formatWeight('60.45')).toBe('60.45')
+  })
+})
+
 describe('measureYAxisPadding', () => {
   test('返回最大文本宽度 + margin', () => {
     const ctx = { measureText: (t) => ({ width: t.length * 5 }), font: '' }

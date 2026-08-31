@@ -11,7 +11,7 @@ function showAuthGuide() {
   return new Promise(resolve => {
     wx.showModal({
       title: '需要位置权限',
-      content: '开启定位后，为你推荐附近的特色餐厅',
+      content: '开启定位后，为你查找附近的用餐与运动场所',
       confirmText: '去开启',
       cancelText: '算了',
       success: res => resolve(!!res.confirm)

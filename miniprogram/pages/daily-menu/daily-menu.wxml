@@ -29,7 +29,6 @@
             <text class="pill-unit">g</text>
           </view>
           <view class="summary-date">{{date}}</view>
-          <view class="poi-link" bindtap="switchView" data-view="poi">📍 附近美食 ➔</view>
         </view>
 
         <view class="action-bar-row">
@@ -81,7 +80,6 @@
         <view class="summary-card">
           <view class="tip-summary-title">🧭 今日燃脂锦囊</view>
           <view class="summary-date">{{date}}</view>
-          <view class="poi-link" bindtap="switchView" data-view="poi">📍 附近运动场所 ➔</view>
         </view>
 
         <view class="action-bar-row">
@@ -112,18 +110,27 @@
   </block>
 
   <block wx:if="{{currentView === 'poi'}}">
-    <view class="poi-search-bar">
-      <view class="poi-search-input-wrap">
-        <input class="poi-search-input" placeholder="{{goalType === 'lose' ? '想去哪运动？如：周边公园、健身房...' : '想吃点什么？如：清淡粤菜、早茶...'}}" value="{{poiSearch}}" bindinput="onPoiSearchInput" confirm-type="search" bindconfirm="doPoiSearch" />
+    <view class="poi-search-card">
+      <view class="poi-card-header">{{goalType === 'lose' ? '说说你想去哪运动 🏃' : '说说你想吃啥 🍽️'}}</view>
+
+      <view class="poi-input-container">
+        <input class="poi-search-input" placeholder="{{goalType === 'lose' ? '例：周边公园 ➕ 健身房 ➕ 绿道' : '例：清淡粤菜 ➕ 地道茶楼 ➕ 海鲜大排档'}}" value="{{poiSearch}}" bindinput="onPoiSearchInput" confirm-type="search" bindconfirm="doPoiSearch" />
       </view>
-      <view class="poi-search-btn" bindtap="doPoiSearch">帮我找</view>
+
+      <view class="poi-tip-row">💡 描述得越详细，结果越贴合你的口味</view>
+
+      <view class="poi-tags-row">
+        <view class="poi-tag" wx:for="{{searchTags}}" wx:for-item="tag" wx:key="*this" bindtap="clickPoiTag" data-tag="{{tag}}">{{tag}}</view>
+      </view>
+
+      <view class="poi-submit-btn" bindtap="doPoiSearch">帮我找</view>
     </view>
 
-    <view class="poi-search-tags">
-      <view class="poi-tag" wx:for="{{searchTags}}" wx:for-item="tag" wx:key="*this" bindtap="clickPoiTag" data-tag="{{tag}}">{{tag}}</view>
+    <view wx:if="{{bannerText}}" class="poi-banner">
+      <text class="poi-banner-icon">✨</text>
+      <text class="poi-banner-text">{{bannerText}}</text>
+      <text class="poi-banner-cursor" wx:if="{{bannerTyping}}">|</text>
     </view>
-
-    <view wx:if="{{poiResolved}}" class="poi-resolved">{{poiResolved}}</view>
 
     <view wx:if="{{poiLoading}}" class="poi-loading">正在帮你找…</view>
 
@@ -141,6 +148,10 @@
             <view class="poi-meta">
               <text class="poi-category">{{poi.category}}</text>
               <text class="poi-distance">· {{poi.distance_text}}</text>
+            </view>
+            <view class="poi-tags" wx:if="{{poi.avg_price || poi.rating}}">
+              <text wx:if="{{poi.avg_price}}" class="poi-tag-s">人均 ￥{{poi.avg_price}}</text>
+              <text wx:if="{{poi.rating}}" class="poi-tag-s">评分 {{poi.rating}}</text>
             </view>
             <view class="poi-address">{{poi.address}}</view>
           </view>
