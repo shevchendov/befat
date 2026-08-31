@@ -401,31 +401,18 @@
   color: var(--color-text-primary);
 }
 
-.goal-card-actions {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-}
-
-.goal-card-edit {
-  font-size: 24rpx;
-  color: var(--color-accent-orange);
-  font-weight: 600;
-  padding: 6rpx 16rpx;
-  background: rgba(255, 107, 53, 0.12);
-  border-radius: var(--radius-sm);
-}
-
 .goal-card-arrow {
   font-size: 40rpx;
   color: var(--color-accent-orange);
   line-height: 1;
 }
 
-.goal-remaining {
+.main-status-row {
   display: flex;
-  align-items: baseline;
-  gap: 10rpx;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  white-space: nowrap;
   margin-bottom: 14rpx;
 }
 
@@ -433,12 +420,40 @@
   font-size: 32rpx;
   font-weight: 700;
   color: var(--color-accent-orange);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .goal-remaining-value {
   font-size: 44rpx;
   font-weight: 800;
   color: var(--color-accent-orange);
+}
+
+.bmi-badge {
+  display: inline-block;
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.bmi-badge-normal {
+  background-color: #E8F5E9;
+  color: #2E7D32;
+}
+
+.bmi-badge-under {
+  background-color: #FFF8E1;
+  color: #F57C00;
+}
+
+.bmi-badge-over {
+  background-color: #FFEBEE;
+  color: #C62828;
 }
 
 .goal-bar {
@@ -457,12 +472,32 @@
   transition: width 0.5s ease;
 }
 
-.goal-bar-info {
+.progress-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 22rpx;
-  color: var(--color-text-light);
+  align-items: center;
+  width: 100%;
+  white-space: nowrap;
   margin-bottom: 12rpx;
+}
+
+.progress-item {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.pl-label {
+  font-size: 22rpx;
+  font-weight: 500;
+  color: #555555;
+  margin-right: 6rpx;
+}
+
+.pl-value {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #333333;
 }
 
 .goal-estimate {

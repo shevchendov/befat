@@ -41,6 +41,10 @@
       </view>
       <view wx:else class="goal-empty">打卡体重后，这里会显示你的变化趋势</view>
     </view>
+
+    <view class="action-section">
+      <view class="btn-modify-goal" bindtap="handleModifyGoal">修改目标</view>
+    </view>
   </block>
 
   <view wx:else class="goal-empty">未找到目标信息</view>

@@ -35,6 +35,9 @@ Page({
     remainingCalorie: null,
     isTodayAchieved: false,
     targetProgressText: '',
+    bmiValue: '',
+    bmiStatus: '',
+    bmiLevel: '',
     goalProgress: null,
     showGoalGuide: false
   },
@@ -59,6 +62,14 @@ Page({
     if (hour < 14) return '吃饱了吗？没吃饱再来一轮！🍖'
     if (hour < 18) return '下午茶时间到，搞点零食不过分吧？🧋'
     return '夜宵时间！做大只的黄金时刻！🌙'
+  },
+
+  // BMI 状态归类：偏瘦 / 正常 / 超重
+  classifyBmi(bmi) {
+    if (!bmi || isNaN(bmi)) return { status: '', level: '' }
+    if (bmi < 18.5) return { status: '偏瘦', level: 'under' }
+    if (bmi < 24) return { status: '正常', level: 'normal' }
+    return { status: '超重', level: 'over' }
   },
 
   // 判断是否刷新数据：reLaunch 场景（onboarding 提交后）用显式标记；
@@ -282,6 +293,19 @@ Page({
         const currentWeight = Number(d.current_weight)
         const targetWeight = Number(d.target_weight)
 
+        // BMI 状态标签：依赖身高（globalData.userInfo）与当前体重
+        const heightCm = app.globalData.userInfo && app.globalData.userInfo.height_cm
+        let bmiValue = ''
+        let bmiStatus = ''
+        let bmiLevel = ''
+        if (heightCm && currentWeight) {
+          const bv = util.calcBMI(currentWeight, heightCm)
+          bmiValue = bv.toFixed(1)
+          const tag = this.classifyBmi(bv)
+          bmiStatus = tag.status
+          bmiLevel = tag.level
+        }
+
         // 目标进度文案：按方向生成，避免"距目标还差 -20 kg"的负号别扭显示
         let targetProgressText
         if (d.achieved) {
@@ -296,6 +320,9 @@ Page({
 
         this.setData({
           targetProgressText,
+          bmiValue,
+          bmiStatus,
+          bmiLevel,
           goalProgress: {
             achieved: d.achieved,
             initial_weight: fmtW(d.initial_weight),
@@ -327,10 +354,6 @@ Page({
 
   goToOnboarding() {
     wx.navigateTo({ url: '/pages/onboarding/onboarding' })
-  },
-
-  goToTargetEdit() {
-    wx.navigateTo({ url: '/pages/target-edit/target-edit' })
   },
 
   goToLogFood() {

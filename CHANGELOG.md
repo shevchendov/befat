@@ -1,5 +1,21 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-31] 7939b2a
+
+**refactor: 精简个人中心页并强化健康提示视觉**
+
+- 移除重新设置目标/吃饭提醒/导出数据/删除所有数据入口，保留重置为新用户与健康提示
+- 健康提示取消折叠交互，改常驻黄色警告卡片，关键词加粗强调
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过（625/625），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `miniprogram/pages/profile/profile.js`
+- `miniprogram/pages/profile/profile.wxml`
+- `miniprogram/pages/profile/profile.wxss`
+- `tests/frontend/profile.test.js`
+
 ## [2026-08-28] b8fea24
 
 **fix: 修复修改目标当前体重失效与选择卡片选中态对比度**

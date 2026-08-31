@@ -25,6 +25,10 @@ Page({
     this.loadGoalProgress()
   },
 
+  handleModifyGoal() {
+    wx.navigateTo({ url: '/pages/target-edit/target-edit' })
+  },
+
   async loadGoalProgress() {
     try {
       const res = await wx.cloud.callFunction({
