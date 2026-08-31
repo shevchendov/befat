@@ -1,5 +1,24 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-31] c67122d
+
+**feat: 首页目标进度卡优化——BMI标签与三点布局、修改目标入口迁移**
+
+- 目标进度卡嵌入 BMI 状态标签（偏瘦/正常/超重动态配色），与还需增重文本字号对齐
+- 底部三点拆分为 label/value 加粗数值、nowrap 防折行
+- 修改目标入口迁至目标进度页底部
+DEPLOY: none
+VERIFIED: 仅本地jest测试通过（625/625），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `miniprogram/pages/goal-detail/goal-detail.js`
+- `miniprogram/pages/goal-detail/goal-detail.wxml`
+- `miniprogram/pages/goal-detail/goal-detail.wxss`
+- `miniprogram/pages/index/index.js`
+- `miniprogram/pages/index/index.wxml`
+- `miniprogram/pages/index/index.wxss`
+
 ## [2026-08-31] 7939b2a
 
 **refactor: 精简个人中心页并强化健康提示视觉**

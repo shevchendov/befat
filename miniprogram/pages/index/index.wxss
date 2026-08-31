@@ -178,8 +178,8 @@
 .action-icon {
   width: 110rpx;
   height: 110rpx;
-  background: var(--card-bg-white);
-  border: var(--border-width) solid var(--color-border);
+  background: #FFF2E6;
+  border: 3rpx solid #D9773B;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -189,13 +189,28 @@
   transition: transform 0.15s;
 }
 
+.action-icon-orange {
+  background: #FFF2E6;
+  border-color: #D9773B;
+}
+
+.action-icon-green {
+  background: #FDF0E6;
+  border-color: #C76B3E;
+}
+
+.action-icon-coral {
+  background: #FFF2E6;
+  border-color: #A86032;
+}
+
 .action-btn:active .action-icon {
   transform: scale(0.9);
 }
 
 .action-label {
   font-size: 24rpx;
-  color: var(--color-text-secondary);
+  color: #664A38;
   font-weight: 500;
 }
 
