@@ -10,7 +10,10 @@ App({
     userInfo: null,
     dailyTargets: null,
     favoritesCache: null,
-    forceIndexRefresh: false
+    forceIndexRefresh: false,
+    // 全局数据变更标记：称重/修改目标/记录饮食后置 true，供各核心页 onShow 检查后强刷并复位
+    isWeightUpdated: false,
+    isGoalUpdated: false
   },
 
   onLaunch() {

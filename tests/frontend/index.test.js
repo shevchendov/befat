@@ -132,6 +132,26 @@ describe('forceIndexRefresh 强制刷新机制', () => {
     expect(callFnMock).not.toHaveBeenCalled()
   })
 
+  test('isWeightUpdated 为 true 时无视 TTL 强制刷新并消费清除', async () => {
+    page._lastLoadTs = Date.now()
+    page._lastLoadDate = mockDate.today
+    getApp().globalData.isWeightUpdated = true
+    callFnMock.mockResolvedValue(makeSummary(2000, 2500, { lunch: mealLog(2000) }))
+    await page.loadData()
+    expect(getApp().globalData.isWeightUpdated).toBe(false)
+    expect(page.data.dailySummary.total_calorie).toBe(2000)
+  })
+
+  test('isGoalUpdated 为 true 时无视 TTL 强制刷新并消费清除', async () => {
+    page._lastLoadTs = Date.now()
+    page._lastLoadDate = mockDate.today
+    getApp().globalData.isGoalUpdated = true
+    callFnMock.mockResolvedValue(makeSummary(1800, 2500, { lunch: mealLog(1800) }))
+    await page.loadData()
+    expect(getApp().globalData.isGoalUpdated).toBe(false)
+    expect(page.data.dailySummary.total_calorie).toBe(1800)
+  })
+
   test('TTL 过期后普通 onShow 正常刷新', async () => {
     callFnMock.mockResolvedValue(makeSummary(1000, 2500, { lunch: mealLog(1000) }))
     await page.loadData()

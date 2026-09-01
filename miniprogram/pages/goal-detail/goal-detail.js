@@ -1,6 +1,7 @@
 const logger = require('../../utils/logger')
 const canvasChart = require('../../utils/canvasChart')
 const util = require('../../utils/util')
+const app = getApp()
 
 function rndRect(ctx, x, y, w, h, r) {
   ctx.beginPath()
@@ -56,6 +57,8 @@ Page({
           })
           wx.hideLoading()
           if (callRes.result && callRes.result.code === 0) {
+            // 称重成功：广播全局标记，供首页/统计/个人中心 onShow 联动刷新（BMI/TDEE/每日目标同步更新）
+            app.globalData.isWeightUpdated = true
             wx.showToast({ title: '已记录', icon: 'success' })
             this.loadGoalProgress()
           } else {

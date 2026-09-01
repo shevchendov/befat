@@ -1,5 +1,23 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-08-31] 335ff82
+
+**refactor: 修复 sync-common 脚本缺陷并对齐共享代码源头**
+
+- sync-common 改为文件到目标函数精确映射，弃用 rmSync 整目录删除重建
+- 更新 common/targetCalc.js 为双模式版、common/config.js 为完整版（含减重锦囊常量）
+- getMealDetail 同步至完整配置，保留 getNearbyPoi 独有 intent/schema 文件
+DEPLOY: cloudfunctions/getMealDetail
+VERIFIED: 仅本地jest测试通过（648/648），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `cloudfunctions/common/config.js`
+- `cloudfunctions/common/targetCalc.js`
+- `cloudfunctions/getMealDetail/common/config.js`
+- `cloudfunctions/sync-common.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getMealDetail
+
 ## [2026-08-31] 7610506
 
 **fix: 修复导航标题与双模式不匹配并清理增肥敏感词**

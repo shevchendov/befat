@@ -92,7 +92,7 @@ global.Page = jest.fn(config => { pageRegistry.push(config) })
 
 // getApp 返回稳定单例：真实 getApp 是单例，页面在 require 时捕获引用，
 // 测试需通过同一实例操作 globalData（如 forceIndexRefresh）才能正确断言
-const appMock = { globalData: { userInfo: null, dailyTargets: null, forceIndexRefresh: false } }
+const appMock = { globalData: { userInfo: null, dailyTargets: null, forceIndexRefresh: false, isWeightUpdated: false, isGoalUpdated: false } }
 global.getApp = jest.fn(() => appMock)
 global.getCurrentPages = jest.fn(() => [{ route: 'pages/test/test' }])
 

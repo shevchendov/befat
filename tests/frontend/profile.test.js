@@ -2,7 +2,7 @@ require('./setup')
 const { getLastPageConfig, createPage, callFnMock } = require('./setup')
 
 let page
-const appInstance = { globalData: { userInfo: null, dailyTargets: null } }
+const appInstance = { globalData: { userInfo: null, dailyTargets: null, isWeightUpdated: false, isGoalUpdated: false } }
 
 beforeAll(() => {
   global.getApp = jest.fn(() => appInstance)
@@ -20,6 +20,8 @@ beforeEach(() => {
   page._gpCache = null
   appInstance.globalData.userInfo = null
   appInstance.globalData.dailyTargets = null
+  appInstance.globalData.isWeightUpdated = false
+  appInstance.globalData.isGoalUpdated = false
 })
 
 describe('loadUserData', () => {
@@ -201,5 +203,30 @@ describe('resetUserData', () => {
     wx.showToast.mockClear()
     await page.resetUserData()
     expect(wx.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining('异常') }))
+  })
+})
+
+describe('onShow - 数据变更后失效缓存', () => {
+  test('isWeightUpdated 为 true 时清空 _gpCache 并复位标记', () => {
+    page._gpCache = { ts: Date.now(), value: { current_weight: 60.4 } }
+    appInstance.globalData.isWeightUpdated = true
+    page.onShow()
+    expect(page._gpCache).toBeNull()
+    expect(appInstance.globalData.isWeightUpdated).toBe(false)
+  })
+
+  test('isGoalUpdated 为 true 时清空 _gpCache 并复位标记', () => {
+    page._gpCache = { ts: Date.now(), value: { current_weight: 60.4 } }
+    appInstance.globalData.isGoalUpdated = true
+    page.onShow()
+    expect(page._gpCache).toBeNull()
+    expect(appInstance.globalData.isGoalUpdated).toBe(false)
+  })
+
+  test('无变更标记时保留 _gpCache', () => {
+    const cache = { ts: Date.now(), value: { current_weight: 60.4 } }
+    page._gpCache = cache
+    page.onShow()
+    expect(page._gpCache).toBe(cache)
   })
 })

@@ -79,6 +79,12 @@ Page({
       app.globalData.forceIndexRefresh = false
       return true
     }
+    // 全局数据变更标记：称重/修改目标后强制刷新首页（体重/BMI/TDEE/每日目标联动）
+    if (app.globalData.isWeightUpdated || app.globalData.isGoalUpdated) {
+      app.globalData.isWeightUpdated = false
+      app.globalData.isGoalUpdated = false
+      return true
+    }
     const pages = getCurrentPages()
     const prev = pages.length >= 2 ? pages[pages.length - 2].route : null
     if (prev && DIRTY_SOURCE_ROUTES.indexOf(prev) !== -1) return true

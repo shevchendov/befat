@@ -23,6 +23,18 @@ Page({
 
   onShow() {
     this.applyGoalType()
+    // 称重/修改目标后，统计页体重趋势、达标统计需同步刷新
+    const app = getApp()
+    if (app.globalData.isWeightUpdated || app.globalData.isGoalUpdated) {
+      app.globalData.isWeightUpdated = false
+      app.globalData.isGoalUpdated = false
+      this.loadData()
+      return
+    }
+    if (app.globalData.forceIndexRefresh) {
+      app.globalData.forceIndexRefresh = false
+      this.loadData()
+    }
   },
 
   applyGoalType() {

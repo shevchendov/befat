@@ -32,6 +32,12 @@ Page({
   },
 
   onShow() {
+    // 体重/目标变更后，失效 30s TTL 缓存，强制重取最新体重与档案
+    if (app.globalData.isWeightUpdated || app.globalData.isGoalUpdated) {
+      app.globalData.isWeightUpdated = false
+      app.globalData.isGoalUpdated = false
+      this._gpCache = null
+    }
     this.loadUserData()
   },
 
