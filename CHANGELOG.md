@@ -1,5 +1,29 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-09-01] 1122f7b
+
+**fix: 修复附近运动场所加载失败与 lose 模式 POI 0 结果**
+
+- steps 页 POI 增加定位授权校验与引导：未授权展示「开启定位」卡片，拒绝/异常降级为可点击重试卡片
+- app.json 定位权限描述覆盖运动场所，steps 页显式传 searchQuery 与 goalType
+- map.js searchNearbyPoi 增加坐标非法兜底空数组，避免硬报错
+- getNearbyPoi 空 searchQuery 默认关键词改为竖线 OR（旧空格被地图按 AND 解析导致 lose 模式 0 条）
+- lose 模式检索起步半径放大至 5000，提升周边运动场所匹配率
+DEPLOY: cloudfunctions/getNearbyPoi
+VERIFIED: 仅本地jest测试通过（669 用例），未做真机/云端验证
+
+**涉及文件:**
+- `CHANGELOG.md`
+- `cloudfunctions/getNearbyPoi/config.js`
+- `cloudfunctions/getNearbyPoi/index.js`
+- `miniprogram/app.json`
+- `miniprogram/pages/steps/steps.js`
+- `miniprogram/pages/steps/steps.wxml`
+- `miniprogram/pages/steps/steps.wxss`
+- `miniprogram/utils/map.js`
+- `tests/getNearbyPoi.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getNearbyPoi
+
 ## [2026-09-01] 9ae1d37
 
 **feat: 减重模式功能上线（视觉吃记/断食计时/步数/减脂教练）**
