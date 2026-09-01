@@ -8,7 +8,10 @@
     "pages/stats/stats",
     "pages/goal-detail/goal-detail",
     "pages/target-edit/target-edit",
-    "pages/profile/profile"
+    "pages/profile/profile",
+    "pages/steps/steps",
+    "pages/fasting/fasting",
+    "pages/coach/coach"
   ],
   "window": {
     "navigationBarTextStyle": "black",

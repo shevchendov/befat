@@ -3,7 +3,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const axios = require('axios')
 const logger = require('./common/logger')
-const { getConfig, renderPrompt, SYSTEM_PROMPT, SYSTEM_PROMPT_LOSE_TIPS, DAILY_MENU_TIPS_PROMPT_LOSE, LOCAL_FALLBACK_CONFIG } = require('./common/config')
+const { getConfig, renderPrompt, SYSTEM_PROMPT, SYSTEM_PROMPT_LOSE_TIPS, DAILY_MENU_TIPS_PROMPT_LOSE, DAILY_COACH_PROMPT_LOSE, LOCAL_FALLBACK_CONFIG } = require('./common/config')
 const FN = 'getDailyMenu'
 
 // 目标方向归一化：仅 'lose' 视为减重，其余（含 undefined/null/''/老用户缺失）一律兜底为 'gain'
@@ -51,6 +51,16 @@ function blockingChecks(meals, patterns) {
   return meals
 }
 
+const AI_IDENTITY_RE = /AI|人工智能|智能|大模型/i
+function assertNoAiIdentity(tips) {
+  for (const t of tips || []) {
+    if (AI_IDENTITY_RE.test((t.title || '') + ' ' + (t.content || ''))) {
+      throw new Error('tip contains AI identity word')
+    }
+  }
+  return tips
+}
+
 function pickFallback(menus) {
   return MEAL_ORDER.map(type => {
     const candidates = (menus || []).filter(m => m && m.meal_type === type)
@@ -68,18 +78,50 @@ function pickFallbackTips(config) {
   return tips.map(t => ({ title: t.title, content: t.content }))
 }
 
-async function callGlmMenu(date, config, goalType) {
+// AI 减脂教练：实时诊断，不入 daily_menus 缓存、不落库（行为数据每日/每次变化）
+async function generateCoachAdvice(date, config, behaviors) {
+  const raw = await callGlmMenu(date, config, 'lose', behaviors)
+  let tips
+  try {
+    tips = parseAndValidate(raw, 'lose')
+  } catch (e) {
+    logger.warn(FN, 'coach parse fail, use fallback', { error: e.message })
+    tips = pickFallbackTips(config)
+  }
+  // 安全网检查
+  try {
+    blockingChecks(tips.map(t => ({ title: t.title, ingredients: [], steps: [t.content] })), config.blocking_checks)
+    assertNoAiIdentity(tips)
+  } catch (e) {
+    tips = pickFallbackTips(config)
+  }
+  return tips
+}
+
+async function callGlmMenu(date, config, goalType, behaviors) {
   const apiKey = process.env.MENU_API_KEY || process.env.ZHIPU_API_KEY
   if (!apiKey) throw new Error('MENU_API_KEY not configured')
   const model = process.env.MENU_MODEL || 'glm-4-flash'
   const apiUrl = process.env.MENU_API_URL || MENU_API_URL_DEFAULT
   const isLose = goalType === 'lose'
-  // 减重走独立 tips Prompt（生活减脂建议）；增重保留 config.prompts.daily_menu（system_config 动态配置）原逻辑
-  const promptTemplate = isLose ? DAILY_MENU_TIPS_PROMPT_LOSE : config.prompts.daily_menu
-  const systemPrompt = isLose ? SYSTEM_PROMPT_LOSE_TIPS : SYSTEM_PROMPT
+  // 减重：有行为数据走「AI 减脂教练」动态诊断 Prompt，否则走通用 tips Prompt；
+  // 增重保留 config.prompts.daily_menu（system_config 动态配置）原逻辑
+  let promptTemplate
+  let systemPrompt
+  if (!isLose) {
+    promptTemplate = config.prompts.daily_menu
+    systemPrompt = SYSTEM_PROMPT
+  } else if (behaviors) {
+    promptTemplate = DAILY_COACH_PROMPT_LOSE
+    systemPrompt = SYSTEM_PROMPT_LOSE_TIPS
+  } else {
+    promptTemplate = DAILY_MENU_TIPS_PROMPT_LOSE
+    systemPrompt = SYSTEM_PROMPT_LOSE_TIPS
+  }
   const user = renderPrompt(promptTemplate, {
     date,
-    ingredients: config.ingredient_whitelist.join('、')
+    ingredients: config.ingredient_whitelist.join('、'),
+    behaviors: behaviors || ''
   })
 
   const resp = await axios.post(apiUrl, {
@@ -226,6 +268,7 @@ async function fetchOrGenerate(date, forceRefresh, goalType) {
       const tips = parseAndValidate(raw, goalType)
       // 安全网：复用 blockingChecks，将 content 并入 steps 供其检查
       blockingChecks(tips.map(t => ({ title: t.title, ingredients: [], steps: [t.content] })), config.blocking_checks)
+      assertNoAiIdentity(tips)
       updatePayload = { tips }
     } else {
       const meals = parseAndValidate(raw, goalType)
@@ -267,7 +310,8 @@ exports.main = async (event, context) => {
   const start = Date.now()
   const date = event.date || fmtBeijingDate()
   const forceRefresh = event.forceRefresh === true
-  logger.info(FN, 'invoke', { date, forceRefresh })
+  const behaviors = event.behaviors
+  logger.info(FN, 'invoke', { date, forceRefresh, hasBehaviors: !!behaviors })
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     const result = { code: 1, message: '日期格式非法' }
@@ -283,6 +327,20 @@ exports.main = async (event, context) => {
     goalType = normalizeGoalType(userRes.data[0] ? userRes.data[0].goal_type : undefined)
   } catch (err) {
     logger.warn(FN, 'read user goal_type failed, fallback gain', { error: err.message })
+  }
+
+  // AI 减脂教练：实时动态诊断（带 behaviors），不落缓存直接返回
+  if (goalType === 'lose' && behaviors) {
+    try {
+      const config = await getConfig(db)
+      const tips = await generateCoachAdvice(date, config, behaviors)
+      return { code: 0, message: 'ok', data: { date, goal_type: 'lose', tips, generated_by: 'coach' } }
+    } catch (err) {
+      logger.warn(FN, 'coach generate fail, fallback', { error: err.message })
+      const config = await getConfig(db)
+      const tips = pickFallbackTips(config)
+      return { code: 93, message: '今日减脂建议暂不可用，已返回备用建议', data: { date, goal_type: 'lose', tips, generated_by: 'fallback' } }
+    }
   }
 
   try {
@@ -322,3 +380,4 @@ exports.parseAndValidate = parseAndValidate
 exports.blockingChecks = blockingChecks
 exports.pickFallback = pickFallback
 exports.pickFallbackTips = pickFallbackTips
+exports.assertNoAiIdentity = assertNoAiIdentity

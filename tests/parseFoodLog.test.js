@@ -309,3 +309,50 @@ describe('parseFoodLog.main - image mode', () => {
     expect(result.code).toBe(92)
   })
 })
+
+describe('parseFoodLog.main - lose 红绿灯', () => {
+  beforeEach(() => {
+    process.env.DEEPSEEK_API_KEY = 'test-key'
+  })
+
+  test('lose 模式返回 traffic_light 与 light_reason，且保留 calorie/protein_g', async () => {
+    mockDeepSeekResponse(JSON.stringify({
+      items: [
+        { name: '鸡胸肉沙拉', portion: '1份', calorie: 220, protein_g: 28, traffic_light: 'green', light_reason: '高蛋白高纤维少油' },
+        { name: '炸鸡', portion: '2块', calorie: 480, protein_g: 20, traffic_light: 'red', light_reason: '高油高热量' }
+      ],
+      total_calorie: 700,
+      total_protein_g: 48,
+      overall_light: 'red'
+    }))
+
+    const result = await parseFoodLog.main({
+      raw_text: '鸡胸肉沙拉加炸鸡', meal_type: 'lunch', date: '2026-07-29', goal_type: 'lose'
+    }, {})
+
+    expect(result.code).toBe(0)
+    expect(result.data.goal_type).toBe('lose')
+    expect(result.data.items[0].traffic_light).toBe('green')
+    expect(result.data.items[0].light_reason).toBe('高蛋白高纤维少油')
+    expect(result.data.items[1].traffic_light).toBe('red')
+    expect(result.data.overall_light).toBe('red')
+    // 数值依旧保留落盘
+    expect(result.data.items[0].calorie).toBe(220)
+    expect(result.data.items[0].protein_g).toBe(28)
+  })
+
+  test('gain 模式（缺省）仍无红绿灯字段污染', async () => {
+    mockDeepSeekResponse(JSON.stringify({
+      items: [{ name: '米饭', portion: '1碗', calorie: 230, protein_g: 4.3 }],
+      total_calorie: 230,
+      total_protein_g: 4.3
+    }))
+    const result = await parseFoodLog.main({
+      raw_text: '一碗米饭', meal_type: 'lunch', date: '2026-07-29'
+    }, {})
+    expect(result.code).toBe(0)
+    expect(result.data.goal_type).toBe('gain')
+    expect(result.data.items[0].traffic_light).toBe('')
+    expect(result.data.overall_light).toBe('')
+  })
+})

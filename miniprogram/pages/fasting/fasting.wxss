@@ -1,0 +1,131 @@
+.fasting-page {
+  padding: 30rpx;
+}
+
+.fasting-card {
+  background: linear-gradient(135deg, #EAF7EF, #FFF8F0);
+  border: 2rpx solid var(--color-border);
+  border-radius: 24rpx;
+  box-shadow: var(--shadow-card);
+  padding: 40rpx 30rpx;
+  text-align: center;
+}
+
+.status-label {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--color-accent-green);
+}
+
+.remain-num {
+  font-size: 26rpx;
+  color: var(--color-text-secondary);
+  margin-top: 20rpx;
+}
+
+.remain-time {
+  font-size: 88rpx;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin-top: 10rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-bar {
+  height: 24rpx;
+  background: var(--card-bg-light);
+  border: 2rpx solid var(--color-border);
+  border-radius: 12rpx;
+  overflow: hidden;
+  margin-top: 30rpx;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-accent-green), #8BC34A);
+  border-radius: 12rpx;
+  transition: width 0.5s ease;
+}
+
+.progress-sub {
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+  margin-top: 10rpx;
+}
+
+.phase-box {
+  margin-top: 24rpx;
+  background: #fff;
+  border: 2rpx solid var(--color-border);
+  border-radius: 16rpx;
+  padding: 20rpx;
+}
+
+.phase-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #3D2C29;
+}
+
+.phase-desc {
+  display: block;
+  font-size: 26rpx;
+  color: var(--color-text-secondary);
+  margin-top: 8rpx;
+}
+
+.offset-card {
+  margin-top: 24rpx;
+  background: var(--card-bg);
+  border: 2rpx solid var(--color-border);
+  border-radius: 24rpx;
+  padding: 24rpx;
+}
+
+.offset-label {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.offset-input {
+  height: 72rpx;
+  border: 2rpx solid var(--color-border);
+  border-radius: 16rpx;
+  padding: 0 24rpx;
+  margin-top: 16rpx;
+  font-size: 28rpx;
+}
+
+.offset-hint {
+  font-size: 24rpx;
+  color: var(--color-text-light);
+  margin-top: 12rpx;
+}
+
+.stage-list {
+  margin-top: 24rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.stage-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  font-size: 28rpx;
+  color: var(--color-text-secondary);
+}
+
+.dot {
+  width: 18rpx;
+  height: 18rpx;
+  border-radius: 50%;
+}
+
+.dot-1 { background: #C9C2B8; }
+.dot-2 { background: #FFD23F; }
+.dot-3 { background: #FFB347; }
+.dot-4 { background: #FF6B35; }

@@ -18,7 +18,18 @@ Page({
     rawTextSaved: '',
     showCelebration: false,
     celebEmoji: '🎉',
-    celebText: ''
+    celebText: '',
+    goalType: 'gain',
+    // Lose 红绿灯专属状态（与 gain 完全隔离）
+    loseOverallLight: '',
+    loseOverallLightText: '',
+    loseGreenCount: 0,
+    loseYellowCount: 0,
+    loseRedCount: 0
+  },
+
+  onLoad() {
+    this.setData({ goalType: util.normalizeGoalType(app.globalData.userInfo && app.globalData.userInfo.goal_type) })
   },
 
   setMealType(e) {
@@ -44,13 +55,77 @@ Page({
     }
 
     const text = this.data.rawText.trim() || result.data.raw_text || ''
+    const items = result.data.items.length > 0 ? result.data.items : [{ name: text || '未知食物', portion: '1份', calorie: 0, protein_g: 0 }]
+    const loseAgg = this.data.goalType === 'lose' ? this.aggregateTraffic(items) : {}
     this.setData({
       showResult: true,
-      parsedItems: result.data.items.length > 0 ? result.data.items : [{ name: text || '未知食物', portion: '1份', calorie: 0, protein_g: 0 }],
+      parsedItems: items,
       totalCalorie: result.data.total_calorie,
       totalProtein: result.data.total_protein_g,
       rawTextSaved: text,
-      parsing: false
+      parsing: false,
+      ...loseAgg
+    })
+  },
+
+  // Lose 模式：聚合红绿灯统计（green/yellow/red 计数 + 整餐评级文本）
+  aggregateTraffic(items) {
+    let green = 0
+    let yellow = 0
+    let red = 0
+    items.forEach(it => {
+      if (it.traffic_light === 'green') green++
+      else if (it.traffic_light === 'yellow') yellow++
+      else if (it.traffic_light === 'red') red++
+    })
+    const light = red > 0 ? 'red' : (yellow > 0 ? 'yellow' : 'green')
+    const textMap = { green: '绿灯 · 放心吃', yellow: '黄灯 · 需控量', red: '红灯 · 需注意' }
+    return {
+      loseOverallLight: light,
+      loseOverallLightText: textMap[light],
+      loseGreenCount: green,
+      loseYellowCount: yellow,
+      loseRedCount: red
+    }
+  },
+
+  // Lose 专属极简打卡 Handler：拍完/解析后一键落盘（不走 gain 的克数编辑 saveFoodLog）
+  lose_onRecordVisual() {
+    const items = this.data.parsedItems.filter(item => item.name && item.name.trim())
+    if (items.length === 0) {
+      wx.showToast({ title: '请先拍照或输入描述', icon: 'none' })
+      return
+    }
+    this.setData({ saving: true })
+    const today = util.formatDate(new Date())
+    wx.cloud.callFunction({
+      name: 'saveFoodLog',
+      data: {
+        date: today,
+        meal_type: this.data.mealType,
+        raw_text: this.data.rawTextSaved,
+        items: items.map(item => ({
+          name: item.name,
+          portion: item.portion || '1份',
+          calorie: Number(item.calorie) || 0,
+          protein_g: Number(item.protein_g) || 0,
+          traffic_light: item.traffic_light || '',
+          light_reason: item.light_reason || ''
+        }))
+      }
+    }).then(res => {
+      this.setData({ saving: false })
+      if (res.result && res.result.code === 0) {
+        app.globalData.forceIndexRefresh = true
+        wx.showToast({ title: '已记下', icon: 'success' })
+        setTimeout(() => wx.navigateBack(), 1200)
+      } else {
+        wx.showToast({ title: (res.result && res.result.message) || '保存失败', icon: 'none' })
+      }
+    }).catch(err => {
+      logger.error('lose_onRecordVisual', err)
+      this.setData({ saving: false })
+      wx.showToast({ title: '保存失败，请重试', icon: 'none' })
     })
   },
 
@@ -67,7 +142,8 @@ Page({
         data: {
           raw_text: text,
           meal_type: this.data.mealType,
-          date: today
+          date: today,
+          goal_type: this.data.goalType
         }
       })
       this.handleParseResult(res.result)
@@ -140,7 +216,8 @@ Page({
         data: {
           image_base64: base64,
           meal_type: this.data.mealType,
-          date: today
+          date: today,
+          goal_type: this.data.goalType
         }
       })
       this.handleParseResult(res.result)

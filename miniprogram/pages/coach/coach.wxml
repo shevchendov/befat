@@ -1,0 +1,28 @@
+<view class="coach-page">
+  <!-- 生成中骨架屏（2~4s） -->
+  <view class="coach-skeleton" wx:if="{{loading}}">
+    <view class="sk-pill"></view>
+    <view class="sk-card" wx:for="{{[1,2,3]}}" wx:key="*this">
+      <view class="sk-line w70"></view>
+      <view class="sk-line w40"></view>
+    </view>
+    <view class="sk-tip">🎯 正在生成今日减重建议…</view>
+  </view>
+
+  <!-- 错误态 -->
+  <view wx:elif="{{errorMsg}}" class="coach-error">
+    <text class="error-text">{{errorMsg}}</text>
+    <button class="retry-btn" bindtap="onRetry">重新生成</button>
+  </view>
+
+  <!-- 结果：Advice 列表 -->
+  <view wx:else class="coach-tips">
+    <view class="tip-card" wx:for="{{tips}}" wx:for-item="tip" wx:for-index="idx" wx:key="title">
+      <view class="tip-index">{{idx + 1}}</view>
+      <view class="tip-body">
+        <view class="tip-title">{{tip.title}}</view>
+        <view class="tip-content">{{tip.content}}</view>
+      </view>
+    </view>
+  </view>
+</view>

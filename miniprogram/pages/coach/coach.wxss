@@ -1,0 +1,106 @@
+.coach-page {
+  padding: 30rpx;
+}
+
+/* ===== 骨架屏（暖色复古风格，24rpx 圆角） ===== */
+.coach-skeleton {
+  padding: 10rpx;
+}
+
+.sk-pill {
+  width: 60%;
+  height: 40rpx;
+  border-radius: 999rpx;
+  background: #F0E6D6;
+  margin-bottom: 24rpx;
+}
+
+.sk-card {
+  background: var(--card-bg);
+  border: 2rpx solid #E8DDCC;
+  border-radius: 24rpx;
+  box-shadow: var(--shadow-card);
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+}
+
+.sk-line {
+  height: 24rpx;
+  border-radius: 12rpx;
+  background: #F0E6D6;
+  margin-bottom: 16rpx;
+}
+
+.sk-line.w70 { width: 70%; }
+.sk-line.w40 { width: 40%; }
+
+.sk-tip {
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--color-text-light);
+  padding: 20rpx 0;
+}
+
+/* ===== 错误态 ===== */
+.coach-error {
+  text-align: center;
+  padding: 120rpx 40rpx;
+}
+
+.error-text {
+  display: block;
+  font-size: 28rpx;
+  color: var(--color-text-secondary);
+  margin-bottom: 30rpx;
+}
+
+.retry-btn {
+  background: var(--color-accent-green);
+  color: #fff;
+  border-radius: 999rpx;
+  font-size: 28rpx;
+  padding: 16rpx 48rpx;
+}
+
+/* ===== 建议卡片 ===== */
+.tip-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+  background: var(--card-bg);
+  border: 2rpx solid var(--color-border);
+  border-radius: 24rpx;
+  box-shadow: var(--shadow-card);
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+}
+
+.tip-index {
+  flex-shrink: 0;
+  width: 52rpx;
+  height: 52rpx;
+  line-height: 52rpx;
+  text-align: center;
+  background: #EAF7EF;
+  border-radius: 50%;
+  color: var(--color-accent-green);
+  font-weight: 700;
+  font-size: 30rpx;
+}
+
+.tip-body {
+  flex: 1;
+}
+
+.tip-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 8rpx;
+}
+
+.tip-content {
+  font-size: 26rpx;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}

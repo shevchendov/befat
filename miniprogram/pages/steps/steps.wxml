@@ -1,0 +1,27 @@
+<view class="steps-page">
+  <view class="steps-card">
+    <view class="steps-icon">🚶</view>
+    <view class="steps-num">{{steps}} <text class="steps-unit">步</text></view>
+    <view class="steps-sub">≈ {{calorie}} kcal 消耗</view>
+
+    <view class="steps-auth" wx:if="{{!authorized && !loading}}">
+      <button class="auth-btn" bindtap="onAuthorizeWerun">授权读取微信步数</button>
+      <view class="manual-row">
+        <input class="manual-input" type="number" placeholder="或手动输入步数" value="{{manualStep}}" bindinput="onManualStepInput" />
+        <button class="manual-btn" bindtap="onManualStepConfirm">确认</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-title">🏃 附近运动场所</view>
+  <view wx:if="{{poiLoading}}" class="poi-loading">加载中…</view>
+  <view wx:elif="{{poiError}}" class="poi-error">{{poiMsg}}</view>
+  <view wx:else class="poi-list">
+    <view class="poi-card" wx:for="{{poiList}}" wx:for-index="pi" wx:key="id" bindtap="openPoi" data-index="{{pi}}">
+      <view class="poi-title">{{item.title}}</view>
+      <view class="poi-meta">{{item.category}} · {{item.distance_text}}</view>
+      <view class="poi-address">{{item.address}}</view>
+    </view>
+    <view wx:if="{{poiList.length === 0}}" class="poi-empty">暂无附近运动场所</view>
+  </view>
+</view>

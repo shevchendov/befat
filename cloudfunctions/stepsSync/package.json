@@ -1,0 +1,9 @@
+{
+  "name": "stepsSync",
+  "version": "1.0.0",
+  "description": "微信运动步数解密与消耗换算（CloudID 自动解密）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

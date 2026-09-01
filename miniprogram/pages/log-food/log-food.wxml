@@ -22,13 +22,14 @@
 
   <view class="card" wx:if="{{!showResult}}">
     <button class="btn-primary" bindtap="parseFood" disabled="{{!canParse || parsing}}">
-      <text wx:if="{{!parsing}}">估算热量</text>
+      <text wx:if="{{!parsing}}">{{goalType === 'lose' ? '拍照/描述分析' : '估算热量'}}</text>
       <text wx:if="{{parsing}}">正在分析，请稍候...</text>
     </button>
     <view class="disclaimer">热量为估算值，仅供参考</view>
   </view>
 
-  <view class="card result-card" wx:if="{{showResult}}">
+  <!-- Gain：克数编辑结果卡（原样） -->
+  <view class="card result-card" wx:if="{{showResult && goalType !== 'lose'}}">
     <view class="result-header">
       <text class="result-title">估算结果</text>
       <text class="result-hint">✏️ 不对可以改</text>
@@ -64,6 +65,22 @@
       <button class="btn-secondary" bindtap="resetForm">🔄 重新来</button>
       <button class="btn-primary" bindtap="saveFoodLog" disabled="{{saving}}">
         <text wx:if="{{!saving}}">✅ 记下来！</text>
+        <text wx:if="{{saving}}">📝 正在记...</text>
+      </button>
+    </view>
+  </view>
+
+  <!-- Lose：极简红绿灯打卡（隐去克数编辑） -->
+  <view class="card result-card lose-visual" wx:if="{{showResult && goalType === 'lose'}}">
+    <view class="traffic-summary">
+      <view class="light-badge light-{{loseOverallLight}}">{{loseOverallLightText}}</view>
+      <view class="light-count">🟢 {{loseGreenCount}} · 🟡 {{loseYellowCount}} · 🔴 {{loseRedCount}}</view>
+    </view>
+    <view class="lose-total">约 {{totalCalorie}} kcal · 蛋白质 {{totalProtein}}g</view>
+    <view class="result-actions">
+      <button class="btn-secondary" bindtap="resetForm">🔄 重新来</button>
+      <button class="btn-primary" bindtap="lose_onRecordVisual" disabled="{{saving}}">
+        <text wx:if="{{!saving}}">✅ 记下来</text>
         <text wx:if="{{saving}}">📝 正在记...</text>
       </button>
     </view>

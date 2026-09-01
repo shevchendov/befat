@@ -13,6 +13,8 @@ const DIRTY_SOURCE_ROUTES = [
   'pages/target-edit/target-edit',
   'pages/profile/profile'
 ]
+// 减重模式每日步数目标：可配置，优先取用户目标步数配置（users.steps_goal），缺省 8000
+const LOSE_STEPS_TARGET_DEFAULT = 8000
 
 Page({
   data: {
@@ -38,12 +40,16 @@ Page({
     bmiValue: '',
     bmiStatus: '',
     bmiLevel: '',
+    werunSteps: 0,
+    werunCalorie: 0,
+    loseStepsTarget: LOSE_STEPS_TARGET_DEFAULT,
     goalProgress: null,
     showGoalGuide: false
   },
 
   onShow() {
     this.loadData()
+    this.loadWerunForLose()
   },
 
   // 问候语按【时间段 × 目标模式】隔离，增重/减重文案独立，防止文案污染
@@ -100,7 +106,7 @@ Page({
 
     // 问候语按目标模式隔离；本地阶段先以 globalData 已存 goal_type 兜底（缓存命中时也能正确显示）
     const localGoalType = util.normalizeGoalType(app.globalData.userInfo && app.globalData.userInfo.goal_type)
-    this.setData({ dateText, goalType: localGoalType, greeting: this.getGreetingText(localGoalType) })
+    this.setData({ dateText, goalType: localGoalType, greeting: this.getGreetingText(localGoalType), loseStepsTarget: this.resolveStepsTarget() })
 
     if (app.globalData.dailyTargets) {
       this.setData({ targets: app.globalData.dailyTargets })
@@ -223,7 +229,13 @@ Page({
     const current = this.data.dailySummary
     const isLose = this.data.goalType === 'lose'
 
-    this.drawSingleRing('calorieCanvas', current.total_calorie, targets.calorie, isLose && this.data.overLimit)
+    if (isLose) {
+      this.drawSingleRing('loseCalorieCanvas', current.total_calorie, targets.calorie, this.data.overLimit)
+      this.drawSingleRing('loseStepsCanvas', this.data.werunSteps, this.data.loseStepsTarget, false)
+      return
+    }
+
+    this.drawSingleRing('calorieCanvas', current.total_calorie, targets.calorie, false)
     this.drawSingleRing('proteinCanvas', current.total_protein_g, targets.protein, false)
   },
 
@@ -246,7 +258,7 @@ Page({
 
       ctx.clearRect(0, 0, size, size)
 
-      const isCalorie = canvasId === 'calorieCanvas'
+      const isCalorie = canvasId === 'calorieCanvas' || canvasId === 'loseCalorieCanvas'
       const trackColor = isCalorie ? '#FFE8D0' : '#D8F5E0'
       // 减重超标：热量环填充色切换为警示红；其余维持原配色
       const fillColor = overLimit ? '#FF4D4F' : (isCalorie ? '#FF7A2F' : '#2ECC71')
@@ -373,6 +385,49 @@ Page({
 
   goToDailyMenu() {
     wx.navigateTo({ url: '/pages/daily-menu/daily-menu' })
+  },
+
+  goToSteps() {
+    wx.navigateTo({ url: '/pages/steps/steps' })
+  },
+
+  goToFasting() {
+    wx.navigateTo({ url: '/pages/fasting/fasting' })
+  },
+
+  goToCoach() {
+    wx.navigateTo({ url: '/pages/coach/coach' })
+  },
+
+  // 减重模式每日步数目标：优先读用户配置 users.steps_goal，缺省 8000
+  resolveStepsTarget() {
+    const u = app.globalData.userInfo || {}
+    const custom = Number(u.steps_goal) || 0
+    return custom > 0 ? custom : LOSE_STEPS_TARGET_DEFAULT
+  },
+
+  // Lose 模式：读取微信步数并换算消耗（未授权降级为 0，不影响页面渲染）
+  loadWerunForLose() {
+    const goalType = util.normalizeGoalType(app.globalData.userInfo && app.globalData.userInfo.goal_type)
+    if (goalType !== 'lose') return
+    wx.getSetting({
+      success: (res) => {
+        if (!(res.authSetting && res.authSetting['scope.werun'])) return
+        wx.getWeRunData({
+          success: (r) => {
+            wx.cloud.callFunction({
+              name: 'stepsSync',
+              data: { stepCloud: wx.cloud.CloudID(r.cloudID) }
+            }).then(cr => {
+              const d = (cr.result && cr.result.code === 0 && cr.result.data) ? cr.result.data : { steps: 0, calorie: 0 }
+              this.setData({ werunSteps: d.steps, werunCalorie: d.calorie }, () => {
+                this.drawSingleRing('loseStepsCanvas', d.steps, this.data.loseStepsTarget, false)
+              })
+            }).catch(() => {})
+          }
+        })
+      }
+    })
   },
 
   goToStats() {

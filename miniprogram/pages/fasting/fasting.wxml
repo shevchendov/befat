@@ -1,0 +1,30 @@
+<view class="fasting-page">
+  <view class="fasting-card">
+    <view class="status-label">{{isEating ? '进食窗口 · 可进食' : '断食中 · 坚持住'}}</view>
+    <view class="remain-num">{{isEating ? '距窗口结束' : '距下次进食'}}</view>
+    <view class="remain-time">{{remainText}}</view>
+
+    <view class="progress-bar">
+      <view class="progress-fill" style="width: {{progressPct}}%;"></view>
+    </view>
+    <view class="progress-sub">断食进度 {{progressPct}}% · 已断食 {{elapsedText}}</view>
+
+    <view class="phase-box">
+      <text class="phase-title">{{phase.title}}</text>
+      <text class="phase-desc">{{phase.desc}}</text>
+    </view>
+  </view>
+
+  <view class="offset-card">
+    <text class="offset-label">进食窗口偏移（分钟）</text>
+    <input class="offset-input" type="number" value="{{offsetMin}}" bindchange="onOffsetChange" />
+    <text class="offset-hint">默认 12:00–20:00（8 小时进食 / 16 小时断食）</text>
+  </view>
+
+  <view class="stage-list">
+    <view class="stage-item"><text class="dot dot-1"></text>0-8h 消化期</view>
+    <view class="stage-item"><text class="dot dot-2"></text>8-12h 动用脂肪</view>
+    <view class="stage-item"><text class="dot dot-3"></text>12-14h 深度燃脂</view>
+    <view class="stage-item"><text class="dot dot-4"></text>14-16h 细胞自噬</view>
+  </view>
+</view>

@@ -102,3 +102,81 @@ describe('getHealthWarning', () => {
     expect(util.getHealthWarning(24).level).toBe('info')
   })
 })
+
+describe('calcCalorieBySteps', () => {
+  test('steps * 0.04 四舍五入', () => {
+    expect(util.calcCalorieBySteps(5000)).toBe(200)
+    expect(util.calcCalorieBySteps(10000)).toBe(400)
+  })
+
+  test('非法/非正输入返回 0', () => {
+    expect(util.calcCalorieBySteps(0)).toBe(0)
+    expect(util.calcCalorieBySteps(-5)).toBe(0)
+    expect(util.calcCalorieBySteps('abc')).toBe(0)
+    expect(util.calcCalorieBySteps(undefined)).toBe(0)
+  })
+
+  test('小数步数（字符串）可处理', () => {
+    expect(util.calcCalorieBySteps('8000')).toBe(320)
+  })
+})
+
+describe('calcFastingStatus 跨夜', () => {
+  // 构造本地时区时间戳（与实现内 start 计算使用同一时区）
+  function at(y, m, d, hh, mm) {
+    return new Date(y, m - 1, d, hh, mm, 0, 0).getTime()
+  }
+
+  test('14:00 进食窗口内，剩余约 6 小时', () => {
+    const r = util.calcFastingStatus(at(2026, 1, 15, 14, 0), 0)
+    expect(r.isEating).toBe(true)
+    expect(r.remainMs).toBeCloseTo(6 * 3600 * 1000)
+    expect(r.elapsedFastingMs).toBe(0)
+    expect(r.phase.title).toBe('消化期')
+  })
+
+  test('22:00 已越进食窗口，距次日 12:00 约 14 小时，进入脂肪期', () => {
+    const r = util.calcFastingStatus(at(2026, 1, 15, 22, 0), 0)
+    expect(r.isEating).toBe(false)
+    expect(r.remainMs).toBeCloseTo(14 * 3600 * 1000)
+    expect(r.elapsedFastingMs).toBeCloseTo(2 * 3600 * 1000) // 20:00 结束至 22:00
+    expect(r.phase.title).toBe('消化期') // 2h < 8h
+  })
+
+  test('次日 01:30 断食延续，距当日 12:00 约 10.5 小时，进入动用脂肪', () => {
+    const r = util.calcFastingStatus(at(2026, 1, 16, 1, 30), 0)
+    expect(r.isEating).toBe(false)
+    expect(r.remainMs).toBeCloseTo(10.5 * 3600 * 1000)
+    // 断食时长为昨日 20:00 至次日 01:30 = 5.5h（仍 < 8h，消化期）
+    expect(r.elapsedFastingMs).toBeCloseTo(5.5 * 3600 * 1000)
+    expect(r.phase.title).toBe('消化期')
+  })
+
+  test('11:59 距 12:00 约 1 分钟', () => {
+    const r = util.calcFastingStatus(at(2026, 1, 16, 11, 59), 0)
+    expect(r.isEating).toBe(false)
+    expect(r.remainMs).toBeCloseTo(60 * 1000)
+  })
+
+  test('offsetMin 偏移生效', () => {
+    // offset 60 → 窗口 13:00–21:00，14:00 仍在窗口内
+    const r = util.calcFastingStatus(at(2026, 1, 15, 14, 0), 60)
+    expect(r.isEating).toBe(true)
+  })
+
+  test('跨 12~14h 触发深度燃脂阶段', () => {
+    // 20:00 结束后第 13h = 次日 09:00
+    const r = util.calcFastingStatus(at(2026, 1, 16, 9, 0), 0)
+    expect(r.isEating).toBe(false)
+    expect(r.phase.title).toBe('深度燃脂')
+  })
+})
+
+describe('formatFastingPhase', () => {
+  test('映射四阶段', () => {
+    expect(util.formatFastingPhase(4).title).toBe('消化期')
+    expect(util.formatFastingPhase(9).title).toBe('动用脂肪')
+    expect(util.formatFastingPhase(13).title).toBe('深度燃脂')
+    expect(util.formatFastingPhase(15).title).toBe('细胞自噬')
+  })
+})

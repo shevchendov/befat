@@ -7,18 +7,16 @@
     <view class="hero-badge hero-badge-sprint" wx:else>🎯 今日目标冲刺中</view>
   </view>
 
-  <view class="progress-rings">
+  <!-- Gain：热量+蛋白双环（原样，逐字节不动） -->
+  <view class="progress-rings" wx:if="{{goalType !== 'lose'}}">
     <view class="ring-wrapper">
       <canvas class="ring-canvas" type="2d" id="calorieCanvas"></canvas>
       <view class="ring-center">
         <view class="ring-value-row">
           <text class="ring-value">{{dailySummary.total_calorie}}</text>
-          <text class="ring-unit" wx:if="{{goalType === 'lose'}}"> / 上限 {{targets.calorie}}</text>
-          <text class="ring-unit" wx:else>/ {{targets.calorie}}</text>
+          <text class="ring-unit">/ {{targets.calorie}}</text>
         </view>
         <text class="ring-title">🔥 热量</text>
-        <text class="ring-sub" wx:if="{{goalType === 'lose' && remainingCalorie >= 0}}">还可吃 {{remainingCalorie}} kcal</text>
-        <text class="ring-sub ring-sub-warn" wx:elif="{{goalType === 'lose' && remainingCalorie < 0}}">已超标 {{-remainingCalorie}} kcal</text>
       </view>
     </view>
     <view class="ring-wrapper">
@@ -26,38 +24,76 @@
       <view class="ring-center">
         <view class="ring-value-row">
           <text class="ring-value">{{dailySummary.total_protein_g}}</text>
-          <text class="ring-unit" wx:if="{{goalType === 'lose'}}"> / 保底 {{targets.protein}}g</text>
-          <text class="ring-unit" wx:else>/ {{targets.protein}}g</text>
+          <text class="ring-unit">/ {{targets.protein}}g</text>
         </view>
         <text class="ring-title">💪 蛋白质</text>
       </view>
     </view>
   </view>
 
-  <view class="quick-actions">
-    <view class="action-btn" bindtap="goToLogFood">
-      <view class="action-icon action-icon-orange">
-        <text>🍽️</text>
+  <!-- Lose：双圆环仪表盘（热量缺口环 + 微信步数环，与增重模式环结构统一） -->
+  <view class="progress-rings" wx:elif="{{goalType === 'lose'}}">
+    <view class="ring-wrapper">
+      <canvas class="ring-canvas" type="2d" id="loseCalorieCanvas"></canvas>
+      <view class="ring-center">
+        <view class="ring-value-row">
+          <text class="ring-value">{{dailySummary.total_calorie}}</text>
+          <text class="ring-unit">/ {{targets.calorie}}</text>
+        </view>
+        <text class="ring-title">🔥 热量缺口</text>
+        <text class="ring-sub {{overLimit ? 'ring-sub-warn' : ''}}">{{remainingCalorie === null ? '' : (remainingCalorie >= 0 ? '还可吃 ' + remainingCalorie + ' kcal' : '已超标 ' + (-remainingCalorie) + ' kcal')}}</text>
       </view>
+    </view>
+    <view class="ring-wrapper" bindtap="goToSteps">
+      <canvas class="ring-canvas" type="2d" id="loseStepsCanvas"></canvas>
+      <view class="ring-center">
+        <view class="ring-value-row">
+          <text class="ring-value">{{werunSteps}}</text>
+          <text class="ring-unit">/ {{loseStepsTarget}}</text>
+        </view>
+        <text class="ring-title">🚶 今日步数</text>
+        <text class="ring-sub">≈ {{werunCalorie}} kcal</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- Gain：4 快捷入口（原样） -->
+  <view class="quick-actions" wx:if="{{goalType !== 'lose'}}">
+    <view class="action-btn" bindtap="goToLogFood">
+      <view class="action-icon action-icon-orange"><text>🍽️</text></view>
       <text class="action-label">记录一餐</text>
     </view>
     <view class="action-btn" bindtap="onTapYuefan">
-      <view class="action-icon action-icon-green">
-        <text>{{goalType === 'lose' ? '🏃' : '🍲'}}</text>
-      </view>
-      <text class="action-label">{{goalType === 'lose' ? '去运动' : '约饭吧'}}</text>
+      <view class="action-icon action-icon-green"><text>🍲</text></view>
+      <text class="action-label">约饭吧</text>
     </view>
     <view class="action-btn" bindtap="goToDailyMenu">
-      <view class="action-icon action-icon-coral">
-        <text>📖</text>
-      </view>
-      <text class="action-label">{{goalType === 'lose' ? '今日燃脂锦囊' : '今日增重食谱'}}</text>
+      <view class="action-icon action-icon-coral"><text>📖</text></view>
+      <text class="action-label">今日增重食谱</text>
     </view>
     <view class="action-btn" bindtap="goToStats">
-      <view class="action-icon action-icon-orange">
-        <text>📈</text>
-      </view>
-      <text class="action-label">{{goalType === 'lose' ? '热量与缺口' : '达标统计'}}</text>
+      <view class="action-icon action-icon-orange"><text>📈</text></view>
+      <text class="action-label">达标统计</text>
+    </view>
+  </view>
+
+  <!-- Lose：4 快捷入口（减重专属） -->
+  <view class="quick-actions" wx:else>
+    <view class="action-btn" bindtap="goToLogFood">
+      <view class="action-icon action-icon-orange"><text>📸</text></view>
+      <text class="action-label">视觉吃记</text>
+    </view>
+    <view class="action-btn" bindtap="goToSteps">
+      <view class="action-icon action-icon-green"><text>🚶</text></view>
+      <text class="action-label">每日步数</text>
+    </view>
+    <view class="action-btn" bindtap="goToFasting">
+      <view class="action-icon action-icon-coral"><text>⏱️</text></view>
+      <text class="action-label">断食计时</text>
+    </view>
+    <view class="action-btn" bindtap="goToCoach">
+      <view class="action-icon action-icon-orange"><text>🎯</text></view>
+      <text class="action-label">减脂教练</text>
     </view>
   </view>
 

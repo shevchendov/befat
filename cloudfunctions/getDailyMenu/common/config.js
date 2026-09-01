@@ -4,7 +4,7 @@ let configCache = null
 
 const SYSTEM_PROMPT = '你是一位专业的中国增重营养师。你的任务是为「吃不胖、想增重」的用户设计安全、可落地的一日三餐。你只输出严格 JSON，不输出任何解释、标题、Markdown 代码块或多余文字。你推荐的每一道菜都必须使用常规熟食烹饪方法，杜绝任何食品安全风险。'
 
-const SYSTEM_PROMPT_LOSE_TIPS = '你是一位专业的中国减脂生活教练。你的任务是为「想减脂、控体重」的用户，结合当天天气与季节，输出 3 条实操性强、可立即执行的生活减脂建议。你只输出严格 JSON，不输出任何解释、标题、Markdown 代码块或多余文字。建议必须安全、科学、健康，不得涉及极端节食、药物、催吐等危险行为。'
+const SYSTEM_PROMPT_LOSE_TIPS = '你是一位专业的中国减脂生活教练。你的任务是为「想减脂、控体重」的用户，结合当天天气与季节，输出 3 条实操性强、可立即执行的生活减脂建议。你只输出严格 JSON，不输出任何解释、标题、Markdown 代码块或多余文字。建议必须安全、科学、健康，不得涉及极端节食、药物、催吐等危险行为。建议的 title 与 content 中严禁出现「AI」「人工智能」「智能」「大模型」等字眼，不得以 AI/人工智能 自居或提及。'
 
 const DAILY_MENU_PROMPT = `今天是 {date}。请为增重人群设计一日增重食谱的「概览」，包含 4 餐：早餐(breakfast)、午餐(lunch)、加餐(snack)、晚餐(dinner)。
 
@@ -43,6 +43,7 @@ const DAILY_MENU_TIPS_PROMPT_LOSE = `今天是 {date}。请为减脂人群提供
 3. 3 条建议主题应错开（饮水/运动/作息/饮食结构等），避免雷同
 4. 每条建议要简短、口语化、温暖鼓励，不贩卖焦虑
 5. 结合当前季节气候（如天冷提醒保暖代谢、天热提醒补水），使建议有当日感
+6. 建议标题与内容中严禁出现「AI」「人工智能」「智能」「大模型」等字眼，不得以 AI/人工智能 自称或提及
 
 严格输出以下 JSON 结构：
 
@@ -52,6 +53,27 @@ const DAILY_MENU_TIPS_PROMPT_LOSE = `今天是 {date}。请为减脂人群提供
 1. tips 必须恰好 3 条，每条都有 title 与 content 两个字段，均不能为空
 2. title 简短（8~16 字），content 为一句话（30~80 字）
 3. 只返回 JSON 本体。`
+
+// 减重模式：AI 减脂教练「动态行为诊断」Prompt（占位符 {behaviors} 由后端拼装入参注入）
+const DAILY_COACH_PROMPT_LOSE = `今天是 {date}。请作为贴心的减脂教练，结合用户今日的实时行为数据，输出 3 条个性化动态建议。
+
+【用户今日行为数据】
+{behaviors}
+
+【强约束】
+1. 必须结合上述数据给出针对性建议（如红黄灯占比偏高则提示控制红黄灯类食物；步数偏少则鼓励加一次快走；热量超标则给出更温和的下半日方案；正在断食则提醒补水与进食窗口安排）
+2. 只给正向、健康、可落地的小建议，禁止极端节食、药物、催吐
+3. 每条建议具体、可量化、口语化、温暖不焦虑
+4. 3 条建议主题错开，避免雷同
+5. 建议标题与内容中严禁出现「AI」「人工智能」「智能」「大模型」等字眼，不得以 AI/人工智能 自称或提及
+
+严格输出以下 JSON 结构：
+
+{"tips":[{"title":"建议标题","content":"建议具体内容"}]}
+
+约束：
+1. tips 必须恰好 3 条，title 8~16 字，content 30~80 字
+2. 只返回 JSON 本体。`
 
 const MEAL_DETAIL_PROMPT = `请为以下菜品补充具体食材与烹饪步骤：
 - 菜名：{title}
@@ -140,4 +162,4 @@ function renderPrompt(template, vars) {
   }, template)
 }
 
-module.exports = { getConfig, renderPrompt, LOCAL_FALLBACK_CONFIG, SYSTEM_PROMPT, SYSTEM_PROMPT_LOSE_TIPS, DAILY_MENU_PROMPT, DAILY_MENU_TIPS_PROMPT_LOSE }
+module.exports = { getConfig, renderPrompt, LOCAL_FALLBACK_CONFIG, SYSTEM_PROMPT, SYSTEM_PROMPT_LOSE_TIPS, DAILY_MENU_PROMPT, DAILY_MENU_TIPS_PROMPT_LOSE, DAILY_COACH_PROMPT_LOSE }

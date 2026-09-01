@@ -15,6 +15,11 @@ const IMAGE_BASE64_MAX = 3145728
 const IMAGE_BUFFER_MAX = 2 * 1024 * 1024
 const VALID_MEALS = ['breakfast', 'lunch', 'dinner', 'snack']
 
+// 目标方向归一化：仅 'lose' 视为减重，其余兜底 gain
+function normalizeGoalType(v) {
+  return v === 'lose' ? 'lose' : 'gain'
+}
+
 function stripCodeFence(content) {
   let clean = content.trim()
   if (clean.startsWith('```json')) {
@@ -40,7 +45,26 @@ function buildNutritionPrompt(desc) {
 只返回JSON，不要任何解释文字。`
 }
 
+// 减重模式：红绿灯评级 Prompt（保留 calorie/protein_g 估算落盘）
+function buildNutritionPromptLose(desc) {
+  return `你是减脂饮食红绿灯评判专家。分析用户描述的食物，返回JSON。
+用户描述："${desc}"
+要求：
+1. 列出每种食物的名称、估算份量
+2. 使用中国常见食物营养成分数据估算热量(kcal)和蛋白质(g)（务必保留，用于热量缺口统计）
+3. 份量用中文描述，如"1碗(约200g)"、"1个(约50g)"
+4. 对每种食物给出红绿灯评级 traffic_light（green=清淡高蛋白高纤维/green适合减脂；yellow=中档可接受需控量；red=高油高糖高碳水精加工）及 light_reason（≤40字，说明判定依据）
+
+必须返回格式：
+{"items":[{"name":"食物名","portion":"份量描述","calorie":数值,"protein_g":数值,"traffic_light":"green|yellow|red","light_reason":"理由"}],"total_calorie":数值,"total_protein_g":数值,"overall_light":"green|yellow|red"}
+
+只返回JSON，不要任何解释文字。`
+}
+
 const VISION_NUTRITION_PROMPT = '你是一个中国食物营养分析专家。请看图片中的食物，直接估算每种食物的名称、份量、热量(kcal)和蛋白质(g)。要求：1. 份量用中文描述，如"1碗(约200g)"、"1个(约50g)"；2. 热量和蛋白质依据中国常见食物营养成分数据估算；3. 图片不清晰时按常见份量估算。必须只返回严格的JSON，不要任何解释文字、不要Markdown代码块：{"items":[{"name":"食物名","portion":"份量描述","calorie":数值,"protein_g":数值}],"total_calorie":数值,"total_protein_g":数值}'
+
+// 减重模式：视觉红绿灯评级（保留 calorie/protein_g）
+const VISION_NUTRITION_PROMPT_LOSE = '你是减脂饮食红绿灯评判专家。请看图片中的食物，估算每种食物的名称、份量、热量(kcal)、蛋白质(g)，并对每种食物给出红绿灯评级 traffic_light（green=清淡高蛋白高纤维；yellow=中档需控量；red=高油高糖高碳水精加工）与 light_reason（≤40字）。务必保留热量与蛋白质数值。只返回严格JSON，不要解释文字、不要Markdown代码块：{"items":[{"name":"食物名","portion":"份量描述","calorie":数值,"protein_g":数值,"traffic_light":"green|yellow|red","light_reason":"理由"}],"total_calorie":数值,"total_protein_g":数值,"overall_light":"green|yellow|red"}'
 
 function parseNutritionJson(content) {
   const cleanContent = stripCodeFence(content)
@@ -52,25 +76,29 @@ function parseNutritionJson(content) {
     name: item.name || '未知食物',
     portion: item.portion || '1份',
     calorie: Math.round(Number(item.calorie) || 0),
-    protein_g: Math.round((Number(item.protein_g) || 0) * 10) / 10
+    protein_g: Math.round((Number(item.protein_g) || 0) * 10) / 10,
+    traffic_light: item.traffic_light || '',
+    light_reason: item.light_reason || ''
   }))
   const totalCalorie = result.total_calorie || parsedItems.reduce((s, i) => s + i.calorie, 0)
   const totalProteinG = result.total_protein_g || parsedItems.reduce((s, i) => s + i.protein_g, 0)
-  return { items: parsedItems, total_calorie: totalCalorie, total_protein_g: totalProteinG }
+  const overallLight = result.overall_light || ''
+  return { items: parsedItems, total_calorie: totalCalorie, total_protein_g: totalProteinG, overall_light: overallLight }
 }
 
-async function runVisionNutrition(imageBase64) {
+async function runVisionNutrition(imageBase64, goalType) {
   const apiKey = process.env.VISION_API_KEY || process.env.ZHIPU_API_KEY
   if (!apiKey) throw new Error('VISION_API_KEY not configured')
   const visionModel = process.env.VISION_MODEL || process.env.ZHIPU_VISION_MODEL || 'glm-4v-flash'
   const apiUrl = process.env.VISION_API_URL || VISION_API_URL_DEFAULT
+  const prompt = goalType === 'lose' ? VISION_NUTRITION_PROMPT_LOSE : VISION_NUTRITION_PROMPT
 
   const resp = await axios.post(apiUrl, {
     model: visionModel,
     messages: [{
       role: 'user',
       content: [
-        { type: 'text', text: VISION_NUTRITION_PROMPT },
+        { type: 'text', text: prompt },
         { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + imageBase64 } }
       ]
     }],
@@ -89,17 +117,18 @@ async function runVisionNutrition(imageBase64) {
   return parseNutritionJson(content)
 }
 
-async function runDeepSeekNutrition(desc) {
+async function runDeepSeekNutrition(desc, goalType) {
   const apiKey = process.env.NUTRITION_API_KEY || process.env.DEEPSEEK_API_KEY
   if (!apiKey) throw new Error('NUTRITION_API_KEY not configured')
   const model = process.env.NUTRITION_MODEL || 'deepseek-v4-flash'
   const apiUrl = process.env.NUTRITION_API_URL || NUTRITION_API_URL_DEFAULT
+  const promptFn = goalType === 'lose' ? buildNutritionPromptLose : buildNutritionPrompt
 
   const resp = await axios.post(apiUrl, {
     model,
     messages: [
       { role: 'system', content: '你是一个中国食物营养分析专家。只返回JSON，不要任何解释文字。' },
-      { role: 'user', content: buildNutritionPrompt(desc) }
+      { role: 'user', content: promptFn(desc) }
     ],
     temperature: 0.1,
     max_tokens: 1024
@@ -120,7 +149,8 @@ exports.main = async (event, context) => {
   const start = Date.now()
   const wxContext = cloud.getWXContext()
   const openid = wxContext.OPENID
-  const { raw_text, image_base64, meal_type, date } = event
+  const { raw_text, image_base64, meal_type, date, goal_type } = event
+  const goalType = normalizeGoalType(goal_type)
   const isImageMode = !!image_base64
 
   logger.info(FN, 'invoke', isImageMode
@@ -174,7 +204,7 @@ exports.main = async (event, context) => {
       // 单次多模态调用：视觉模型直接看图输出营养 JSON，跳过第二棒
       let parsed
       try {
-        parsed = await runVisionNutrition(image_base64)
+        parsed = await runVisionNutrition(image_base64, goalType)
       } catch (visionErr) {
         logger.warn(FN, 'vision nutrition failed', { error: visionErr.message, duration: Date.now() - start })
         const result = { code: 92, message: '图片分析失败，请改用文字描述' }
@@ -189,9 +219,11 @@ exports.main = async (event, context) => {
           raw_text: parsed.items.map(i => i.name + ' ' + i.portion).join('；').slice(0, 50),
           meal_type,
           date,
+          goal_type: goalType,
           items: parsed.items,
           total_calorie: parsed.total_calorie,
-          total_protein_g: parsed.total_protein_g
+          total_protein_g: parsed.total_protein_g,
+          overall_light: parsed.overall_light || ''
         }
       }
       logger.info(FN, 'success', { mode: 'image', duration: Date.now() - start, itemCount: parsed.items.length })
@@ -216,7 +248,7 @@ exports.main = async (event, context) => {
     // 文本模式：纯文本营养计算
     let parsed
     try {
-      parsed = await runDeepSeekNutrition(raw_text)
+      parsed = await runDeepSeekNutrition(raw_text, goalType)
     } catch (err) {
       logger.warn(FN, 'parse failed', { error: err.message, duration: Date.now() - start })
       return {
@@ -227,6 +259,7 @@ exports.main = async (event, context) => {
           items: [],
           total_calorie: 0,
           total_protein_g: 0,
+          overall_light: '',
           parse_error: err.message
         }
       }
@@ -239,9 +272,11 @@ exports.main = async (event, context) => {
         raw_text: raw_text.slice(0, 50),
         meal_type,
         date,
+        goal_type: goalType,
         items: parsed.items,
         total_calorie: parsed.total_calorie,
-        total_protein_g: parsed.total_protein_g
+        total_protein_g: parsed.total_protein_g,
+        overall_light: parsed.overall_light || ''
       }
     }
     logger.info(FN, 'success', { mode: 'text', duration: Date.now() - start, itemCount: parsed.items.length })
