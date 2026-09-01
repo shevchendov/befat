@@ -96,6 +96,12 @@ function typewriterEffect(ctx, text, onUpdate, onDone, speed = 40) {
 
 async function searchNearbyPoi({ lat, lng, page, searchQuery, goalType }) {
   page = page || 1
+  // 坐标非法兜底：直接返回安全空数组，不调云函数，避免硬报错
+  const la = Number(lat)
+  const lo = Number(lng)
+  if (!Number.isFinite(la) || !Number.isFinite(lo) || la === 0 || lo === 0) {
+    return { list: [], total: 0, from_cache: false, resolvedTags: null }
+  }
   const q = searchQuery ? String(searchQuery).trim() : ''
   const gt = goalType === 'lose' ? 'lose' : 'gain'
   const rLat = roundCoord(lat)

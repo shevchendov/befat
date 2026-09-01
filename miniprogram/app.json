@@ -25,7 +25,7 @@
   "lazyCodeLoading": "requiredComponents",
   "permission": {
     "scope.userFuzzyLocation": {
-      "desc": "你的位置信息将用于检索周边美食"
+      "desc": "你的位置信息将用于检索周边美食与运动场所"
     }
   },
   "requiredPrivateInfos": [

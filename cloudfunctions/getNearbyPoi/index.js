@@ -92,8 +92,12 @@ exports.main = async (event, context) => {
     return { code: 2, message: '定位坐标异常，请重新定位' }
   }
 
-  // ① 意图解析：有输入走 GLM 转译，空输入用默认关键词
-  let keyword = config.DEFAULT_KEYWORD[goalType]
+  // ① 意图解析：有输入走 GLM 转译，空输入用默认检索关键词
+  // 竖线"|"=OR 语义；旧值空格分隔会被地图按 AND 解析（须同时命中多词），导致 lose 模式 0 条结果
+  const defaultQuery = goalType === 'lose'
+    ? '健身房|体育馆|运动场|公园|游泳馆'
+    : '美食'
+  let keyword = defaultQuery
   let resolvedTags = null
   if (searchQuery && String(searchQuery).trim()) {
     const query = String(searchQuery).trim().slice(0, config.MAX_QUERY_LEN)
@@ -112,10 +116,17 @@ exports.main = async (event, context) => {
     }
   }
 
-  // ② 检索：分级扩距序列 [1000,3000,6000]（显式传 radius 则以其为起点）
-  const radiusSeq = radius
-    ? [Number(radius)].concat(config.RADIUS_SEQ.filter(r => r > Number(radius)))
-    : config.RADIUS_SEQ
+  // ② 检索：分级扩距序列 [1000,3000,6000]（显式传 radius 则以其为起点）；
+  // lose 模式放大起步半径至 5000，提高周边运动场所匹配率
+  let radiusSeq
+  if (goalType === 'lose') {
+    const start = Math.max(Number(radius) || 0, 5000)
+    radiusSeq = [start].concat(config.RADIUS_SEQ.filter(r => r > start))
+  } else {
+    radiusSeq = radius
+      ? [Number(radius)].concat(config.RADIUS_SEQ.filter(r => r > Number(radius)))
+      : config.RADIUS_SEQ
+  }
 
   let matched = null
   let lastErr = null

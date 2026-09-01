@@ -1,6 +1,6 @@
 const util = require('../../utils/util')
 const { searchNearbyPoi } = require('../../utils/map')
-const { getUserLocation } = require('../../utils/location')
+const { getLocation } = require('../../utils/location')
 
 const app = getApp()
 
@@ -11,11 +11,10 @@ Page({
     steps: 0,
     calorie: 0,
     manualStep: '',
-    // POI 降级次级卡片
+    // POI 运动场所次级卡片（idle/denied/loading/error/empty/ready）
     poiList: [],
-    poiError: false,
+    poiStatus: 'idle',
     poiMsg: '',
-    poiLoading: false,
     goalType: 'gain'
   },
 
@@ -101,14 +100,63 @@ Page({
 
   // 次级 POI 运动场所推荐卡片（复用 getNearbyPoi lose 分支）
   async loadPoi() {
-    this.setData({ poiLoading: true, poiError: false })
-    try {
-      const loc = await getUserLocation()
-      const res = await searchNearbyPoi({ lat: loc.latitude, lng: loc.longitude, page: 1, goalType: 'lose' })
-      this.setData({ poiList: res.list || [], poiLoading: false })
-    } catch (err) {
-      this.setData({ poiLoading: false, poiError: true, poiMsg: '附近运动场所加载失败' })
+    if (this.data.poiStatus === 'loading') return
+
+    const granted = await this.checkLocationAuth()
+    if (!granted) {
+      this.setData({ poiStatus: 'denied' })
+      return
     }
+
+    this.setData({ poiStatus: 'loading' })
+    try {
+      const loc = await getLocation()
+      await this.doSearchPoi(loc)
+    } catch (err) {
+      this.setData({ poiStatus: 'error', poiMsg: '定位失败，点击重试' })
+    }
+  },
+
+  // 已获授权后按坐标检索，安全兜底空数组 + 内部捕获错误态
+  async doSearchPoi(loc) {
+    try {
+      const res = await searchNearbyPoi({
+        lat: loc.latitude, lng: loc.longitude, page: 1,
+        searchQuery: '健身房|体育馆|运动场|公园',
+        goalType: 'lose'
+      })
+      const list = (res && res.list) || []
+      this.setData({ poiList: list, poiStatus: list.length > 0 ? 'ready' : 'empty' })
+    } catch (err) {
+      this.setData({ poiStatus: 'error', poiMsg: '附近运动场所加载失败，点击重试' })
+    }
+  },
+
+  // 定位授权校验（scope.userFuzzyLocation 模糊定位）
+  checkLocationAuth() {
+    return new Promise(resolve => {
+      wx.getSetting({
+        success: res => resolve(!!(res.authSetting && res.authSetting['scope.userFuzzyLocation'])),
+        fail: () => resolve(false)
+      })
+    })
+  },
+
+  // 引导开启定位：首次触发系统授权，已拒绝则跳设置页
+  onEnableLocation() {
+    this.setData({ poiStatus: 'loading' })
+    getLocation()
+      .then(loc => this.doSearchPoi(loc))
+      .catch(() => {
+        wx.openSetting({
+          success: () => this.loadPoi(),
+          fail: () => this.setData({ poiStatus: 'denied' })
+        })
+      })
+  },
+
+  onRetryPoi() {
+    this.loadPoi()
   },
 
   openPoi(e) {

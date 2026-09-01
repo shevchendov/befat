@@ -79,13 +79,48 @@
   margin: 30rpx 0 16rpx;
 }
 
-.poi-loading,
-.poi-error,
-.poi-empty {
+.poi-loading {
   text-align: center;
   color: var(--color-text-light);
   font-size: 26rpx;
   padding: 60rpx 0;
+}
+
+.poi-state-card {
+  background: var(--card-bg);
+  border: 2rpx solid var(--color-border);
+  border-radius: 24rpx;
+  box-shadow: var(--shadow-card);
+  padding: 48rpx 30rpx;
+  text-align: center;
+}
+
+.poi-state-emoji {
+  font-size: 64rpx;
+  display: block;
+}
+
+.poi-state-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-top: 16rpx;
+}
+
+.poi-state-sub {
+  font-size: 24rpx;
+  color: var(--color-text-light);
+  margin-top: 10rpx;
+}
+
+.poi-state-btn {
+  display: inline-block;
+  margin-top: 24rpx;
+  padding: 14rpx 48rpx;
+  border-radius: 999rpx;
+  background: var(--color-accent-green);
+  color: #fff;
+  font-size: 28rpx;
 }
 
 .poi-list {

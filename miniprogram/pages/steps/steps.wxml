@@ -14,14 +14,35 @@
   </view>
 
   <view class="section-title">🏃 附近运动场所</view>
-  <view wx:if="{{poiLoading}}" class="poi-loading">加载中…</view>
-  <view wx:elif="{{poiError}}" class="poi-error">{{poiMsg}}</view>
+
+  <view wx:if="{{poiStatus === 'denied'}}" class="poi-state-card" bindtap="onEnableLocation">
+    <view class="poi-state-emoji">📍</view>
+    <view class="poi-state-title">开启定位获取周边运动场所</view>
+    <view class="poi-state-sub">授权后可为你推荐附近健身房、操场、游泳馆等</view>
+    <view class="poi-state-btn">去开启定位</view>
+  </view>
+
+  <view wx:elif="{{poiStatus === 'loading'}}" class="poi-loading">加载中…</view>
+
+  <view wx:elif="{{poiStatus === 'error'}}" class="poi-state-card" bindtap="onRetryPoi">
+    <view class="poi-state-emoji">😕</view>
+    <view class="poi-state-title">附近运动场所加载失败</view>
+    <view class="poi-state-sub">{{poiMsg || '网络异常或定位不可用'}}</view>
+    <view class="poi-state-btn">点击重试</view>
+  </view>
+
+  <view wx:elif="{{poiStatus === 'empty'}}" class="poi-state-card" bindtap="onRetryPoi">
+    <view class="poi-state-emoji">🏞️</view>
+    <view class="poi-state-title">附近暂未找到运动场所</view>
+    <view class="poi-state-sub">换个位置或稍后再试</view>
+    <view class="poi-state-btn">重新查找</view>
+  </view>
+
   <view wx:else class="poi-list">
     <view class="poi-card" wx:for="{{poiList}}" wx:for-index="pi" wx:key="id" bindtap="openPoi" data-index="{{pi}}">
       <view class="poi-title">{{item.title}}</view>
       <view class="poi-meta">{{item.category}} · {{item.distance_text}}</view>
       <view class="poi-address">{{item.address}}</view>
     </view>
-    <view wx:if="{{poiList.length === 0}}" class="poi-empty">暂无附近运动场所</view>
   </view>
 </view>

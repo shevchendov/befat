@@ -101,7 +101,7 @@ describe('getNearbyPoi - 双目标类目隔离', () => {
     expect(axios.get).toHaveBeenCalled()
     const params = axios.get.mock.calls[0][1].params
     expect(params.filter).toBe('category=体育休闲')
-    expect(params.keyword).toBe('公园 健身房 绿道 游泳馆')
+    expect(params.keyword).toBe('健身房|体育馆|运动场|公园|游泳馆')
   })
 
   test('lose 模式 searchQuery 走运动转译，不停留在餐饮', async () => {

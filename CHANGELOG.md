@@ -1,5 +1,51 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-09-01] 9ae1d37
+
+**feat: 减重模式功能上线（视觉吃记/断食计时/步数/减脂教练）**
+
+- 首页减重模式仪表盘重构为与增重模式统一的双 canvas 圆环：热量缺口环 + 微信步数环
+- 新增减脂教练页（coach）、断食计时页（fasting）、每日步数页（steps），并注册到 app.json
+- 新增 stepsSync 云函数，解密微信运动步数并换算消耗
+- log-food 减重模式接入红绿灯评级（green/yellow/red）并支持极简打卡
+- parseFoodLog 减重模式新增红绿灯评级提示词（文字/视觉双模式）
+- getDailyMenu 减重模式输出 tips 建议，Prompt + 代码级安全网强约束 title/content 禁止 AI/人工智能等自称
+- 清理用户可见端 AI/智能/人工智能等敏感文案（金刚区入口、教练页标题与骨架屏）
+DEPLOY: cloudfunctions/getDailyMenu, cloudfunctions/parseFoodLog, cloudfunctions/stepsSync
+VERIFIED: 仅本地jest测试通过（669 用例），未做真机/云端验证
+DATA IMPACT: food_logs.parsed_items[] 新增可选字段 traffic_light/light_reason/overall_light，向后兼容，旧数据缺省为空，无需迁移
+
+**涉及文件:**
+- `cloudfunctions/getDailyMenu/common/config.js`
+- `cloudfunctions/getDailyMenu/index.js`
+- `cloudfunctions/parseFoodLog/index.js`
+- `cloudfunctions/stepsSync/index.js`
+- `cloudfunctions/stepsSync/package.json`
+- `miniprogram/app.json`
+- `miniprogram/pages/coach/coach.js`
+- `miniprogram/pages/coach/coach.json`
+- `miniprogram/pages/coach/coach.wxml`
+- `miniprogram/pages/coach/coach.wxss`
+- `miniprogram/pages/fasting/fasting.js`
+- `miniprogram/pages/fasting/fasting.json`
+- `miniprogram/pages/fasting/fasting.wxml`
+- `miniprogram/pages/fasting/fasting.wxss`
+- `miniprogram/pages/index/index.js`
+- `miniprogram/pages/index/index.wxml`
+- `miniprogram/pages/index/index.wxss`
+- `miniprogram/pages/log-food/log-food.js`
+- `miniprogram/pages/log-food/log-food.wxml`
+- `miniprogram/pages/log-food/log-food.wxss`
+- `miniprogram/pages/steps/steps.js`
+- `miniprogram/pages/steps/steps.json`
+- `miniprogram/pages/steps/steps.wxml`
+- `miniprogram/pages/steps/steps.wxss`
+- `miniprogram/utils/util.js`
+- `tests/parseFoodLog.test.js`
+- `tests/stepsSync.test.js`
+- `tests/util.test.js`
+⚠️ 待确认：以下云函数是否已重新部署 → cloudfunctions/getDailyMenu, cloudfunctions/parseFoodLog, cloudfunctions/stepsSync
+
 ## [2026-08-31] 335ff82
 
 **refactor: 修复 sync-common 脚本缺陷并对齐共享代码源头**
