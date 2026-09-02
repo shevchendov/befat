@@ -97,6 +97,17 @@
     </view>
   </view>
 
+  <!-- Lose 模式：单行微型断食状态条 -->
+  <view class="fasting-strip-bar" wx:if="{{goalType === 'lose' && fastingState}}" bindtap="goToFasting">
+    <view class="strip-left">
+      <text class="strip-icon">⏱️</text>
+      <text class="strip-status">{{fastingState.isEating ? '进食期' : '断食中'}}</text>
+      <text class="strip-dot">·</text>
+      <text class="strip-desc">{{fastingState.isEating ? '距断食开始还剩' : '距下次进食还剩'}} {{fastingState.remainTimeStr}}</text>
+    </view>
+    <text class="strip-arrow">＞</text>
+  </view>
+
   <view class="goal-card" wx:if="{{goalProgress}}" bindtap="goToGoalDetail" hover-class="goal-card-hover">
     <view class="goal-card-header">
       <text class="goal-card-title">🎯 目标进度</text>

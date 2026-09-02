@@ -44,12 +44,14 @@ Page({
     werunCalorie: 0,
     loseStepsTarget: LOSE_STEPS_TARGET_DEFAULT,
     goalProgress: null,
-    showGoalGuide: false
+    showGoalGuide: false,
+    fastingState: null
   },
 
   onShow() {
     this.loadData()
     this.loadWerunForLose()
+    this.loadFastingState()
   },
 
   // 问候语按【时间段 × 目标模式】隔离，增重/减重文案独立，防止文案污染
@@ -432,6 +434,34 @@ Page({
 
   goToStats() {
     wx.navigateTo({ url: '/pages/stats/stats' })
+  },
+
+  // Lose 模式：读取断食状态（本地偏移 + 绝对时间计算），供首页单行微型状态条展示
+  loadFastingState() {
+    const goalType = util.normalizeGoalType(app.globalData.userInfo && app.globalData.userInfo.goal_type)
+    if (goalType !== 'lose') {
+      this.setData({ fastingState: null })
+      return
+    }
+    const offsetMin = Number(wx.getStorageSync('fasting_offset_min')) || 0
+    const r = util.calcFastingStatus(Date.now(), offsetMin)
+    this.setData({
+      fastingState: {
+        isEating: r.isEating,
+        remainTimeStr: this.formatFastRemain(r.remainMs)
+      }
+    })
+  },
+
+  // 剩余时长人性化格式（如「2 小时 30 分」「45 分钟」）
+  formatFastRemain(ms) {
+    const totalMin = Math.max(0, Math.round(ms / 60000))
+    if (totalMin >= 60) {
+      const h = Math.floor(totalMin / 60)
+      const m = totalMin % 60
+      return m > 0 ? h + ' 小时 ' + m + ' 分' : h + ' 小时'
+    }
+    return totalMin + ' 分钟'
   },
 
   goToProfile() {

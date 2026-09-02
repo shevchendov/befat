@@ -552,3 +552,52 @@
   margin-top: 8rpx;
 }
 
+/* ===== Lose：单行微型断食状态条 ===== */
+.fasting-strip-bar {
+  margin: 20rpx 30rpx 0;
+  padding: 16rpx 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #F0F7EA;
+  border: 2rpx solid var(--color-border);
+  border-radius: 16rpx;
+  box-shadow: var(--shadow-card);
+}
+
+.fasting-strip-bar:active {
+  transform: scale(0.99);
+  opacity: 0.9;
+}
+
+.strip-left {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  font-size: 26rpx;
+}
+
+.strip-icon {
+  font-size: 28rpx;
+  line-height: 1;
+}
+
+.strip-status {
+  font-weight: 700;
+  color: var(--color-accent-green);
+}
+
+.strip-dot {
+  color: var(--color-text-light);
+}
+
+.strip-desc {
+  color: var(--color-text-secondary);
+}
+
+.strip-arrow {
+  font-size: 26rpx;
+  color: var(--color-text-light);
+  margin-left: 12rpx;
+}
+
