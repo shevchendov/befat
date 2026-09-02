@@ -35,6 +35,11 @@
       <text class="title-text">16:8 轻断食怎么用？</text>
     </view>
 
+    <view class="guide-intro">
+      <text class="intro-icon">🔥</text>
+      <text class="intro-text">断食的目的：拉长空腹时间，让身体在断食期从「消耗糖原」切换到「燃脂供能」，同时给肠胃留出休息时间，配合热量缺口更易掉秤。</text>
+    </view>
+
     <view class="guide-section">
       <view class="section-item">
         <text class="item-tag tag-eat">8h 进食期</text>

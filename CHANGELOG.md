@@ -1,5 +1,18 @@
 # CHANGELOG / 迭代升级记录
 
+## [2026-09-02] e669182
+
+**feat: 断食页新增 16:8 轻断食规则与使用指南卡片**
+
+- 在 4 个生理阶段列表下方新增说明卡片：8h 进食期 / 16h 断食期规则 + 偏移调整提示
+- 样式延续手绘复古硬朗风格：#3D2C29 粗描边 + 24rpx 圆角，字号层级与页面协调（标题 32rpx / 标签 24rpx / 正文 26rpx）
+DEPLOY: none
+VERIFIED: 仅本地静态检查，未做真机/云端验证
+
+**涉及文件:**
+- `miniprogram/pages/fasting/fasting.wxml`
+- `miniprogram/pages/fasting/fasting.wxss`
+
 ## [2026-09-01] 1122f7b
 
 **fix: 修复附近运动场所加载失败与 lose 模式 POI 0 结果**

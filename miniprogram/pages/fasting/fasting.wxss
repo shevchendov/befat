@@ -158,6 +158,28 @@
   color: #3D2C29;
 }
 
+.guide-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+  padding: 20rpx;
+  background: var(--card-bg-light);
+  border-radius: 16rpx;
+}
+
+.intro-icon {
+  font-size: 28rpx;
+  line-height: 1.5;
+}
+
+.intro-text {
+  flex: 1;
+  font-size: 24rpx;
+  color: #3D2C29;
+  line-height: 1.6;
+}
+
 .guide-section {
   display: flex;
   flex-direction: column;
