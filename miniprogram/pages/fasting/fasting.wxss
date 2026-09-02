@@ -129,3 +129,84 @@
 .dot-2 { background: #FFD23F; }
 .dot-3 { background: #FFB347; }
 .dot-4 { background: #FF6B35; }
+
+/* ===== 16:8 轻断食规则与使用指南卡片 ===== */
+.guide-card {
+  margin-top: 24rpx;
+  background: var(--card-bg-warm);
+  border: 4rpx solid #3D2C29;
+  border-radius: 24rpx;
+  box-shadow: var(--shadow-card);
+  padding: 28rpx 24rpx;
+}
+
+.guide-title {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+
+.title-icon {
+  font-size: 36rpx;
+  line-height: 1;
+}
+
+.title-text {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #3D2C29;
+}
+
+.guide-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.section-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.item-tag {
+  align-self: flex-start;
+  padding: 6rpx 20rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #fff;
+}
+
+.tag-eat { background: var(--color-accent-green); }
+.tag-fast { background: var(--color-accent-orange); }
+
+.item-desc {
+  font-size: 26rpx;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.guide-tip {
+  margin-top: 24rpx;
+  padding: 20rpx;
+  background: var(--card-bg-light);
+  border: 2rpx solid #3D2C29;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+}
+
+.tip-icon {
+  font-size: 28rpx;
+  line-height: 1.5;
+}
+
+.tip-text {
+  flex: 1;
+  font-size: 24rpx;
+  color: #3D2C29;
+  line-height: 1.6;
+}

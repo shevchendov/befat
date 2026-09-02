@@ -27,4 +27,29 @@
     <view class="stage-item"><text class="dot dot-3"></text>12-14h 深度燃脂</view>
     <view class="stage-item"><text class="dot dot-4"></text>14-16h 细胞自噬</view>
   </view>
+
+  <!-- 新增：轻断食用法与规则说明卡片 -->
+  <view class="guide-card">
+    <view class="guide-title">
+      <text class="title-icon">💡</text>
+      <text class="title-text">16:8 轻断食怎么用？</text>
+    </view>
+
+    <view class="guide-section">
+      <view class="section-item">
+        <text class="item-tag tag-eat">8h 进食期</text>
+        <text class="item-desc">在设定的 8 小时内（默认 12:00–20:00）正常吃三餐或两餐，吃饱即可，避免暴饮暴食。</text>
+      </view>
+
+      <view class="section-item">
+        <text class="item-tag tag-fast">16h 断食期</text>
+        <text class="item-desc">其余 16 小时内不摄入有热量的食物。可正常饮水、无糖黑咖啡、无糖茶。</text>
+      </view>
+    </view>
+
+    <view class="guide-tip">
+      <text class="tip-icon">✏️</text>
+      <text class="tip-text">作息不同？修改上方的「偏移分钟」，如输入 -120 即可将进食窗口调为 10:00–18:00。</text>
+    </view>
+  </view>
 </view>
