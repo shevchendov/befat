@@ -90,6 +90,17 @@ function formatFastingPhase(hours) {
   return { title: '细胞自噬', desc: '细胞自噬启动，清理与修复进行中' }
 }
 
+// 人性化时长格式（分钟级，如「2 小时 30 分」「45 分钟」），供首页状态条等极简展示复用
+function formatDurationHuman(ms) {
+  const totalMin = Math.max(0, Math.round(Number(ms) / 60000))
+  if (totalMin >= 60) {
+    const h = Math.floor(totalMin / 60)
+    const m = totalMin % 60
+    return m > 0 ? h + ' 小时 ' + m + ' 分' : h + ' 小时'
+  }
+  return totalMin + ' 分钟'
+}
+
 module.exports = {
   formatDate,
   normalizeGoalType,
@@ -99,5 +110,6 @@ module.exports = {
   getHealthWarning,
   calcCalorieBySteps,
   calcFastingStatus,
-  formatFastingPhase
+  formatFastingPhase,
+  formatDurationHuman
 }

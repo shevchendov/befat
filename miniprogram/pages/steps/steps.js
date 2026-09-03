@@ -21,7 +21,7 @@ Page({
   onLoad() {
     const goalType = util.normalizeGoalType(app.globalData.userInfo && app.globalData.userInfo.goal_type)
     this.setData({ goalType })
-    this.loadWerun()
+    // 步数/POI 加载统一走 onShow（onLoad 后必触发 onShow，避免重复请求）
   },
 
   onShow() {
@@ -147,11 +147,17 @@ Page({
     this.setData({ poiStatus: 'loading' })
     getLocation()
       .then(loc => this.doSearchPoi(loc))
-      .catch(() => {
-        wx.openSetting({
-          success: () => this.loadPoi(),
-          fail: () => this.setData({ poiStatus: 'denied' })
-        })
+      .catch(async () => {
+        // 区分：未授权 → 引导授权；已授权但定位失败（系统定位关闭等）→ 提示重试
+        const granted = await this.checkLocationAuth()
+        if (!granted) {
+          wx.openSetting({
+            success: () => this.loadPoi(),
+            fail: () => this.setData({ poiStatus: 'denied' })
+          })
+        } else {
+          this.setData({ poiStatus: 'error', poiMsg: '定位失败，请检查系统定位是否开启后重试' })
+        }
       })
   },
 

@@ -52,6 +52,18 @@ Page({
     this.loadData()
     this.loadWerunForLose()
     this.loadFastingState()
+    if (this._fastingTimer) clearInterval(this._fastingTimer)
+    this._fastingTimer = setInterval(() => this.loadFastingState(), 60000)
+  },
+
+  onHide() {
+    if (this._fastingTimer) clearInterval(this._fastingTimer)
+    this._fastingTimer = null
+  },
+
+  onUnload() {
+    if (this._fastingTimer) clearInterval(this._fastingTimer)
+    this._fastingTimer = null
   },
 
   // 问候语按【时间段 × 目标模式】隔离，增重/减重文案独立，防止文案污染
@@ -232,8 +244,8 @@ Page({
     const isLose = this.data.goalType === 'lose'
 
     if (isLose) {
+      // 步数环由 loadWerunForLose 单独绘制，此处只画热量缺口环（避免双重绘制竞态）
       this.drawSingleRing('loseCalorieCanvas', current.total_calorie, targets.calorie, this.data.overLimit)
-      this.drawSingleRing('loseStepsCanvas', this.data.werunSteps, this.data.loseStepsTarget, false)
       return
     }
 
@@ -401,7 +413,7 @@ Page({
     wx.navigateTo({ url: '/pages/coach/coach' })
   },
 
-  // 减重模式每日步数目标：优先读用户配置 users.steps_goal，缺省 8000
+  // 减重模式每日步数目标：users.steps_goal 为预留字段（后端当前未写入），未配置时缺省 8000
   resolveStepsTarget() {
     const u = app.globalData.userInfo || {}
     const custom = Number(u.steps_goal) || 0
@@ -448,20 +460,9 @@ Page({
     this.setData({
       fastingState: {
         isEating: r.isEating,
-        remainTimeStr: this.formatFastRemain(r.remainMs)
+        remainTimeStr: util.formatDurationHuman(r.remainMs)
       }
     })
-  },
-
-  // 剩余时长人性化格式（如「2 小时 30 分」「45 分钟」）
-  formatFastRemain(ms) {
-    const totalMin = Math.max(0, Math.round(ms / 60000))
-    if (totalMin >= 60) {
-      const h = Math.floor(totalMin / 60)
-      const m = totalMin % 60
-      return m > 0 ? h + ' 小时 ' + m + ' 分' : h + ' 小时'
-    }
-    return totalMin + ' 分钟'
   },
 
   goToProfile() {

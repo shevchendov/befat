@@ -35,15 +35,15 @@ Page({
   tick() {
     const now = new Date().getTime()
     const r = util.calcFastingStatus(now, this.data.offsetMin)
-    // 16 小时断食周期进度（remainMs 若为断食剩余则倒推）
+    // 断食进度：已断食时长 / 16h；进食期 elapsedFastingMs 为 0，进度归零
     const totalMs = 16 * 3600 * 1000
-    const doneMs = Math.max(0, totalMs - r.remainMs)
+    const doneMs = Math.max(0, Math.min(totalMs, r.elapsedFastingMs))
     this.setData({
       nowMs: now,
       isEating: r.isEating,
       remainText: this.formatDuration(r.remainMs),
       elapsedText: this.formatDuration(r.elapsedFastingMs),
-      progressPct: Math.min(100, Math.round(doneMs / totalMs * 100)),
+      progressPct: Math.round(doneMs / totalMs * 100),
       phase: r.phase
     })
   },

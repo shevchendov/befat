@@ -1,6 +1,5 @@
 const util = require('../../utils/util')
 const logger = require('../../utils/logger')
-const app = getApp()
 
 Page({
   data: {
@@ -35,11 +34,15 @@ Page({
       // 红绿灯比例：从今日 food_logs 统计（此处用 getDailySummary 返回的 items 聚合，若无则回退空比例）
       const trafficRatio = this.aggregateTraffic(summary)
 
+      // 断食状态：与 fasting 页同源（本地偏移 storage + 绝对时间计算），userInfo 无 fasting_state 字段
+      const fastOffset = Number(wx.getStorageSync('fasting_offset_min')) || 0
+      const fast = util.calcFastingStatus(Date.now(), fastOffset)
+
       const behaviors = [
         `今日红绿灯比例：绿 ${trafficRatio.green}%、黄 ${trafficRatio.yellow}%、红 ${trafficRatio.red}%`,
         `今日步数：${goal.steps || 0} 步`,
         `今日热量缺口：${calorieGap > 0 ? '还可吃 ' + calorieGap : '已超标 ' + Math.abs(calorieGap)} kcal`,
-        `轻断食：${app.globalData.userInfo && app.globalData.userInfo.fasting_state && app.globalData.userInfo.fasting_state.active ? '进行中' : '未开启'}`
+        `轻断食：${fast.isEating ? '进食窗口进行中' : '断食进行中'}`
       ].join('；')
 
       const res = await wx.cloud.callFunction({
