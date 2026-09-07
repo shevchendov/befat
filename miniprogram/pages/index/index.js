@@ -84,12 +84,12 @@ Page({
     return '夜宵时间！做大只的黄金时刻！🌙'
   },
 
-  // BMI 状态归类：偏瘦 / 正常 / 超重
+  // BMI 状态归类：偏瘦 / 正常 / 偏高
   classifyBmi(bmi) {
     if (!bmi || isNaN(bmi)) return { status: '', level: '' }
     if (bmi < 18.5) return { status: '偏瘦', level: 'under' }
     if (bmi < 24) return { status: '正常', level: 'normal' }
-    return { status: '超重', level: 'over' }
+    return { status: '偏高', level: 'over' }
   },
 
   // 判断是否刷新数据：reLaunch 场景（onboarding 提交后）用显式标记；
